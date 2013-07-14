@@ -15,7 +15,7 @@
    - Neither the name of Notational Velocity nor the names of its contributors may be used to endorse 
      or promote products derived from this software without specific prior written permission. */
 
-#include <Carbon/Carbon.h>
+#import <Foundation/Foundation.h>
 
 typedef int CGSConnection;
 typedef int CGSWorkspace;
@@ -30,9 +30,9 @@ extern CGError CGSSetWorkspace(const CGSConnection cid, CGSWorkspace workspace);
 typedef struct _SpaceSwitchingContext {
 	CGSWorkspace userSpace;
 	CGSWorkspace windowSpace;
-	ProcessSerialNumber frontPSN;
+	pid_t frontPID;
 } SpaceSwitchingContext;
 
-Boolean CurrentContextForWindowNumber(NSInteger windowNum, SpaceSwitchingContext *ctx);
-Boolean CompareContextsAndSwitch(SpaceSwitchingContext *ctxBefore, SpaceSwitchingContext *ctxAfter);
+extern Boolean CurrentContextForWindowNumber(NSInteger windowNum, SpaceSwitchingContext *ctx);
+extern Boolean CompareContextsAndSwitch(SpaceSwitchingContext *ctxBefore, SpaceSwitchingContext *ctxAfter);
 

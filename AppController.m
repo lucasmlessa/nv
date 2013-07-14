@@ -52,6 +52,7 @@
 #import "nvaDevConfig.h"
 #import <Sparkle/SUUpdater.h>
 #import "NSString_CustomTruncation.h"
+#import "NSApplication+NTVActivationPolicy.h"
 
 #define kSparkleUpdateFeedForLions @"http://abyss.designheresy.com/nvalt/updates.xml"
 //http://abyss.designheresy.com/nvalt/betaupdates.xml
@@ -79,12 +80,10 @@ BOOL splitViewAwoke;
 	if (!self) { return nil; }
 
 	hasLaunched=NO;
-        
-	if (![[NSUserDefaults standardUserDefaults] boolForKey:@"ShowDockIcon"]){
-		ProcessSerialNumber psn = { 0, kCurrentProcess };
-		OSStatus returnCode = TransformProcessType(&psn, kProcessTransformToUIElementApplication);
-		if( returnCode != 0) {
-			NSLog(@"Could not bring the application to front. Error %d", returnCode);
+
+	if (![[NSUserDefaults standardUserDefaults] boolForKey:@"ShowDockIcon"]) {
+		if (![NSApp ntv_setActivationPolicy:NSApplicationActivationPolicyAccessory]) {
+			NSLog(@"Could not bring the application to front");
 		}
 
 		if (![[NSUserDefaults standardUserDefaults] boolForKey:@"StatusBarItem"]) {
@@ -3116,11 +3115,7 @@ void outletObjectAwoke(id sender) {
     }
     
     - (void)showDockIcon{
-		ProcessSerialNumber psn = { 0, kCurrentProcess };
-		OSStatus returnCode = TransformProcessType(&psn, kProcessTransformToForegroundApplication);
-		if( returnCode != 0) {
-			NSLog(@"Could not bring the application to front. Error %d", returnCode);
-		}
+		[NSApp ntv_setActivationPolicy:NSApplicationActivationPolicyRegular];
 
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.16 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 			[self reActivate:self];
@@ -3128,11 +3123,8 @@ void outletObjectAwoke(id sender) {
     }
 
     - (void)hideDockIcon{
-		ProcessSerialNumber psn = { 0, kCurrentProcess };
-		OSStatus returnCode = TransformProcessType(&psn, kProcessTransformToUIElementApplication);
-		if( returnCode != 0) {
-			NSLog(@"Could not bring the application to front. Error %d", returnCode);
-		}
+		[NSApp ntv_setActivationPolicy:NSApplicationActivationPolicyAccessory];
+		
 		if (!statusItem) {
 			[self setUpStatusBarItem];
 		}

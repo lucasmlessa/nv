@@ -15,7 +15,7 @@
      or promote products derived from this software without specific prior written permission.
  */
 
-#include "Spaces.h"
+#import "Spaces.h"
 
 Boolean CurrentContextForWindowNumber(NSInteger windowNum, SpaceSwitchingContext *ctx) {
 	if (!ctx) return false;
@@ -34,16 +34,24 @@ Boolean CurrentContextForWindowNumber(NSInteger windowNum, SpaceSwitchingContext
 		return false;
 	}
 	
-	ProcessSerialNumber frontPSN;
-	OSErr osErr = GetFrontProcess(&frontPSN);
-	if (osErr) {
-		printf("GetFrontProcess error: %d\n", err);
+	NSArray *runningApps = [[NSWorkspace sharedWorkspace] runningApplications];
+	NSUInteger index = [runningApps indexOfObjectPassingTest:^(NSRunningApplication *app, NSUInteger idx, BOOL *stop) {
+		if (app.isActive) {
+			*stop = YES;
+			return YES;
+		}
+		return NO;
+	}];
+	
+	if (index == NSNotFound) {
 		return false;
 	}
 	
+	NSRunningApplication *app = runningApps[index];
+	
 	ctx->userSpace = currentSpace;
 	ctx->windowSpace = windowSpace;
-	ctx->frontPSN = frontPSN;
+	ctx->frontPID = app.processIdentifier;
 	
 	return true;
 }
@@ -69,16 +77,12 @@ Boolean CompareContextsAndSwitch(SpaceSwitchingContext *ctxBefore, SpaceSwitchin
 	if (ctxBefore->windowSpace == ctxAfter->windowSpace && 
 		ctxBefore->windowSpace == ctxAfter->userSpace && 
 		ctxBefore->userSpace != ctxBefore->windowSpace &&
-		(ctxBefore->frontPSN.highLongOfPSN != ctxAfter->frontPSN.highLongOfPSN ||
-		ctxBefore->frontPSN.lowLongOfPSN != ctxAfter->frontPSN.lowLongOfPSN)) {
+		ctxBefore->frontPID != ctxAfter->frontPID) {
 		
-		OSErr err = SetFrontProcess(&ctxBefore->frontPSN);
-		if (err) {
-			printf("SetFrontProcess error: %d\n", err);
-			return false;
-		}
+		NSRunningApplication *app = [NSRunningApplication runningApplicationWithProcessIdentifier:ctxBefore->frontPID];
+		if (!app) return false;
 		
-		return true;
+		return [app activateWithOptions:0];
 	}
 	
 	//conditions not right for switch-back; presumably reverting to normal window-toggling
