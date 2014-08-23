@@ -394,16 +394,17 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 	}
 }
 
-- (BOOL)tableView:(NSTableView *)tv writeRows:(NSArray*)rows toPasteboard:(NSPasteboard*)pboard {
-    NSArray *typesArray = [NSArray arrayWithObject:MovedBookmarksType];
-	
+- (BOOL)tableView:(NSTableView *)tableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard
+{
+	NSArray *typesArray = [NSArray arrayWithObject:MovedBookmarksType];
+
 	[pboard declareTypes:typesArray owner:self];
-    [pboard setPropertyList:rows forType:MovedBookmarksType];
-	
-    return YES;
+	[pboard setData:[NSKeyedArchiver archivedDataWithRootObject:rowIndexes] forType:MovedBookmarksType];
+
+	return YES;
 }
 
-- (NSDragOperation)tableView:(NSTableView*)tv validateDrop:(id <NSDraggingInfo>)info proposedRow:(NSInteger)row
+- (NSDragOperation)tableView:(NSTableView *)tv validateDrop:(id <NSDraggingInfo>)info proposedRow:(NSInteger)row
 	   proposedDropOperation:(NSTableViewDropOperation)op {
     
     NSDragOperation dragOp = ([info draggingSource] == bookmarksTableView) ? NSDragOperationMove : NSDragOperationCopy;
@@ -413,13 +414,13 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
     return dragOp;
 }
 
-- (BOOL)tableView:(NSTableView*)tv acceptDrop:(id <NSDraggingInfo>)info row:(NSInteger)row dropOperation:(NSTableViewDropOperation)op {
+- (BOOL)tableView:(NSTableView *)tv acceptDrop:(id <NSDraggingInfo>)info row:(NSInteger)row dropOperation:(NSTableViewDropOperation)op {
     if (row < 0)
 		row = 0;
     
     if ([info draggingSource] == bookmarksTableView) {
-		NSArray *rows = [[info draggingPasteboard] propertyListForType:MovedBookmarksType];
-		NSInteger theRow = [[rows objectAtIndex:0] intValue];
+		NSIndexSet *indexes = [NSKeyedUnarchiver unarchiveObjectWithData:[[info draggingPasteboard] dataForType:MovedBookmarksType]];
+		NSInteger theRow = [indexes firstIndex];
 		
 		id object = [[bookmarks objectAtIndex:theRow] retain];
 		
