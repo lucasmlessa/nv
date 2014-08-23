@@ -52,7 +52,7 @@
 // what a hack
 extern void outletObjectAwoke(id sender);
 
-@interface AppController : NSObject <NSToolbarDelegate, NSTableViewDelegate, NSWindowDelegate, NSTextFieldDelegate, NSTextViewDelegate>
+@interface AppController : NSObject <NSApplicationDelegate, NSToolbarDelegate, NSTableViewDelegate, NSWindowDelegate, NSTextFieldDelegate, NSTextViewDelegate>
 {
 	IBOutlet NSMenuItem *fsMenuItem;
 	BOOL wasVert;

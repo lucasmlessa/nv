@@ -2293,10 +2293,8 @@ cancelCompetion:
     for (id thing in sViews){
         if ([[thing className] isEqualToString:@"NSButton"]) {
             NSButton *aBut = thing;
-            //            if (![aBut target]==nil) {
             [aBut setTarget:self];
             [aBut setAction:@selector(performFindPanelAction:)];
-            //            }
         }
     }    
     [[textFinder findPanel:YES] update];

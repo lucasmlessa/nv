@@ -148,7 +148,7 @@ BOOL splitViewAwoke;
     // [theFieldEditor setDelegate:self];
     [self updateFieldAttributes];
     
-	[NSApp setDelegate:self];
+	[[NSApplication sharedApplication] setDelegate:self];
 	[window setDelegate:self];
     
     //ElasticThreads>> set up the rbsplitview programatically to remove dependency on IBPlugin
