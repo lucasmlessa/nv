@@ -29,6 +29,7 @@
 #import "NotationPrefs.h"
 #import "NotationController.h"
 #import "NoteObject.h"
+#import <Quartz/Quartz.h>
 
 NSString *PasswordWasRetrievedFromKeychainKey = @"PasswordRetrievedFromKeychain";
 NSString *RetrievedPasswordKey = @"RetrievedPassword";
@@ -141,33 +142,6 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 	[source release];
 	
 	[super dealloc];
-}
-
-+ (NSBundle *)PDFKitBundle {
-	static NSBundle *PDFKitBundle = nil;
-	if (PDFKitBundle == nil) {
-		NSString *PDFKitPath = @"/System/Library/Frameworks/Quartz.framework/Frameworks/PDFKit.framework";
-		if (![[NSFileManager defaultManager] fileExistsAtPath:PDFKitPath]) {
-			NSLog(@"Couldn't find PDFKit.framework");
-			return nil;
-		}
-		PDFKitBundle = [NSBundle bundleWithPath:PDFKitPath];
-		if (![PDFKitBundle load]) {
-			NSLog(@"Couldn't load PDFKit.framework");
-		}
-	}
-	return PDFKitBundle;
-}
-
-+ (Class)PDFDocClass {
-	static Class PDFDocClass = nil;
-	if (PDFDocClass == nil) {
-		PDFDocClass = [[self PDFKitBundle] classNamed:@"PDFDocument"];
-		if (PDFDocClass == nil) {
-			NSLog(@"Couldn't find PDFDocument class in PDFKit.framework");
-		}
-	}
-	return PDFDocClass;
 }
 
 - (NSDictionary*)documentSettings {
@@ -400,24 +374,18 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 	} else if (fileType == PDF_TYPE_ID || [extension isEqualToString:@"pdf"]) {
 		//try PDFKit loading lazily
 		@try {
-			Class PdfDocClass = [[self class] PDFDocClass];
-			if (PdfDocClass != Nil) {
-				id doc = [[PdfDocClass alloc] initWithURL:[NSURL fileURLWithPath:filename]];
-				if (doc) {
-					//this method reliably crashes in 64-bit before 10.6
-					id sel = [doc performSelector:@selector(selectionForEntireDocument)];
-					if (sel) {
-						attributedStringFromData = [[NSMutableAttributedString alloc] initWithAttributedString:[sel attributedString]];
-						//maybe we could check pages and boundsForPage: to try to determine where a line was soft-wrapped in the document?
-					} else {
-						NSLog(@"Couldn't get entire doc selection for PDF");
-					}
-					[doc autorelease];
+			id doc = [[PDFDocument alloc] initWithURL:[NSURL fileURLWithPath:filename]];
+			if (doc) {
+				PDFSelection *sel = [doc selectionForEntireDocument];
+				if (sel) {
+					attributedStringFromData = [[NSMutableAttributedString alloc] initWithAttributedString:[sel attributedString]];
+					//maybe we could check pages and boundsForPage: to try to determine where a line was soft-wrapped in the document?
 				} else {
-					NSLog(@"Couldn't parse data into PDF");
+					NSLog(@"Couldn't get entire doc selection for PDF");
 				}
+				[doc autorelease];
 			} else {
-				NSLog(@"No PDFDocument!");
+				NSLog(@"Couldn't parse data into PDF");
 			}
 		} @catch (NSException *e) {
 			NSLog(@"Error importing PDF %@ (%@, %@)", filename, [e name], [e reason]);

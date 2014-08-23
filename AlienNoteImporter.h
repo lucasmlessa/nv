@@ -49,9 +49,6 @@ extern NSString *RetrievedPasswordKey;
 - (void)importURLInBackground:(NSURL*)aURL linkTitle:(NSString*)linkTitle receptionDelegate:(id)receiver;
 + (NSString*)blorPath;
 
-+ (NSBundle *)PDFKitBundle;
-+ (Class)PDFDocClass;
-
 - (NSView*)accessoryView;
 - (NSDictionary*)documentSettings;
 - (NSArray*)importedNotes;
