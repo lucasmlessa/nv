@@ -1121,7 +1121,7 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 			return;
 		}
 		lastIndexAuthFailed = NO;
-		NSMutableArray *entries = [NSMutableArray arrayWithCapacity:[rawEntries count]];
+		NSMutableArray *addedEntires = [NSMutableArray arrayWithCapacity:[rawEntries count]];
 		NSMutableArray *removedEntries = [NSMutableArray arrayWithCapacity:[rawEntries count]];
 		NSMutableDictionary *entriesDict = [NSMutableDictionary dictionaryWithCapacity:[rawEntries count]];
 
@@ -1141,13 +1141,13 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 			if ([@"-" isEqualToString:rawEntry[@"o"]]) {
 				[removedEntries addObject:entry];
 			} else {
-				[entries addObject:entry];
+				[addedEntires addObject:entry];
 			}
 		}
 
 		[self _updateSyncTime];
-		[delegate syncSession:self receivedPartialNoteList:entries withRemovedList:removedEntries];
-		if ([entries count] || [removedEntries count]) {
+		[delegate syncSession:self receivedPartialNoteList:addedEntires withRemovedList:removedEntries];
+		if ([addedEntires count] || [removedEntries count]) {
 			[changesFetcher autorelease];
 			changesFetcher = nil;
 		}

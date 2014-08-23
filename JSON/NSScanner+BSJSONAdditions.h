@@ -55,7 +55,6 @@ extern const NSInteger jsonDoNotIndent;
 - (BOOL)scanJSONObjectEndString;
 - (BOOL)scanJSONArrayStartString;
 - (BOOL)scanJSONArrayEndString;
-- (BOOL)scanJSONArrayEndString;
 - (BOOL)scanJSONStringDelimiterString;
 
 - (BOOL)scanUnicodeCharacterIntoString:(NSMutableString *)string;
