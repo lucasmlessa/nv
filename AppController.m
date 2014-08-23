@@ -428,7 +428,7 @@ void outletObjectAwoke(id sender) {
 	__block NSString *location = nil;
 
 	NSData *aliasData = [prefsController aliasDataForDefaultDirectory];
-	NSString *subMessage = @"";
+	NSString *subMessage = nil;
 
 	void(^terminateApp)(void) = ^{
 		[newNotation release];
@@ -485,7 +485,7 @@ void outletObjectAwoke(id sender) {
 				NSString *reason = [NSString reasonStringFromCarbonFSError:err];
 
 				if (NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"Unable to initialize notes database in \n%@ because %@.",nil), location, reason],
-									subMessage, NSLocalizedString(@"Choose another folder",nil),NSLocalizedString(@"Quit",nil),NULL) == NSAlertDefaultReturn) {
+									@"%@", NSLocalizedString(@"Choose another folder",nil),NSLocalizedString(@"Quit",nil), nil, subMessage) == NSAlertDefaultReturn) {
 					//show nsopenpanel, defaulting to current default notes dir
 					if (showOpenPanel()) break;
 				} else {
@@ -1028,8 +1028,9 @@ void outletObjectAwoke(id sender) {
 				NSString *oldLocation = [[[NSFileManager defaultManager] pathCopiedFromAliasData:oldData] stringByAbbreviatingWithTildeInPath];
 				NSString *reason = [NSString reasonStringFromCarbonFSError:err];
 				NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"Unable to initialize notes database in \n%@ because %@.",nil), location, reason],
-								[NSString stringWithFormat:NSLocalizedString(@"Reverting to current location of %@.",nil), oldLocation],
-								NSLocalizedString(@"OK",nil), NULL, NULL);
+								NSLocalizedString(@"Reverting to current location of %@.", nil),
+								NSLocalizedString(@"OK",nil), nil, nil,
+								oldLocation);
 			}
 		}
     } else if ([selectorString isEqualToString:SEL_STR(setSortedTableColumnKey:reversed:sender:)]) {
@@ -2126,7 +2127,7 @@ void outletObjectAwoke(id sender) {
 	//need this variable to allow overriding the wait
 	waitedForUncommittedChanges = YES;
 	NSString *errMsg = [[notationController syncSessionController] changeCommittingErrorMessage];
-	if ([errMsg length]) NSRunAlertPanel(NSLocalizedString(@"Changes could not be uploaded.", nil), errMsg, @"Quit", nil, nil);
+	if ([errMsg length]) NSRunAlertPanel(NSLocalizedString(@"Changes could not be uploaded.", nil), @"%@", NSLocalizedString(@"Quit", nil), nil, nil, errMsg);
 	
 	[NSApp terminate:nil];
 }

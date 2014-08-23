@@ -183,7 +183,7 @@
 }
 
 - (NSString*)description {
-	return [NSString stringWithFormat:@"Fetcher(%X, %@)", self, requestURL];
+	return [NSString stringWithFormat:@"Fetcher(%p, %@)", (void *)self, requestURL];
 }
 
 - (void)_fetchDidFinishWithError:(NSString*)anErrString {

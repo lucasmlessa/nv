@@ -431,18 +431,19 @@ ended:
 	
 	if (!foundNotes) {
 		res = NSRunCriticalAlertPanel([NSString stringWithFormat:NSLocalizedString(@"The %@ server reports that no notes exist. Delete all %lu notes in nvALT to match it, or re-upload them now?", nil), serviceTitle, [allNotes count]],
-									  [NSString stringWithFormat:NSLocalizedString(@"If your %@ account is different, you may prefer to create a new database in nvALT instead.", nil), serviceTitle],
-									  [NSString stringWithFormat:NSLocalizedString(@"Turn Off Syncing", nil), serviceTitle], 
+									  NSLocalizedString(@"If your %@ account is different, you may prefer to create a new database in nvALT instead.", nil),
+									  NSLocalizedString(@"Turn Off Syncing", nil),
 									  NSLocalizedString(@"Re-upload Notes", @"dialog button for uploading local notes when none exist remotely"), 
-									  NSLocalizedString(@"Remove All Notes", @"dialog button for deleting all notes when none exist remotely"));
+									  NSLocalizedString(@"Remove All Notes", @"dialog button for deleting all notes when none exist remotely"),
+									  serviceTitle);
 	} else {
 		res = NSRunCriticalAlertPanel([NSString stringWithFormat:NSLocalizedString(@"The %@ server holds a different set of notes. Replace all %lu notes in nvALT with the %lu notes on the server, or merge both sets together?", nil),
 									   serviceTitle, (unsigned long)[allNotes count], (unsigned long)foundNotes],
-									  [NSString stringWithFormat:NSLocalizedString(@"Replacing will remove all %lu notes from nvALT. Merging will upload all notes to %@, omitting duplicates.", nil), 
-									   (unsigned long)[allNotes count], serviceTitle],
-									  [NSString stringWithFormat:NSLocalizedString(@"Turn Off Syncing", nil), serviceTitle], 
+									  NSLocalizedString(@"Replacing will remove all %lu notes from nvALT. Merging will upload all notes to %@, omitting duplicates.", nil),
+									  NSLocalizedString(@"Turn Off Syncing", nil),
 									  NSLocalizedString(@"Merge Notes", @"dialog button for uploading local notes"), 
-									  NSLocalizedString(@"Replace All Notes", @"dialog button for deleting all notes"));
+									  NSLocalizedString(@"Replace All Notes", @"dialog button for deleting all notes"),
+									  (unsigned long)[allNotes count], serviceTitle);
 	}
 	switch (res) {
 		case NSAlertDefaultReturn:

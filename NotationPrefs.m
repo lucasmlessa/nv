@@ -869,8 +869,10 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 			offendingFileConduitName = NSLocalizedString(@"Dropbox", nil);
 		}
 		if (offendingFileConduitName) {
-			NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"<Feedback loop warning title>", nil), offendingFileConduitName, syncServiceTitle], 
-							[NSString stringWithFormat:NSLocalizedString(@"<Feedback loop warning message>", nil), syncServiceTitle], NSLocalizedString(@"OK", nil), nil, nil);
+			NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"<Feedback loop warning title>", nil), offendingFileConduitName, syncServiceTitle],
+							NSLocalizedString(@"<Feedback loop warning message>", nil),
+							NSLocalizedString(@"OK", nil), nil, nil,
+							syncServiceTitle);
 		}
 	}
 }
