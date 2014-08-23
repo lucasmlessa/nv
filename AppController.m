@@ -3097,9 +3097,13 @@ void outletObjectAwoke(id sender) {
                 [modifierTimer release];
             }
             if (popped==1) {
-                [self performSelector:@selector(popWordCount:) withObject:NO afterDelay:0.1];
-            }else if (popped==2) {
-                [self performSelector:@selector(popPreview:) withObject:NO afterDelay:0.1];
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+					[self popWordCount:NO];
+				});
+			}else if (popped==2) {
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+					[self popPreview:NO];
+				});
             }
             popped=0;
         }
@@ -3279,7 +3283,10 @@ void outletObjectAwoke(id sender) {
             enum {NSApplicationActivationPolicyRegular};
             [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
         }
-              [self performSelector:@selector(reActivate:) withObject:self afterDelay:0.16];
+
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.16 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			[self reActivate:self];
+		});
     }
 
     - (void)hideDockIcon{
@@ -3296,8 +3303,10 @@ void outletObjectAwoke(id sender) {
             if (!statusItem) {
                 [self setUpStatusBarItem];
             }
-            
-            [self performSelector:@selector(reActivate:) withObject:self afterDelay:0.36];
+
+			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.36 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+				[self reActivate:self];
+			});
         }else{
 //            NSLog(@"hiding dock incon in snow leopard");
             id fullPath = [[NSBundle mainBundle] executablePath];
@@ -3313,8 +3322,9 @@ void outletObjectAwoke(id sender) {
     }
     
     - (void)hideDockIconAfterDelay{
-        
-        [self performSelector:@selector(hideDockIcon) withObject:nil afterDelay:0.22];
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.22 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+			[self hideDockIcon];
+		});
     }
     
 - (void)setUpStatusBarItem{
