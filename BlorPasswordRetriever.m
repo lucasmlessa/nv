@@ -23,6 +23,7 @@
 #import "AttributedPlainText.h"
 #import "NotationPrefs.h"
 #include "idea_ossl.h"
+#import "NSData+NTVCommonDigest.h"
 
 @implementation BlorPasswordRetriever
 
@@ -63,7 +64,7 @@
 	
 	NSData *passData = [[passphraseField stringValue] dataUsingEncoding:[NSString defaultCStringEncoding] allowLossyConversion:NO];
 	
-	if ([[passData SHA1Digest] isEqualToData:hashData]) {
+	if ([[passData ntv_SHA1Digest] isEqualToData:hashData]) {
 		
 		[NSApp stopModalWithCode:1];
 		[window close];
@@ -100,11 +101,11 @@
 	
 	//try to get PW from keychain. if that fails, request from user
 	NSData *passwordData = [self keychainPasswordData];
-	if (passwordData && [[passwordData SHA1Digest] isEqualToData:hashData]) {
+	if (passwordData && [[passwordData ntv_SHA1Digest] isEqualToData:hashData]) {
 		couldRetrieveFromKeychain = YES;
 		originalPasswordString = [[NSString alloc] initWithData:passwordData encoding:[NSString defaultCStringEncoding]];
 		
-		return [passwordData BrokenMD5Digest];
+		return [passwordData ntv_brokenMD5Digest];
 	}
 	
 	//run dialog and grab PW
@@ -125,12 +126,12 @@
 	NSString *passwordString = [passphraseField stringValue];
 	passwordData = [passwordString dataUsingEncoding:[NSString defaultCStringEncoding] allowLossyConversion:NO];
 	
-	if (result && [[passwordData SHA1Digest] isEqualToData:hashData]) {
+	if (result && [[passwordData ntv_SHA1Digest] isEqualToData:hashData]) {
 		originalPasswordString = [passwordString copy];
 		
 		[passphraseField setStringValue:@""];
 		
-		return [passwordData BrokenMD5Digest];
+		return [passwordData ntv_brokenMD5Digest];
 	}
 	
 	[passphraseField setStringValue:@""];

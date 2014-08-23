@@ -18,11 +18,8 @@
 - (BOOL) isCompressedFormat;
 
 + (NSMutableData *)randomDataOfLength:(int)len;
-- (NSMutableData*)derivedKeyOfLength:(int)len salt:(NSData*)salt iterations:(int)count;
+- (NSData *)derivedKeyOfLength:(int)len salt:(NSData *)salt iterations:(int)count;
 - (unsigned long)CRC32;
-- (NSData*)SHA1Digest;
-- (NSData*)MD5Digest;
-- (NSData*)BrokenMD5Digest;
 
 - (NSString*)pathURLFromWebArchive;
 

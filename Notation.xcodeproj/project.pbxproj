@@ -9,13 +9,10 @@
 /* Begin PBXBuildFile section */
 		210A10690B66720F005BE981 /* BookmarksTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 210A10670B66720F005BE981 /* BookmarksTable.m */; };
 		211344450B354E000081B064 /* idea_ossl.c in Sources */ = {isa = PBXBuildFile; fileRef = 211344440B354E000081B064 /* idea_ossl.c */; };
-		211345AB0B35D8540081B064 /* broken_md5.c in Sources */ = {isa = PBXBuildFile; fileRef = 211345A90B35D8540081B064 /* broken_md5.c */; };
 		2114C11609575BD400614E74 /* AppController.m in Sources */ = {isa = PBXBuildFile; fileRef = 2114C11509575BD400614E74 /* AppController.m */; };
 		2114C13F0957732800614E74 /* NotationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 2114C13E0957732800614E74 /* NotationController.m */; };
 		2114C1460957733200614E74 /* NoteObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 2114C1450957733200614E74 /* NoteObject.m */; };
 		2114C23E095883A600614E74 /* NSData_transformations.m in Sources */ = {isa = PBXBuildFile; fileRef = 2114C23C095883A600614E74 /* NSData_transformations.m */; };
-		2114C2880958CC9100614E74 /* pbkdf2.c in Sources */ = {isa = PBXBuildFile; fileRef = 2114C2870958CC9100614E74 /* pbkdf2.c */; };
-		2114C2A80958D24800614E74 /* hmacsha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 2114C2A70958D24800614E74 /* hmacsha1.c */; };
 		212089B10B0C24F500A15A69 /* AlienNoteImporter.m in Sources */ = {isa = PBXBuildFile; fileRef = 212089B00B0C24F500A15A69 /* AlienNoteImporter.m */; };
 		212089D80B0C2CA500A15A69 /* StickiesDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 212089D70B0C2CA500A15A69 /* StickiesDocument.m */; };
 		2128651E1278AF220013820A /* ServicesMenu.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2128651C1278AF220013820A /* ServicesMenu.strings */; };
@@ -257,6 +254,8 @@
 		DB98BB9F19A90A1800055B14 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 213623E50B92AA4E008C0830 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DB98BBA119A90B1E00055B14 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB98BBA019A90B1E00055B14 /* libz.dylib */; };
 		DB98BBA319A90B2500055B14 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB98BBA219A90B2500055B14 /* libcrypto.dylib */; };
+		DB98BBA919A9110700055B14 /* NSData+NTVCommonDigest.m in Sources */ = {isa = PBXBuildFile; fileRef = DB98BBA819A9110700055B14 /* NSData+NTVCommonDigest.m */; };
+		DB98BBDF19A927C600055B14 /* NTVBrokenMD5.m in Sources */ = {isa = PBXBuildFile; fileRef = DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */; };
 		DBD70D8A19A63C000026F349 /* HelpNotes in Resources */ = {isa = PBXBuildFile; fileRef = DBD70D8819A63C000026F349 /* HelpNotes */; };
 		DBD70E0B19A641F90026F349 /* SaveHTMLPreview.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E0919A641F90026F349 /* SaveHTMLPreview.xib */; };
 		DBD70E1419A6427D0026F349 /* DeletionManager.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E1219A6427D0026F349 /* DeletionManager.xib */; };
@@ -311,8 +310,6 @@
 		2110BADD0B640D2100F5C52E /* BookmarksController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookmarksController.h; sourceTree = "<group>"; };
 		211344430B354E000081B064 /* idea_ossl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = idea_ossl.h; sourceTree = "<group>"; };
 		211344440B354E000081B064 /* idea_ossl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = idea_ossl.c; sourceTree = "<group>"; };
-		211345A90B35D8540081B064 /* broken_md5.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = broken_md5.c; sourceTree = "<group>"; };
-		211345AA0B35D8540081B064 /* broken_md5.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = broken_md5.h; sourceTree = "<group>"; };
 		2114C11409575BD400614E74 /* AppController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = AppController.h; sourceTree = "<group>"; };
 		2114C11509575BD400614E74 /* AppController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppController.m; sourceTree = "<group>"; wrapsLines = 1; };
 		2114C13D0957732800614E74 /* NotationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NotationController.h; sourceTree = "<group>"; };
@@ -321,10 +318,6 @@
 		2114C1450957733200614E74 /* NoteObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NoteObject.m; sourceTree = "<group>"; };
 		2114C23B095883A600614E74 /* NSData_transformations.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = NSData_transformations.h; sourceTree = "<group>"; };
 		2114C23C095883A600614E74 /* NSData_transformations.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = NSData_transformations.m; sourceTree = "<group>"; };
-		2114C2860958CC9100614E74 /* pbkdf2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pbkdf2.h; sourceTree = "<group>"; };
-		2114C2870958CC9100614E74 /* pbkdf2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pbkdf2.c; sourceTree = "<group>"; };
-		2114C2A60958D24800614E74 /* hmacsha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hmacsha1.h; sourceTree = "<group>"; };
-		2114C2A70958D24800614E74 /* hmacsha1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hmacsha1.c; sourceTree = "<group>"; };
 		212089AF0B0C24F500A15A69 /* AlienNoteImporter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AlienNoteImporter.h; sourceTree = "<group>"; };
 		212089B00B0C24F500A15A69 /* AlienNoteImporter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AlienNoteImporter.m; sourceTree = "<group>"; };
 		212089D60B0C2CA500A15A69 /* StickiesDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StickiesDocument.h; sourceTree = "<group>"; };
@@ -652,6 +645,11 @@
 		DB327BE219A6B3C500947BAE /* zh */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh; path = zh.lproj/ServicesMenu.strings; sourceTree = "<group>"; };
 		DB98BBA019A90B1E00055B14 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		DB98BBA219A90B2500055B14 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		DB98BBA719A9110700055B14 /* NSData+NTVCommonDigest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+NTVCommonDigest.h"; sourceTree = "<group>"; };
+		DB98BBA819A9110700055B14 /* NSData+NTVCommonDigest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+NTVCommonDigest.m"; sourceTree = "<group>"; };
+		DB98BBDC19A9276F00055B14 /* NTVMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NTVMacros.h; sourceTree = "<group>"; };
+		DB98BBDD19A927C600055B14 /* NTVBrokenMD5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVBrokenMD5.h; sourceTree = "<group>"; };
+		DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVBrokenMD5.m; sourceTree = "<group>"; };
 		DBD70CE119A638B50026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/ServicesMenu.strings; sourceTree = "<group>"; };
 		DBD70CF219A639200026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DBD70D2319A6395A0026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -911,14 +909,10 @@
 		211345A10B35D8340081B064 /* Crypto */ = {
 			isa = PBXGroup;
 			children = (
-				2114C2860958CC9100614E74 /* pbkdf2.h */,
-				2114C2870958CC9100614E74 /* pbkdf2.c */,
-				2114C2A60958D24800614E74 /* hmacsha1.h */,
-				2114C2A70958D24800614E74 /* hmacsha1.c */,
 				211344430B354E000081B064 /* idea_ossl.h */,
 				211344440B354E000081B064 /* idea_ossl.c */,
-				211345A90B35D8540081B064 /* broken_md5.c */,
-				211345AA0B35D8540081B064 /* broken_md5.h */,
+				DB98BBDD19A927C600055B14 /* NTVBrokenMD5.h */,
+				DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */,
 			);
 			name = Crypto;
 			sourceTree = "<group>";
@@ -1211,6 +1205,7 @@
 				213FAD510B3C6B52004C74BD /* FSExchangeObjectsCompat.h */,
 				213FAD520B3C6B52004C74BD /* FSExchangeObjectsCompat.c */,
 				5C4479DF17020153000AA45A /* nvaDevConfig.h */,
+				DB98BBDC19A9276F00055B14 /* NTVMacros.h */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
@@ -1352,6 +1347,8 @@
 			children = (
 				DB30022019A8FCA800FAE64D /* NSArray+NTVFunctional.h */,
 				DB30022119A8FCA800FAE64D /* NSArray+NTVFunctional.m */,
+				DB98BBA719A9110700055B14 /* NSData+NTVCommonDigest.h */,
+				DB98BBA819A9110700055B14 /* NSData+NTVCommonDigest.m */,
 			);
 			name = Categories;
 			sourceTree = "<group>";
@@ -1569,12 +1566,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
+				DB98BBDF19A927C600055B14 /* NTVBrokenMD5.m in Sources */,
 				2114C11609575BD400614E74 /* AppController.m in Sources */,
 				2114C13F0957732800614E74 /* NotationController.m in Sources */,
 				2114C1460957733200614E74 /* NoteObject.m in Sources */,
 				2114C23E095883A600614E74 /* NSData_transformations.m in Sources */,
-				2114C2880958CC9100614E74 /* pbkdf2.c in Sources */,
-				2114C2A80958D24800614E74 /* hmacsha1.c in Sources */,
 				219588D20961D7F200972B8C /* LinkingEditor.m in Sources */,
 				217D4282096545A000E84749 /* LabelObject.m in Sources */,
 				21A30EA70971D11D0071E9AF /* FastListDataSource.m in Sources */,
@@ -1609,9 +1605,9 @@
 				219FD3160B2CC655004E132B /* LinkingEditor_Indentation.m in Sources */,
 				219FD63E0B309B69004E132B /* BlorPasswordRetriever.m in Sources */,
 				211344450B354E000081B064 /* idea_ossl.c in Sources */,
-				211345AB0B35D8540081B064 /* broken_md5.c in Sources */,
 				21F1CD6D0B3A38DB001FB5F6 /* PTHotKeyCenter.m in Sources */,
 				21F1CD6F0B3A38DB001FB5F6 /* PTKeyBroadcaster.m in Sources */,
+				DB98BBA919A9110700055B14 /* NSData+NTVCommonDigest.m in Sources */,
 				21F1CD710B3A38DB001FB5F6 /* PTKeyComboPanel.m in Sources */,
 				21F1CD980B3A3F77001FB5F6 /* PTHotKey.m in Sources */,
 				21F1CDAD0B3A401F001FB5F6 /* PTKeyCombo.m in Sources */,

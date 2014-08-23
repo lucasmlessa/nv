@@ -18,8 +18,6 @@
 /* NSData_transformations.m */
 
 #import "NSData_transformations.h"
-#include "hmacsha1.h"
-#include "broken_md5.h"
 #import <CommonCrypto/CommonCrypto.h>
 
 #include <unistd.h>
@@ -185,40 +183,6 @@
 	uLong crc = crc32(0L, Z_NULL, 0);
     return crc32(crc, [self bytes], [self length]);
 }
-
-- (NSData*)SHA1Digest {
-	sha1_ctx_nv keyhash;
-	
-	NSMutableData *mutableData = [NSMutableData dataWithLength:20];
-	
-	sha1_init_ctx(&keyhash);
-	sha1_process_bytes([self bytes], [self length], &keyhash);
-	sha1_finish_ctx(&keyhash, [mutableData mutableBytes]);
-	
-	return mutableData;
-}
-
-- (NSData*)BrokenMD5Digest {
-	BrokenMD5_CTX context;
-	NSMutableData *digest = [NSMutableData dataWithLength:16];
-    
-    BrokenMD5Init(&context);
-    BrokenMD5Update(&context, [self bytes], [self length]);
-    BrokenMD5Final([digest mutableBytes], &context);
-	
-	return digest;
-}
-
-- (NSData*)MD5Digest {
-	EVP_MD_CTX mdctx;
-	unsigned char md_value[EVP_MAX_MD_SIZE];
-	unsigned int md_len;
-	EVP_DigestInit(&mdctx, EVP_md5());
-	EVP_DigestUpdate(&mdctx, [self bytes], [self length]);
-	EVP_DigestFinal(&mdctx, md_value, &md_len);
-	return [NSData dataWithBytes: md_value length: md_len];	
-}
-
 
 - (NSString*)pathURLFromWebArchive {
 

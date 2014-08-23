@@ -12,6 +12,7 @@
 
 #if defined(__OBJC__) && __OBJC__
 #import <Cocoa/Cocoa.h>
+#import "NTVMacros.h"
 #endif
 
 #ifndef NSFoundationVersionNumber10_9
@@ -83,4 +84,3 @@ typedef char _COMPILE_ASSERT_SYMBOL(__LINE__, msg) [ ((test) ? 1 : -1) ]
 
 #define NOTES_MENU_ID 89
 #define VIEW_MENU_ID 99
-
