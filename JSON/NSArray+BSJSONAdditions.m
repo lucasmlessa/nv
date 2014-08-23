@@ -47,13 +47,13 @@
 	[jsonString appendString:jsonArrayStartString];
 	
 	if ([self count] > 0) {
-		[jsonString appendString:[BSJSONEncoder jsonStringForValue:[self objectAtIndex:0] withIndentLevel:level]];
+		[jsonString appendString:[BSJSONEncoder jsonStringForValue:self[0] withIndentLevel:level]];
 	}
 	
 	NSUInteger i;
   NSString *encoded;
 	for (i = 1; i < [self count]; i++) {
-    encoded = [BSJSONEncoder jsonStringForValue:[self objectAtIndex:i] withIndentLevel:level];
+    encoded = [BSJSONEncoder jsonStringForValue:self[i] withIndentLevel:level];
 		[jsonString appendFormat:@"%@ %@", jsonValueSeparatorString, encoded];
 	}
 	

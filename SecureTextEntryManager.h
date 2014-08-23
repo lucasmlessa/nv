@@ -21,7 +21,7 @@
 
 extern NSString *ShouldHideSecureTextEntryWarningKey;
 
-@interface SecureTextEntryManager : NSObject {
+@interface SecureTextEntryManager : NSObject<NSCopying>  {
 
 	BOOL _calledSecureEventInput, secureTextEntry;
 }

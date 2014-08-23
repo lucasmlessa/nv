@@ -67,7 +67,7 @@
 		
 		unsigned int i;
 		for (i=0; i<count; i++) {
-			NoteObject *curNote = [deletedNotes objectAtIndex:i];
+			NoteObject *curNote = deletedNotes[i];
 			if (compareFilename(&curNote, &aNote) == kCFCompareEqualTo) {
 				return YES;
 			}
@@ -88,7 +88,7 @@
 		BOOL didAddDeletedNote = NO;
 		unsigned int i;
 		for (i=0; i<[array count]; i++) {
-			NoteObject *aNote = [array objectAtIndex:i];
+			NoteObject *aNote = array[i];
 			if (![self noteFileIsAlreadyDeleted:aNote]) {
 				[deletedNotes addObject:aNote];
 				didAddDeletedNote = YES;
@@ -245,7 +245,7 @@ void updateForVerifiedExistingNote(DeletionManager *self, NoteObject *goodNote) 
 	//force-write the files
 	unsigned int i;
 	for (i=0; i<[deletedNotes count]; i++) {
-		[[deletedNotes objectAtIndex:i] makeNoteDirtyUpdateTime:NO updateFile:YES];
+		[deletedNotes[i] makeNoteDirtyUpdateTime:NO updateFile:YES];
 	}
 	[notationController synchronizeNoteChanges:nil];
 	
@@ -265,7 +265,7 @@ void updateForVerifiedExistingNote(DeletionManager *self, NoteObject *goodNote) 
 }
 
 - (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex {
-	return filenameOfNote((NoteObject *)[deletedNotes objectAtIndex:rowIndex]);
+	return filenameOfNote((NoteObject *)deletedNotes[rowIndex]);
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {

@@ -28,7 +28,7 @@ enum { SingleDatabaseFormat = 0, PlainTextFormat, RTFTextFormat, HTMLFormat, Wor
 
 extern NSString *NotationPrefsDidChangeNotification;
 
-@interface NotationPrefs : NSObject {
+@interface NotationPrefs : NSObject<NSCoding>  {
 	BOOL doesEncryption, storesPasswordInKeychain, secureTextEntry;
 	NSString *keychainDatabaseIdentifier;
 	

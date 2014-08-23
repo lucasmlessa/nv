@@ -147,7 +147,7 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 		[confirmFileDeletionButton setState:[notationPrefs confirmFileDeletion]];
 		
 		[enabledSyncButton setState:[notationPrefs syncServiceIsEnabled:SimplenoteServiceName]];
-		NSString *username = [[notationPrefs syncAccountForServiceName:SimplenoteServiceName] objectForKey:@"username"];
+		NSString *username = [notationPrefs syncAccountForServiceName:SimplenoteServiceName][@"username"];
 		NSString *password = [notationPrefs syncPasswordForServiceName:SimplenoteServiceName];
 		[syncAccountField setStringValue:username ? username : @""];
 		[syncPasswordField setStringValue:password ? password : @""];
@@ -242,9 +242,9 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 		NSString *extension = [notationPrefs pathExtensionAtIndex:rowIndex];
 		
 		if ([notationPrefs indexOfChosenPathExtension] == (unsigned int)rowIndex) {
-			return [[[NSAttributedString alloc] initWithString:extension attributes:
-					[NSDictionary dictionaryWithObjectsAndKeys:
-					 [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]], NSFontAttributeName, nil]] autorelease];
+			return [[[NSAttributedString alloc] initWithString:extension attributes:@{
+				NSFontAttributeName: [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]]
+			}] autorelease];
 		}
 		return extension;
 			
@@ -452,9 +452,13 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 - (void)startLoginVerifier {
 	if (!loginVerifier && [[syncAccountField stringValue] length] && [[syncPasswordField stringValue] length]) {
 		NSURL *loginURL = [SimplenoteSession authURLWithPath:@"/authorize/" parameters:nil];
-		NSDictionary *headers = [NSDictionary dictionaryWithObject:kSimperiumAPIKey forKey:@"X-Simperium-API-Key"];
-		NSDictionary *login = [NSDictionary dictionaryWithObjectsAndKeys:
-							   [syncAccountField stringValue], @"username", [syncPasswordField stringValue], @"password", nil];
+		NSDictionary *headers = @{
+			@"X-Simperium-API-Key": kSimperiumAPIKey
+		};
+		NSDictionary *login = @{
+			@"username": [syncAccountField stringValue],
+			@"password": [syncPasswordField stringValue]
+		};
 
 		loginVerifier = [[SyncResponseFetcher alloc] initWithURL:loginURL POSTData:[[login jsonStringValue] dataUsingEncoding:NSUTF8StringEncoding] headers:headers contentType:@"application/json" delegate:self];
 

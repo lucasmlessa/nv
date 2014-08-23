@@ -18,7 +18,7 @@
 #import <Cocoa/Cocoa.h>
 
 
-@interface DiskUUIDEntry : NSObject {
+@interface DiskUUIDEntry : NSObject<NSCoding>  {
 
 	NSDate *lastAccessed;
 	CFUUIDRef uuidRef;

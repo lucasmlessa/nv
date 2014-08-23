@@ -111,7 +111,7 @@ static ODBEditor	*_sharedODBEditor;
 	 //#warning REVIEW if we created a temporary file for this session should we try to delete it and/or close it in the editor?
 	
 	if (path) {
-		if (nil == [_filePathsBeingEdited objectForKey: path])
+		if (nil == _filePathsBeingEdited[path])
 			NSLog(@"ODBEditor: No active editing session for \"%@\"", path);
 		
 		[_filePathsBeingEdited removeObjectForKey: path];
@@ -131,11 +131,11 @@ static ODBEditor	*_sharedODBEditor;
 	NSDictionary *dictionary = nil;
 	
 	while (nil != (dictionary = [enumerator nextObject])) {
-		id  iterClient = [[dictionary objectForKey: ODBEditorNonRetainedClient] nonretainedObjectValue];
+		id  iterClient = [dictionary[ODBEditorNonRetainedClient] nonretainedObjectValue];
 		
 		if (iterClient == client) {
 			found = YES;
-			[keysToRemove addObject:[dictionary objectForKey: ODBEditorFileName]];
+			[keysToRemove addObject:dictionary[ODBEditorFileName]];
 		}
 	}
 	
@@ -155,7 +155,7 @@ static ODBEditor	*_sharedODBEditor;
 	if ([ed canEditNoteDirectly:aNote]) {
 		NSString *path = [aNote noteFilePath];
 		
-		[[NSWorkspace sharedWorkspace] openURLs:[NSArray arrayWithObject:[NSURL fileURLWithPath:path]] withAppBundleIdentifier:[ed bundleIdentifier] options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifiers:NULL];
+		[[NSWorkspace sharedWorkspace] openURLs:@[[NSURL fileURLWithPath:path]] withAppBundleIdentifier:[ed bundleIdentifier] options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifiers:NULL];
 		return YES;
 	}
 
@@ -179,7 +179,9 @@ static ODBEditor	*_sharedODBEditor;
 		goto beepReturn;
 	}
 	
-	return [self editFile:path inEditor:ed options:[NSDictionary dictionaryWithObject:titleOfNote(aNote) forKey:ODBEditorCustomPathKey] forClient:aNote context:context];
+	return [self editFile:path inEditor:ed options:@{
+		ODBEditorCustomPathKey: titleOfNote(aNote)
+	} forClient:aNote context:context];
 beepReturn:
 	NSBeep();
 	return NO;
@@ -215,12 +217,12 @@ beepReturn:
 	NSString *editorBundleIdentifier = [ed bundleIdentifier];
 	
 	while (nil != (applicationInfo = [enumerator nextObject])) {
-		NSString *bundleIdentifier = [applicationInfo objectForKey: @"NSApplicationBundleIdentifier"];
+		NSString *bundleIdentifier = applicationInfo[@"NSApplicationBundleIdentifier"];
 		
 		if ([bundleIdentifier isEqualToString: editorBundleIdentifier]) {
 			running = YES;
 			// bring the app forward
-			success = [workspace launchApplication: [applicationInfo objectForKey: @"NSApplicationPath"]];
+			success = [workspace launchApplication: applicationInfo[@"NSApplicationPath"]];
 			break;
 		}
 	}
@@ -278,7 +280,7 @@ beepReturn:
 	NSAppleEventDescriptor  *replyDescriptor = nil;
 	NSAppleEventDescriptor  *errorDescriptor = nil;
 	AEDesc reply = {typeNull, NULL};														
-	NSString *customPath = [options objectForKey: ODBEditorCustomPathKey];
+	NSString *customPath = options[ODBEditorCustomPathKey];
 	
 	[self _launchExternalEditor:ed];
 	
@@ -302,13 +304,13 @@ beepReturn:
 			
 			NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
 			
-			[dictionary setObject: [NSValue valueWithNonretainedObject: client] forKey: ODBEditorNonRetainedClient];
+			dictionary[ODBEditorNonRetainedClient] = [NSValue valueWithNonretainedObject: client];
 			if (context != NULL)
-				[dictionary setObject: context forKey: ODBEditorClientContext];
-			[dictionary setObject: path forKey: ODBEditorFileName];
-			[dictionary setObject: [NSNumber numberWithBool: editingStringFlag] forKey: ODBEditorIsEditingString];
+				dictionary[ODBEditorClientContext] = context;
+			dictionary[ODBEditorFileName] = path;
+			dictionary[ODBEditorIsEditingString] = @(editingStringFlag);
 			
-			[_filePathsBeingEdited setObject: dictionary forKey: path];
+			_filePathsBeingEdited[path] = dictionary;
 		}
 	}
 	
@@ -327,13 +329,13 @@ beepReturn:
 	NSDictionary *dictionary = nil;
 	NSError *error = nil;
 	
-	dictionary = [_filePathsBeingEdited objectForKey: path];
+	dictionary = _filePathsBeingEdited[path];
 	
 	if (dictionary != nil)
 	{
-		id  client		= [[dictionary objectForKey: ODBEditorNonRetainedClient] nonretainedObjectValue];
-		id isString		= [dictionary objectForKey: ODBEditorIsEditingString];
-		NSDictionary *context	= [dictionary objectForKey: ODBEditorClientContext];
+		id  client		= [dictionary[ODBEditorNonRetainedClient] nonretainedObjectValue];
+		id isString		= dictionary[ODBEditorIsEditingString];
+		NSDictionary *context	= dictionary[ODBEditorClientContext];
 		
 		if([isString boolValue]) {
 			NSString *stringContents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
@@ -367,12 +369,12 @@ beepReturn:
 	NSDictionary			*dictionary = nil;
 	NSError *error = nil;
 	
-	dictionary = [_filePathsBeingEdited objectForKey: fileName];
+	dictionary = _filePathsBeingEdited[fileName];
 	
 	if (dictionary != nil) {
-		id client		= [[dictionary objectForKey: ODBEditorNonRetainedClient] nonretainedObjectValue];
-		id isString		= [dictionary objectForKey: ODBEditorIsEditingString];
-		NSDictionary *context	= [dictionary objectForKey: ODBEditorClientContext];
+		id client		= [dictionary[ODBEditorNonRetainedClient] nonretainedObjectValue];
+		id isString		= dictionary[ODBEditorIsEditingString];
+		NSDictionary *context	= dictionary[ODBEditorClientContext];
 		
 		if([isString boolValue]) {
 			 NSString	*stringContents = [NSString stringWithContentsOfURL:[NSURL fileURLWithPath:fileName] encoding:NSUTF8StringEncoding error:&error];

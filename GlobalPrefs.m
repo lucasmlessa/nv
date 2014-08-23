@@ -126,57 +126,54 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 	
 	tableColumns = nil;
 	
-	[defaults registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithBool:IsMavericksOrLater], UseFinderTagsKey,
-		[NSNumber numberWithBool:YES], AutoSuggestLinksKey,
-		[NSNumber numberWithBool:YES], AutoFormatsDoneTagKey, 
-		[NSNumber numberWithBool:YES], AutoIndentsNewLinesKey, 
-		[NSNumber numberWithBool:YES], AutoFormatsListBulletsKey,
-		[NSNumber numberWithBool:NO], UseSoftTabsKey,
-		[NSNumber numberWithInteger:4], NumberOfSpacesInTabKey,
-		[NSNumber numberWithBool:YES], PastePreservesStyleKey,
-		[NSNumber numberWithBool:YES], TabKeyIndentsKey,
-		[NSNumber numberWithBool:YES], ConfirmNoteDeletionKey,
-		[NSNumber numberWithBool:YES], CheckSpellingInNoteBodyKey, 
-		[NSNumber numberWithBool:NO], TextReplacementInNoteBodyKey, 
-		[NSNumber numberWithBool:YES], AutoCompleteSearchesKey, 
-		[NSNumber numberWithBool:YES], QuitWhenClosingMainWindowKey, 
-		[NSNumber numberWithBool:NO], TriedToImportBlorKey,
-		[NSNumber numberWithBool:NO], HorizontalLayoutKey,
-		[NSNumber numberWithBool:YES], MakeURLsClickableKey,
-		[NSNumber numberWithBool:YES], HighlightSearchTermsKey, 
-		[NSNumber numberWithBool:YES], TableColumnsHaveBodyPreviewKey, 
-		[NSNumber numberWithDouble:0.0], LastScrollOffsetKey,
-		@"General", LastSelectedPreferencesPaneKey, 
-		[NSNumber numberWithBool:NO], StatusBarItem, 
-		[NSNumber numberWithBool:NO], KeepsMaxTextWidth,
-		[NSNumber numberWithFloat:660.0], NoteBodyMaxWidth,
-		[NSNumber numberWithInt:2], ColorScheme,
-		[NSNumber numberWithBool:YES],ShowDockIcon,
-		[NSNumber numberWithBool:NO], RTLKey,
-		[NSNumber numberWithBool:YES], ShowWordCount,
-		[NSNumber numberWithInt:MultiMarkdownPreview], markupPreviewMode,
-		[NSNumber numberWithBool:NO], UseMarkdownImportKey,
-		[NSNumber numberWithBool:NO], UseReadabilityKey,
-		[NSNumber numberWithBool:YES], ShowGridKey,
-		[NSNumber numberWithBool:NO], AlternatingRowsKey,
-		[NSNumber numberWithBool:NO], UseAutoPairing,
-		[NSNumber numberWithBool:NO], UseETScrollbarsOnLion,
-		[NSNumber numberWithBool:NO], UsesMarkdownCompletions,
-
-		[NSArchiver archivedDataWithRootObject:
-		 [NSFont fontWithName:@"Helvetica" size:12.0f]], NoteBodyFontKey,
-		
-		[NSArchiver archivedDataWithRootObject:[NSColor blackColor]], ForegroundTextColorKey,
-		[NSArchiver archivedDataWithRootObject:[NSColor whiteColor]], BackgroundTextColorKey,
-		
-		[NSArchiver archivedDataWithRootObject:
-		 [NSColor colorWithCalibratedRed:0.945 green:0.702 blue:0.702 alpha:1.0f]], SearchTermHighlightColorKey,
-
-		[NSNumber numberWithFloat:[NSFont smallSystemFontSize]], TableFontSizeKey, 
-		[NSArray arrayWithObjects:NoteTitleColumnString, NoteDateModifiedColumnString, nil], NoteAttributesVisibleKey,
-		NoteDateModifiedColumnString, TableSortColumnKey,
-		[NSNumber numberWithBool:YES], TableIsReverseSortedKey, nil]];
+	[defaults registerDefaults:@{
+		UseFinderTagsKey: @(IsMavericksOrLater),
+		AutoSuggestLinksKey: @YES,
+		AutoFormatsDoneTagKey: @YES, 
+		AutoIndentsNewLinesKey: @YES, 
+		AutoFormatsListBulletsKey: @YES,
+		UseSoftTabsKey: @NO,
+		NumberOfSpacesInTabKey: @4,
+		PastePreservesStyleKey: @YES,
+		TabKeyIndentsKey: @YES,
+		ConfirmNoteDeletionKey: @YES,
+		CheckSpellingInNoteBodyKey: @YES, 
+		TextReplacementInNoteBodyKey: @NO, 
+		AutoCompleteSearchesKey: @YES, 
+		QuitWhenClosingMainWindowKey: @YES, 
+		TriedToImportBlorKey: @NO,
+		HorizontalLayoutKey: @NO,
+		MakeURLsClickableKey: @YES,
+		HighlightSearchTermsKey: @YES, 
+		TableColumnsHaveBodyPreviewKey: @YES, 
+		LastScrollOffsetKey: @0.0,
+		LastSelectedPreferencesPaneKey: @"General", 
+		StatusBarItem: @NO, 
+		KeepsMaxTextWidth: @NO,
+		NoteBodyMaxWidth: @660.0f,
+		ColorScheme: @2,
+		ShowDockIcon: @YES,
+		RTLKey: @NO,
+		ShowWordCount: @YES,
+		markupPreviewMode: @MultiMarkdownPreview,
+		UseMarkdownImportKey: @NO,
+		UseReadabilityKey: @NO,
+		ShowGridKey: @YES,
+		AlternatingRowsKey: @NO,
+		UseAutoPairing: @NO,
+		UseETScrollbarsOnLion: @NO,
+		UsesMarkdownCompletions: @NO,
+		NoteBodyFontKey: [NSArchiver archivedDataWithRootObject:[NSFont fontWithName:@"Helvetica" size:12.0f]],
+		ForegroundTextColorKey: [NSArchiver archivedDataWithRootObject:[NSColor blackColor]],
+		BackgroundTextColorKey: [NSArchiver archivedDataWithRootObject:[NSColor whiteColor]],
+		SearchTermHighlightColorKey: [NSArchiver archivedDataWithRootObject:[NSColor colorWithCalibratedRed:0.945 green:0.702 blue:0.702 alpha:1.0f]],
+		TableFontSizeKey: @([NSFont smallSystemFontSize]),
+		NoteAttributesVisibleKey: @[
+			NoteTitleColumnString, NoteDateModifiedColumnString
+		],
+		TableSortColumnKey: NoteDateModifiedColumnString,
+		TableIsReverseSortedKey: @YES}
+	 ];
 	
 	autoCompleteSearches = [defaults boolForKey:AutoCompleteSearchesKey];
 
@@ -207,10 +204,10 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 		do {
 			NSString *selectorKey = NSStringFromSelector(aSEL);
 			
-			NSMutableArray *senders = [selectorObservers objectForKey:selectorKey];
+			NSMutableArray *senders = selectorObservers[selectorKey];
 			if (!senders) {
 				senders = [[[NSMutableArray alloc] initWithCapacity:1] autorelease];
-				[selectorObservers setObject:senders forKey:selectorKey];
+				selectorObservers[selectorKey] = senders;
 			}
 			[senders addObject:sender];
 //            [senders release];
@@ -229,7 +226,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)unregisterForNotificationsFromSelector:(SEL)selector sender:(id)sender {
 	NSString *selectorKey = NSStringFromSelector(selector);
 	
-	NSMutableArray *senders = [selectorObservers objectForKey:selectorKey];
+	NSMutableArray *senders = selectorObservers[selectorKey];
 	if (senders) {
 		[senders removeObjectIdenticalTo:sender];
 		
@@ -246,12 +243,12 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 	
 	NSString *selectorKey = NSStringFromSelector(selector);
 	
-	if ((observers = [selectorObservers objectForKey:selectorKey])) {
+	if ((observers = selectorObservers[selectorKey])) {
 		unsigned int i;
 		
 		for (i=0; i<[observers count]; i++) {
 			
-			if ((observer = [observers objectAtIndex:i]) != sender && observer)
+			if ((observer = observers[i]) != sender && observer)
 				[observer performSelector:@selector(settingChangedForSelectorString:) withObject:selectorKey];
 		}
 	}
@@ -536,7 +533,9 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 	NSColor *highlightColor = nil;
 	
 	if (!searchTermHighlightAttributes && (highlightColor = [self searchTermHighlightColorRaw:NO])) {
-		searchTermHighlightAttributes = [[NSDictionary dictionaryWithObjectsAndKeys:highlightColor, NSBackgroundColorAttributeName, nil] retain];
+		searchTermHighlightAttributes = [@{
+			NSBackgroundColorAttributeName: highlightColor
+		} retain];
 	}
 	return searchTermHighlightAttributes;
 	
@@ -663,7 +662,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		NSColor *fgColor = [[NSApp delegate] foregrndColor];
 		
 		if (!ColorsEqualWith8BitChannels([NSColor blackColor], fgColor)) {
-			[attrs setObject:fgColor forKey:NSForegroundColorAttributeName];
+			attrs[NSForegroundColorAttributeName] = fgColor;
 		}
 		// background text color is handled directly by the NSTextView subclass and so does not need to be stored here
 		if ([self _bodyFontIsMonospace]) {
@@ -671,14 +670,14 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		//	NSLog(@"notebody att3");
 			NSParagraphStyle *pStyle = [self noteBodyParagraphStyle];
 			if (pStyle)
-				[attrs setObject:pStyle forKey:NSParagraphStyleAttributeName];
+				attrs[NSParagraphStyleAttributeName] = pStyle;
 		}
 		noteBodyAttributes = attrs;
 	}else {
 		NSMutableDictionary *attrs = [[NSMutableDictionary dictionaryWithObjectsAndKeys:bodyFont, NSFontAttributeName, nil] retain];
 		NSColor *fgColor = [[NSApp delegate] foregrndColor];
 		
-		[attrs setObject:fgColor forKey:NSForegroundColorAttributeName];
+		attrs[NSForegroundColorAttributeName] = fgColor;
 		noteBodyAttributes = attrs;
 	}
 
@@ -700,9 +699,10 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		while (numberOfSpaces--) {
 			[sizeString appendString:@" "];
 		}
-		NSDictionary *sizeAttribute = [[NSDictionary alloc] initWithObjectsAndKeys:bodyFont, NSFontAttributeName, nil];
+		NSDictionary *sizeAttribute = @{
+			NSFontAttributeName: bodyFont
+		};
 		float sizeOfTab = [sizeString sizeWithAttributes:sizeAttribute].width;
-		[sizeAttribute release];
 		[sizeString release];
 		
 		noteBodyParagraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];

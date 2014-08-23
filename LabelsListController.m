@@ -87,7 +87,7 @@
 	NSUInteger i, titleLen, j = 0, shortestTitleLen = UINT_MAX;
 	
 	for (i=0; i<[objs count]; i++) {
-		CFStringRef title = (CFStringRef)titleOfLabel((LabelObject*)[objs objectAtIndex:i]);
+		CFStringRef title = (CFStringRef)titleOfLabel((LabelObject*)objs[i]);
 		
 		if (CFStringFindWithOptions(title, prefix, CFRangeMake(0, CFStringGetLength(prefix)), kCFCompareAnchored | kCFCompareCaseInsensitive, NULL)) {
 			
@@ -112,11 +112,13 @@
 	if (!labelImages) labelImages = [[NSMutableDictionary alloc] init];
 	
 	NSString *imgKey = [[aWord lowercaseString] stringByAppendingFormat:@", %d", isHighlighted];
-	NSImage *img = [labelImages objectForKey:imgKey];
+	NSImage *img = labelImages[imgKey];
 	if (!img) {
 		//generate the image and add it to labelImages under imgKey
-		float tableFontSize = [[GlobalPrefs defaultPrefs] tableFontSize] - 1.0;
-		NSDictionary *attrs = [NSDictionary dictionaryWithObject:[NSFont systemFontOfSize:tableFontSize] forKey:NSFontAttributeName];
+		CGFloat tableFontSize = [[GlobalPrefs defaultPrefs] tableFontSize] - 1.0;
+		NSDictionary *attrs = @{
+			NSFontAttributeName: [NSFont systemFontOfSize:tableFontSize]
+		};
 		NSSize wordSize = [aWord sizeWithAttributes:attrs];
 		NSRect wordRect = NSMakeRect(0, 0, roundf(wordSize.width + 4.0), roundf(tableFontSize * 1.3));
 		
@@ -142,7 +144,7 @@
 		
 		[img unlockFocus];
 		
-		[labelImages setObject:[img autorelease] forKey:imgKey];
+		labelImages[imgKey] = [img autorelease];
 	}
 	return img;
 }

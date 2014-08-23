@@ -17,7 +17,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-typedef enum { NoIcon, DownArrowIcon, SynchronizingIcon, AlertIcon } TitleBarButtonIcon;
+typedef NS_ENUM(NSInteger, TitleBarButtonIcon) { NoIcon, DownArrowIcon, SynchronizingIcon, AlertIcon } ;
 
 @interface TitlebarButtonCell : NSPopUpButtonCell {
 	TitleBarButtonIcon iconType;

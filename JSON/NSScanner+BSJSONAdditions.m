@@ -64,7 +64,7 @@ const NSInteger jsonDoNotIndent = -1;
 		id value;
 		[self scanJSONWhiteSpace];
 		while (([self scanJSONString:&key]) && ([self scanJSONKeyValueSeparator]) && ([self scanJSONValue:&value])) {
-			[jsonKeyValues setObject:value forKey:key];
+			jsonKeyValues[key] = value;
 			[self scanJSONWhiteSpace];
 			// check to see if the character at scan location is a value separator. If it is, do nothing.
 			if ([[[self string] substringWithRange:NSMakeRange([self scanLocation], 1)] isEqualToString:jsonValueSeparatorString]) {
@@ -248,11 +248,11 @@ const NSInteger jsonDoNotIndent = -1;
 		result = [self scanJSONArray:value];
 	} else if (scanLocation == trueLocation) {
 		result = YES;
-		*value = [NSNumber numberWithBool:YES];
+		*value = @YES;
 		[self setScanLocation:(scanLocation + jsonTrueString.length)];
 	} else if (scanLocation == falseLocation) {
 		result = YES;
-		*value = [NSNumber numberWithBool:NO];
+		*value = @NO;
 		[self setScanLocation:(scanLocation + jsonFalseString.length)];
 	} else if (scanLocation == nullLocation) {
 		result = YES;

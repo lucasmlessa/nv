@@ -48,7 +48,7 @@
 {
 	if (!path) return nil;
 
-	NSURL *url = [NSURL fileURLWithPath:[NSString stringWithCString:path encoding:NSUTF8StringEncoding]];
+	NSURL *url = [NSURL fileURLWithPath:@(path)];
 	NSArray *existingTags;
 	NSError *error;
 	if (![url getResourceValue:&existingTags forKey:NSURLTagNamesKey error:&error])
@@ -175,7 +175,7 @@
 		return NO;
 	}
 	NSString *textEncStr = [(NSString *)CFStringConvertEncodingToIANACharSetName(cfStringEncoding) stringByAppendingFormat:@";%@", 
-							[[NSNumber numberWithInt:cfStringEncoding] stringValue]];
+							[@(cfStringEncoding) stringValue]];
 	const char *textEncUTF8Str = [textEncStr UTF8String];
 	
 	if (setxattr(path, "com.apple.TextEncoding", textEncUTF8Str, strlen(textEncUTF8Str), 0, 0) < 0) {
@@ -196,17 +196,17 @@
 		if (ENOATTR != errno) NSLog(@"couldn't get text encoding attribute of %s: %d", path, errno);
 		goto errorReturn;
 	}
-	NSString *encodingStr = [NSString stringWithUTF8String:xattrValueBytes];
+	NSString *encodingStr = @(xattrValueBytes);
 	if (!encodingStr) {
 		NSLog(@"couldn't make attribute data from %s into a string", path);
 		goto errorReturn;
 	}
 	NSArray *segs = [encodingStr componentsSeparatedByString:@";"];
 	
-	if ([segs count] >= 2 && [(NSString*)[segs objectAtIndex:1] length] > 1) {
-		return CFStringConvertEncodingToNSStringEncoding([[segs objectAtIndex:1] intValue]);
-	} else if ([(NSString*)[segs objectAtIndex:0] length] > 1) {
-		CFStringEncoding theCFEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef)[segs objectAtIndex:0]);
+	if ([segs count] >= 2 && [(NSString*)segs[1] length] > 1) {
+		return CFStringConvertEncodingToNSStringEncoding([segs[1] intValue]);
+	} else if ([(NSString*)segs[0] length] > 1) {
+		CFStringEncoding theCFEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef)segs[0]);
 		if (theCFEncoding == kCFStringEncodingInvalidId) {
 			NSLog(@"couldn't convert IANA charset");
 			goto errorReturn;
@@ -277,7 +277,7 @@ errorReturn:
         NSLog(@"trouble getting attributes at path:>%@<\ndict:%@",[err description],dict);
     }
     
-    return [NSDictionary dictionary];
+    return @{};
 }
 
 - (NSArray *)folderContentsAtPath:(NSString *)path{

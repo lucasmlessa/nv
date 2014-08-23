@@ -312,7 +312,7 @@ long BlockSizeForNotation(NotationController *controller) {
 	NoteObject *dbNote = nil, *walNote = nil;
 	
 	for (i=0; i<[allNotes count]; i++) {
-		NoteObject *obj = [allNotes objectAtIndex:i];
+		NoteObject *obj = allNotes[i];
 		
 		if (!dbNote && [filenameOfNote(obj) isEqualToString:NotesDatabaseFileName])
 			dbNote = [[obj retain] autorelease];
@@ -436,14 +436,14 @@ terminate:
 		//this ought to just use an nsset, but then we'd have to maintain a parallel data structure for marginal benefit
 		//also, it won't quite work right for filenames with no (real) extensions and periods in their names
 		for (i=0; i<[allNotes count]; i++) {
-			NoteObject *aNote = [allNotes objectAtIndex:i];
+			NoteObject *aNote = allNotes[i];
 			NSString *basefilename = [filenameOfNote(aNote) stringByDeletingPathExtension];
 			
 			if (note != aNote && [basefilename caseInsensitiveCompare:uniqueFilename] == NSOrderedSame) {
 				isUnique = NO;
 				
 				uniqueFilename = [uniqueFilename stringByDeletingPathExtension];
-				NSString *numberPath = [[NSNumber numberWithInt:++iteration] stringValue];
+				NSString *numberPath = [@(++iteration) stringValue];
 				uniqueFilename = [uniqueFilename stringByAppendingPathExtension:numberPath];
 				break;
 			}
@@ -625,7 +625,7 @@ terminate:
     [[NSFileManager defaultManager]createFolderAtPath:sillyDirectory];
 	 NSInteger tag = 0;
 	 [[NSWorkspace sharedWorkspace] performFileOperation:NSWorkspaceRecycleOperation source:NSTemporaryDirectory() destination:@"" 
-												   files:[NSArray arrayWithObject:[sillyDirectory lastPathComponent]] tag:&tag];
+												   files:@[[sillyDirectory lastPathComponent]] tag:&tag];
 }
 
 + (OSStatus)trashFolderRef:(FSRef*)trashRef forChild:(FSRef*)childRef {

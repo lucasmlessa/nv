@@ -244,7 +244,7 @@
 	char *notesData = NULL;
 	OSStatus err = noErr, result = noErr;
 	if ((err = FSRefReadData(notesFileRef, BlockSizeForNotation(self), &fileSize, (void**)&notesData, forceReadMask)) != noErr)
-		return [NSNumber numberWithInt:err];
+		return @(err);
 	
 	FrozenNotation *frozenNotation = nil;
 	if (!fileSize) {
@@ -274,7 +274,7 @@
 	}
 	unsigned int i;
 	for (i=0; i<[notesToVerify count]; i++) {
-		if ([[[notesToVerify objectAtIndex:i] contentString] length] != [[[allNotes objectAtIndex:i] contentString] length]) {
+		if ([[notesToVerify[i] contentString] length] != [[allNotes[i] contentString] length]) {
 			result = kItemVerifyErr;
 			goto returnResult;
 		}
@@ -283,7 +283,7 @@
 	NSLog(@"verified %lu notes in %g s", [notesToVerify count], (float)[[NSDate date] timeIntervalSinceDate:date]);
 returnResult:
 	if (notesData) free(notesData);
-	return [NSNumber numberWithInt:result];
+	return @(result);
 }
 
 
@@ -472,7 +472,7 @@ bail:
 				
 				if (existingNoteIndex != NSNotFound) {
 					
-					NoteObject *existingNote = [allNotes objectAtIndex:existingNoteIndex];
+					NoteObject *existingNote = allNotes[existingNoteIndex];
 					if ([existingNote youngerThanLogObject:obj]) {
 						NSLog(@"got a newer deleted note %@", obj);
 						//except that normally the undomanager doesn't exist by this point			
@@ -492,12 +492,12 @@ bail:
 				}
 			} else if (existingNoteIndex != NSNotFound) {
 				
-				if ([[allNotes objectAtIndex:existingNoteIndex] youngerThanLogObject:obj]) {
+				if ([allNotes[existingNoteIndex] youngerThanLogObject:obj]) {
 					// NSLog(@"replacing old note with new: %@", [[(NoteObject*)obj contentString] string]);
 					
 					[(NoteObject*)obj setDelegate:self];
 					[(NoteObject*)obj updateLabelConnectionsAfterDecoding];
-					[allNotes replaceObjectAtIndex:existingNoteIndex withObject:obj];
+					allNotes[existingNoteIndex] = obj;
 					notesChanged = YES;
 				} else {
 					// NSLog(@"note %@ is not being replaced because its LSN is %u, while the old note's LSN is %u", 
@@ -799,12 +799,12 @@ bail:
 
 	NSUInteger j, i = 0, count = [allNotesAlpha count];
 	for (i=0; i<count - 1; i++) {
-		NoteObject *shorterNote = [allNotesAlpha objectAtIndex:i];
+		NoteObject *shorterNote = allNotesAlpha[i];
 		BOOL isAPrefix = NO;
 		//scan all notes sorted beneath this one for matching prefixes
 		j = i + 1;
 		do {
-			NoteObject *longerNote = [allNotesAlpha objectAtIndex:j];
+			NoteObject *longerNote = allNotesAlpha[j];
 			if ((isAPrefix = noteTitleIsAPrefixOfOtherNoteTitle(longerNote, shorterNote))) {
 				[longerNote addPrefixParentNote:shorterNote];
 			}
@@ -865,7 +865,7 @@ bail:
 	
 	if ([[self undoManager] isUndoing]) [undoManager beginUndoGrouping];
 	for (i=0; i<[noteArray count]; i++) {
-		NoteObject * note = [noteArray objectAtIndex:i];
+		NoteObject * note = noteArray[i];
 		
 		[self _addNote:note];
 		
@@ -894,7 +894,7 @@ bail:
 	
 	if ([[self undoManager] isUndoing]) [undoManager beginUndoGrouping];
 	for (i=0; i<[noteArray count]; i++) {
-		NoteObject * note = [noteArray objectAtIndex:i];
+		NoteObject * note = noteArray[i];
 		
 		[self _addNote:note];
 		
@@ -1140,7 +1140,7 @@ bail:
 	NSUInteger i = 0;
 	NSArray *dnArray = [deletedNotes allObjects];
 	for (i = 0; i<[dnArray count]; i++) {
-		DeletedNoteObject *dnObj = [dnArray objectAtIndex:i];
+		DeletedNoteObject *dnObj = dnArray[i];
 		if (![[dnObj syncServicesMD] count]) {
 			[deletedNotes removeObject:dnObj];
 			notesChanged = YES;
@@ -1241,7 +1241,7 @@ bail:
 
 - (NoteObject*)noteForUUIDBytes:(CFUUIDBytes*)bytes {
 	NSUInteger noteIndex = [allNotes indexOfNoteWithUUIDBytes:bytes];
-	if (noteIndex != NSNotFound) return [allNotes objectAtIndex:noteIndex];
+	if (noteIndex != NSNotFound) return allNotes[noteIndex];
 	return nil;	
 }
 
@@ -1396,7 +1396,7 @@ bail:
 				NSArray *prefixParents = prefixParentsOfNote(notesBuffer[i]);
 				
 				for (j=0; j<[prefixParents count]; j++) {
-					NoteObject *obj = [prefixParents objectAtIndex:j];
+					NoteObject *obj = prefixParents[j];
 					
 					if (noteTitleHasPrefixOfUTF8String(obj, searchString, newLen) &&
 						(prefixParentIndex = [notesListDataSource indexOfObjectIdenticalTo:obj]) != NSNotFound) {
@@ -1430,7 +1430,7 @@ bail:
 	NSUInteger i, titleLen, strLen = strlen(searchString), j = 0, shortestTitleLen = UINT_MAX;
 
 	for (i=0; i<[allNotes count]; i++) {
-		NoteObject *thisNote = [allNotes objectAtIndex:i];
+		NoteObject *thisNote = allNotes[i];
 		if (noteTitleHasPrefixOfUTF8String(thisNote, searchString, strLen)) {
 			[objs addObject:titleOfNote(thisNote)];
 			if (anIndex && (titleLen = CFStringGetLength((CFStringRef)titleOfNote(thisNote))) < shortestTitleLen) {
@@ -1623,7 +1623,7 @@ bail:
     NSString *path = nil;
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     if ([paths count])    {
-        path = [[paths objectAtIndex:0] stringByAppendingPathComponent:[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"]];
+        path = [paths[0] stringByAppendingPathComponent:[[NSBundle mainBundle] infoDictionary][@"CFBundleIdentifier"]];
         NSError *theError=nil;
         if ((path!=nil)&&([[NSFileManager defaultManager]createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:&theError])) {
 //           NSLog(@"cache folder :>%@<",path);

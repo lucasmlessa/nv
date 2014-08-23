@@ -12,12 +12,12 @@
 @class RBSplitView;
 
 // These values are used to inquire about the status of a subview.
-typedef enum {
+typedef NS_ENUM(NSInteger, RBSSubviewStatus) {
 	RBSSubviewExpanding=-2,
 	RBSSubviewCollapsing=-1,
 	RBSSubviewNormal=0,
 	RBSSubviewCollapsed=1
-} RBSSubviewStatus;
+};
 
 @interface RBSplitSubview : NSView {
     // Subclasses normally should use setter methods instead of changing instance variables by assignment.

@@ -46,7 +46,7 @@
         NSInteger theColumn = [self columnAtPoint:theClickPoint];
         NSTableColumn *theTableColumn = nil;
         if (theColumn > -1)
-            theTableColumn = [[[self tableView] tableColumns] objectAtIndex:theColumn];
+            theTableColumn = [[self tableView] tableColumns][theColumn];
         
         NSMenu *theMenu = [[self tableView] performSelector:@selector(menuForColumnConfiguration:) withObject:theTableColumn];
         return theMenu;
@@ -89,10 +89,10 @@
 	NSInteger i;
 	//change all user-resizable-only columns
 	for (i=0; i<[[self tableView] numberOfColumns]; i++) {
-		NoteAttributeColumn *col = [[[self tableView] tableColumns] objectAtIndex:i];
+		NoteAttributeColumn *col = [[self tableView] tableColumns][i];
 		if ((originalResizingMask = [col resizingMask]) == NSTableColumnUserResizingMask) {
 			[col setResizingMask: NSTableColumnAutoresizingMask | NSTableColumnUserResizingMask];
-			[col performSelector:@selector(setResizingMaskNumber:) withObject:[NSNumber numberWithUnsignedInteger:originalResizingMask] afterDelay:0];
+			[col performSelector:@selector(setResizingMaskNumber:) withObject:@(originalResizingMask) afterDelay:0];
 		}
 	}
     

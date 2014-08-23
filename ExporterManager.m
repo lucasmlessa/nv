@@ -82,7 +82,7 @@ void(^exportHandler)(NSInteger) =^(NSInteger returnCode) {
 		
 		for (i=0; i<[notes count]; i++) {
 			BOOL lastNote = i != [notes count] - 1;
-			NoteObject *note = [notes objectAtIndex:i];
+			NoteObject *note = notes[i];
 			
 			OSStatus err = [note exportToDirectoryRef:&directoryRef withFilename:filename usingFormat:storageFormat overwrite:overwriteNotes];
 			

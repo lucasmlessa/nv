@@ -291,7 +291,7 @@ force_inline id unifiedCellSingleLineForNote(NotesTableView *tv, NoteObject *not
 	
 	id obj = note->tableTitleString ? (id)note->tableTitleString : (id)titleOfNote(note);
 	
-	UnifiedCell *cell = [[[tv tableColumns] objectAtIndex:0] dataCellForRow:row];
+	UnifiedCell *cell = [[tv tableColumns][0] dataCellForRow:row];
 	[cell setNoteObject:note];
 	[cell setPreviewIsHidden:YES];
 	
@@ -302,7 +302,7 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 	//snow leopard is stricter about applying the default highlight-attributes (e.g., no shadow unless no paragraph formatting)
 	//so add the shadow here for snow leopard on selected rows
 	
-	UnifiedCell *cell = [[[tv tableColumns] objectAtIndex:0] dataCellForRow:row];
+	UnifiedCell *cell = [[tv tableColumns][0] dataCellForRow:row];
 	[cell setNoteObject:note];
 	[cell setPreviewIsHidden:NO];
 
@@ -701,7 +701,9 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 - (NSAttributedString*)printableStringRelativeToBodyFont:(NSFont*)bodyFont {
 	NSFont *titleFont = [NSFont fontWithName:[bodyFont fontName] size:[bodyFont pointSize] + 6.0f];
 	
-	NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:titleFont, NSFontAttributeName, nil];
+	NSDictionary *dict = @{
+		NSFontAttributeName: titleFont
+	};
 	
 	NSMutableAttributedString *largeAttributedTitleString = [[[NSMutableAttributedString alloc] initWithString:titleString attributes:dict] autorelease];
 	
@@ -1007,7 +1009,7 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 	
 	unsigned int i;
 	for (i=0; i<[words count]; i++) {
-		NSString *aWord = [words objectAtIndex:i];
+		NSString *aWord = words[i];
 		
 		if ([aWord length] > 0) {
 			LabelObject *aLabel = [[LabelObject alloc] initWithTitle:aWord];
@@ -1056,7 +1058,7 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 	NSInteger i;
 	
 	for (i=0; i<(NSInteger)[words count]; i++) {
-		NSString *word = [words objectAtIndex:i];
+		NSString *word = words[i];
 		if ([word length]) {
 			NSImage *img = [[delegate labelsListDataSource] cachedLabelImageForWord:word highlighted:isHighlighted];
 			
@@ -1082,7 +1084,7 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 		if (onRight) {
 			//draw images in reverse instead
 			for (i = [images count] - 1; i>=0; i--) {
-				NSImage *img = [images objectAtIndex:i];
+				NSImage *img = images[i];
 				nextBoxPoint.x -= [img size].width + 4.0;
                 dRect.origin=nextBoxPoint;
                 dRect.size=[img size];
@@ -1105,11 +1107,10 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 	//include all identifying keys in case the title changes later
 	NSUInteger i = 0;
 	for (i=0; i<[svcs count]; i++) {
-		NSString *syncID = [[syncServicesMD objectForKey:[svcs objectAtIndex:i]]
-							objectForKey:[[[SyncSessionController allServiceClasses] objectAtIndex:i] nameOfKeyElement]];
-		if (syncID) [idsDict setObject:syncID forKey:[svcs objectAtIndex:i]];
+		NSString *syncID = syncServicesMD[svcs[i]][[[SyncSessionController allServiceClasses][i] nameOfKeyElement]];
+		if (syncID) idsDict[svcs[i]] = syncID;
 	}
-	[idsDict setObject:[[NSData dataWithBytes:&uniqueNoteIDBytes length:16] encodeBase64WithNewlines:NO] forKey:@"NV"];
+	idsDict[@"NV"] = [[NSData dataWithBytes:&uniqueNoteIDBytes length:16] encodeBase64WithNewlines:NO];
 	
 	return [NSURL URLWithString:[@"nvalt://find/" stringByAppendingFormat:@"%@/?%@", [titleString stringWithPercentEscapes], 
 								 [idsDict URLEncodedString]]];
@@ -1236,9 +1237,9 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 			break;
 		case HTMLFormat:
 			//export to HTML document here using NSHTMLTextDocumentType;
-			formattedData = [contentString dataFromRange:NSMakeRange(0, [contentString length]) 
-									  documentAttributes:[NSDictionary dictionaryWithObject:NSHTMLTextDocumentType 
-																					 forKey:NSDocumentTypeDocumentAttribute] error:&error];
+			formattedData = [contentString dataFromRange:NSMakeRange(0, [contentString length])  documentAttributes:@{
+				NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType
+			} error:&error];
 			//our links will always be to filenames, so hopefully we shouldn't have to change anything
 			break;
 		default:
@@ -1672,17 +1673,17 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 			formattedData = [contentMinusColor RTFFromRange:NSMakeRange(0, [contentMinusColor length]) documentAttributes:nil];
 			break;
 		case HTMLFormat:
-			formattedData = [contentMinusColor dataFromRange:NSMakeRange(0, [contentMinusColor length])
-									  documentAttributes:[NSDictionary dictionaryWithObject:NSHTMLTextDocumentType 
-																					 forKey:NSDocumentTypeDocumentAttribute] error:&error];
+			formattedData = [contentMinusColor dataFromRange:NSMakeRange(0, [contentMinusColor length]) documentAttributes:@{
+				NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType
+			} error:&error];
 			break;
 		case WordDocFormat:
 			formattedData = [contentMinusColor docFormatFromRange:NSMakeRange(0, [contentMinusColor length]) documentAttributes:nil];
 			break;
 		case WordXMLFormat:
-			formattedData = [contentMinusColor dataFromRange:NSMakeRange(0, [contentMinusColor length]) 
-									  documentAttributes:[NSDictionary dictionaryWithObject:NSWordMLTextDocumentType 
-																					 forKey:NSDocumentTypeDocumentAttribute] error:&error];
+			formattedData = [contentMinusColor dataFromRange:NSMakeRange(0, [contentMinusColor length]) documentAttributes:@{
+				NSDocumentTypeDocumentAttribute: NSWordMLTextDocumentType
+			} error:&error];
 			break;
 		default:
 			NSLog(@"Attempted to export using unknown format ID: %d", storageFormat);
@@ -1780,7 +1781,7 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 	NSString *haystack = [contentString string];
 	NSRange nextRange = NSMakeRange(NSNotFound, 0);
 	for (i=0; i<[words count]; i++) {
-		NSString *word = [words objectAtIndex:i];
+		NSString *word = words[i];
 		if ([word length] > 0) {
 			nextRange = [haystack rangeOfString:word options:opts range:inRange];
 			if (nextRange.location != NSNotFound && nextRange.length)

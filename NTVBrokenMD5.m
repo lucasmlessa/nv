@@ -21,7 +21,7 @@ NTV_ALWAYS_INLINE CC_LONG F4(CC_LONG x, CC_LONG y, CC_LONG z) {
 	return y ^ (x | ~z);
 }
 
-typedef enum {
+typedef NS_ENUM(CC_LONG, S) {
 	S11 =  7,
 	S12 = 12,
 	S13 = 17,
@@ -38,7 +38,7 @@ typedef enum {
 	S42 = 10,
 	S43 = 15,
 	S44 = 21,
-} S;
+};
 
 NTV_ALWAYS_INLINE CC_LONG rotate_left(CC_LONG x, S n) {
 	return (x << n) | (x >> (32-n));

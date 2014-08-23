@@ -10,13 +10,13 @@
 #import "RBSplitSubview.h"
 
 // These values are used to handle the various cursor types.
-typedef enum {
-	RBSVHorizontalCursor=0,		// appears over horizontal dividers
+typedef NS_ENUM(NSInteger, RBSVCursorType) {
+	RBSVHorizontalCursor,		// appears over horizontal dividers
 	RBSVVerticalCursor,			// appears over vertical dividers
 	RBSV2WayCursor,				// appears over two-way thumbs
 	RBSVDragCursor,				// appears while dragging
 	RBSVCursorTypeCount
-} RBSVCursorType;
+};
 
 @interface RBSplitView : RBSplitSubview {
     // Subclasses normally should use setter methods instead of changing instance variables by assignment.

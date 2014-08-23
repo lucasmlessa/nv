@@ -133,9 +133,9 @@ NSAttributedString *AttributedStringForSelection(NSAttributedString *str) {
 	NSMutableDictionary *baseAttrs = [self baseTextAttributes];
 	BOOL isActive = ([tv selectionHighlightStyle] == NSTableViewSelectionHighlightStyleSourceList) ? YES : [tv isActiveStyle];
 	
-	NSColor *textColor = ([self isHighlighted] && isActive) ? [NSColor whiteColor] : (![self isHighlighted] ? [[self class] dateColorForTint]/*[NSColor grayColor]*/ : nil);
+	NSColor *textColor = ([self isHighlighted] && isActive) ? [NSColor whiteColor] : (![self isHighlighted] ? [[self class] dateColorForTint] : nil);
 	if (textColor)
-		[baseAttrs setObject:textColor forKey:NSForegroundColorAttributeName];
+		baseAttrs[NSForegroundColorAttributeName] = textColor;
 
 	float fontHeight = [tv tableFontHeight];
 	
@@ -174,8 +174,9 @@ NSAttributedString *AttributedStringForSelection(NSAttributedString *str) {
 	if ([tv currentEditor] && [self isHighlighted]) {
 		//needed because the body text is normally not drawn while editing
 		NSMutableAttributedString *cloneStr = [[self attributedStringValue] mutableCopy];
-		[cloneStr addAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[self font], NSFontAttributeName, textColor, 
-								 NSForegroundColorAttributeName, nil] range:NSMakeRange(0, [cloneStr length])];
+		NSRange range = NSMakeRange(0, [cloneStr length]);
+		[cloneStr addAttribute:NSFontAttributeName value:[self font] range:range];
+		if (textColor) [cloneStr addAttribute:NSForegroundColorAttributeName value:textColor range:range];
 		[cloneStr addAttributes:LineTruncAttributesForTitle() range:NSMakeRange(0, [titleOfNote(noteObject) length])];
 		
 		[cloneStr drawWithRect:NSInsetRect([self titleRectForBounds:cellFrame], 2., 0.) options: NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];

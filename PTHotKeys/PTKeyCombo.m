@@ -37,10 +37,10 @@
 {
 	int keyCode, modifiers;
 		
-	keyCode = [[plist objectForKey: @"keyCode"] intValue];
+	keyCode = [plist[@"keyCode"] intValue];
 	if( keyCode <= 0 ) keyCode = -1;
 
-	modifiers = [[plist objectForKey: @"modifiers"] intValue];
+	modifiers = [plist[@"modifiers"] intValue];
 	if( modifiers <= 0 ) modifiers = -1;
 
 	return (self = [self initWithKeyCode: keyCode modifiers: modifiers]);
@@ -48,10 +48,10 @@
 
 - (id)plistRepresentation
 {
-	return [NSDictionary dictionaryWithObjectsAndKeys:
-				[NSNumber numberWithInt: [self keyCode]], @"keyCode",
-				[NSNumber numberWithInt: [self modifiers]], @"modifiers",
-				nil];
+	return @{
+		@"keyCode": @([self keyCode]),
+		@"modifiers": @([self modifiers])
+	};
 }
 
 - (id)copyWithZone:(NSZone*)zone
@@ -149,7 +149,7 @@
 	
 	dict = [self _keyCodesDictionary];
 	key = [NSString stringWithFormat: @"%d", keyCode];
-	str = [dict objectForKey: key];
+	str = dict[key];
 	
 	if( !str )
 		str = [NSString stringWithFormat: @"%X", keyCode];

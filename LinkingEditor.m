@@ -159,7 +159,7 @@ CGFloat _perceptualDarkness(NSColor*a);
 	
 	[self setTypingAttributes:[prefsController noteBodyAttributes]];
 	
-	[self performSelector:@selector(_fixCursorForBackgroundUpdatingMouseInside:) withObject:[NSNumber numberWithBool:YES] afterDelay:0.0];
+	[self performSelector:@selector(_fixCursorForBackgroundUpdatingMouseInside:) withObject:@YES afterDelay:0.0];
 	
 	return [super becomeFirstResponder];
 }
@@ -171,7 +171,7 @@ CGFloat _perceptualDarkness(NSColor*a);
 - (BOOL)resignFirstResponder {
 	[notesTableView setShouldUseSecondaryHighlightColor:NO];
 	
-	[self performSelector:@selector(_fixCursorForBackgroundUpdatingMouseInside:) withObject:[NSNumber numberWithBool:YES] afterDelay:0.0];
+	[self performSelector:@selector(_fixCursorForBackgroundUpdatingMouseInside:) withObject:@YES afterDelay:0.0];
 	
 	return [super resignFirstResponder];
 }
@@ -205,8 +205,9 @@ CGFloat _perceptualDarkness(NSColor*a);
     
 	[self setInsertionPointColor:[self _insertionPointColorForForegroundColor:fgColor backgroundColor:bgColor]];
 	[self setLinkTextAttributes:[self preferredLinkAttributes]];
-	[self setSelectedTextAttributes:[NSDictionary dictionaryWithObject:[self _selectionColorForForegroundColor:fgColor backgroundColor:bgColor] 
-																forKey:NSBackgroundColorAttributeName]];
+	[self setSelectedTextAttributes:@{
+		NSBackgroundColorAttributeName: [self _selectionColorForForegroundColor:fgColor backgroundColor:bgColor]
+	}];
 	[self setTypingAttributes:[prefsController noteBodyAttributes]];
     [[self enclosingScrollView]setNeedsDisplay:YES];
 //    [[[self enclosingScrollView]contentView]setNeedsDisplay:YES];
@@ -307,21 +308,13 @@ CGFloat _perceptualColorDifference(NSColor*a, NSColor*b) {
 
 - (NSDictionary*)preferredLinkAttributes {
 	if (![prefsController URLsAreClickable])
-		return [NSDictionary dictionary];
+		return @{};
 	
-	return [NSDictionary dictionaryWithObjectsAndKeys:
-			[NSCursor pointingHandCursor], NSCursorAttributeName,
-			[NSNumber numberWithInt:NSUnderlineStyleSingle], NSUnderlineStyleAttributeName,
-			[self _linkColorForForegroundColor:[[NSApp delegate] foregrndColor] backgroundColor:[[NSApp delegate] backgrndColor]],
-			NSForegroundColorAttributeName, nil];
-	
-	/*
-	 return [NSDictionary dictionaryWithObjectsAndKeys:
-	 [NSCursor pointingHandCursor], NSCursorAttributeName,
-	 [NSNumber numberWithInt:NSUnderlineStyleSingle], NSUnderlineStyleAttributeName,
-	 [self _linkColorForForegroundColor:[prefsController foregroundTextColor] backgroundColor:[prefsController backgroundTextColor]],
-	 NSForegroundColorAttributeName, nil];
-	 */
+	return @{
+		NSCursorAttributeName: [NSCursor pointingHandCursor],
+		NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle),
+		NSForegroundColorAttributeName: [self _linkColorForForegroundColor:[[NSApp delegate] foregrndColor] backgroundColor:[[NSApp delegate] backgrndColor]]
+	};
 }
 
 /*
@@ -506,7 +499,7 @@ copyRTFType:
 - (void)strikethroughNV:(id)sender {
 
 	[self applyStyleOfTrait:0 alternateAttributeName:NSStrikethroughStyleAttributeName 
-	alternateAttributeValue:[NSNumber numberWithInt:NSUnderlineStyleSingle]];
+	alternateAttributeValue:@(NSUnderlineStyleSingle)];
 	
 	[[self undoManager] setActionName:NSLocalizedString(@"Strikethrough",nil)];
 }
@@ -521,7 +514,7 @@ copyRTFType:
         [self changeMarkdownAttribute:@"**"];
     }else{
         [self applyStyleOfTrait:NSBoldFontMask alternateAttributeName:NSStrokeWidthAttributeName 
-        alternateAttributeValue:[NSNumber numberWithFloat:(float)STROKE_WIDTH_FOR_BOLD]];
+        alternateAttributeValue:@((float)STROKE_WIDTH_FOR_BOLD)];
         [[self undoManager] setActionName:NSLocalizedString(@"Bold",nil)];
 	}
 }
@@ -531,7 +524,7 @@ copyRTFType:
         [self changeMarkdownAttribute:@"*"];
     }else{
         [self applyStyleOfTrait:NSItalicFontMask alternateAttributeName:NSObliquenessAttributeName 
-        alternateAttributeValue:[NSNumber numberWithFloat:(float)OBLIQUENESS_FOR_ITALIC]];
+        alternateAttributeValue:@((float)OBLIQUENESS_FOR_ITALIC)];
         
         [[self undoManager] setActionName:NSLocalizedString(@"Italic",nil)];
     }
@@ -558,7 +551,7 @@ copyRTFType:
 				attributes = [[text attributesAtIndex:limitRange.location longestEffectiveRange:&effectiveRange 
 											  inRange:limitRange] mutableCopyWithZone:nil];
 				if (!attributes) attributes = [[prefsController noteBodyAttributes] mutableCopyWithZone:nil];
-				font = [attributes objectForKey:NSFontAttributeName];
+				font = attributes[NSFontAttributeName];
 				
 				[attributes applyStyleInverted:hasTrait trait:trait forFont:font alternateAttributeName:attrName alternateAttributeValue:value];
 				[text setAttributes:attributes range:effectiveRange];
@@ -572,7 +565,7 @@ copyRTFType:
 	} else {
 		attributes = [[self typingAttributes] mutableCopyWithZone:nil];
 		if (!attributes) attributes = [[prefsController noteBodyAttributes] mutableCopyWithZone:nil];
-		font = [attributes objectForKey:NSFontAttributeName];
+		font = attributes[NSFontAttributeName];
 		
 		hasTrait = [attributes attributesHaveFontTrait:trait orAttribute:attrName];
 		[attributes applyStyleInverted:hasTrait trait:trait forFont:font alternateAttributeName:attrName alternateAttributeValue:value];
@@ -1092,7 +1085,7 @@ copyRTFType:
 
 //hiding or showing the view does not always produce mouseEntered/Exited events
 - (void)viewDidUnhide {
-	[self performSelector:@selector(_fixCursorForBackgroundUpdatingMouseInside:) withObject:[NSNumber numberWithBool:YES] afterDelay:0.0];
+	[self performSelector:@selector(_fixCursorForBackgroundUpdatingMouseInside:) withObject:@YES afterDelay:0.0];
 
 	[super viewDidUnhide];
 }
@@ -1393,25 +1386,25 @@ cancelCompetion:
 		//this check helps prevent NSTextView from being repeatedly punched in the face when it can't help it
 		
 		NSFont *currentFont = [prefsController noteBodyFont];
-		if (![[[[self typingAttributes] objectForKey:NSFontAttributeName] familyName] isEqualToString:[currentFont familyName]]) {
+		if (![[[self typingAttributes][NSFontAttributeName] familyName] isEqualToString:[currentFont familyName]]) {
 			//if someone managed to mangle the font--possibly with characters not present in it due to alt. text encoding--so mangle it back
 			
 			NSMutableDictionary *newTypingAttributes = [[self typingAttributes] mutableCopy];
-			[newTypingAttributes setObject:currentFont forKey:NSFontAttributeName];
+			newTypingAttributes[NSFontAttributeName] = currentFont;
 			//NSLog(@"mangling font 'back' to normal");
 			
 			if ([[self typingAttributes] attributesHaveFontTrait:NSBoldFontMask orAttribute:NSStrokeWidthAttributeName]) {
 				[newTypingAttributes applyStyleInverted:NO trait:NSBoldFontMask forFont:currentFont 
 								 alternateAttributeName:NSStrokeWidthAttributeName 
-								alternateAttributeValue:[NSNumber numberWithFloat:STROKE_WIDTH_FOR_BOLD]];
+								alternateAttributeValue:@(STROKE_WIDTH_FOR_BOLD)];
 				
-				currentFont = [newTypingAttributes objectForKey:NSFontAttributeName];
+				currentFont = newTypingAttributes[NSFontAttributeName];
 			}
 			
 			if ([[self typingAttributes] attributesHaveFontTrait:NSItalicFontMask orAttribute:NSObliquenessAttributeName]) {
 				[newTypingAttributes applyStyleInverted:NO trait:NSItalicFontMask forFont:currentFont 
 								 alternateAttributeName:NSObliquenessAttributeName 
-								alternateAttributeValue:[NSNumber numberWithFloat:OBLIQUENESS_FOR_ITALIC]];	
+								alternateAttributeValue:@(OBLIQUENESS_FOR_ITALIC)];
 			}
 			[self setTypingAttributes:newTypingAttributes];
             [newTypingAttributes release];
@@ -1524,9 +1517,9 @@ cancelCompetion:
                 [self replaceCharactersInRange:previousLineRange withString:previousLineWhitespaceString];
                 if (carriedBulletRange.length>0) {
                     if (!isNumberedList) {
-                        [[self layoutManager] addTemporaryAttributes:[NSDictionary dictionaryWithObject:[NSNull null] forKey:NVHiddenBulletIndentAttributeName]
-                                                   forCharacterRange:carriedBulletRange];
-                        //[[self layoutManager] addTemporaryAttributes:[prefsController searchTermHighlightAttributes] forCharacterRange:carriedBulletRange];
+                        [[self layoutManager] addTemporaryAttributes:@{
+							NVHiddenBulletIndentAttributeName: [NSNull null]
+						} forCharacterRange:carriedBulletRange];
                     }else{
                         [[self layoutManager]invalidateDisplayForCharacterRange:previousLineRange];
                         [[self window] resetCursorRects];
@@ -1640,7 +1633,7 @@ cancelCompetion:
 
 		NSPasteboardItem *pbitem = [[[NSPasteboardItem alloc] init] autorelease];
 		[pbitem setData:[password dataUsingEncoding:NSUTF8StringEncoding] forType:(NSString *)kUTTypePlainText];
-		[pb writeObjects:[NSArray arrayWithObject:pbitem]];
+		[pb writeObjects:@[pbitem]];
 	} @catch (NSException *e) {}
 }
 
@@ -2364,7 +2357,7 @@ cancelCompetion:
              if ([typedString length] > 0 && ![lastImportedFindString isEqualToString:typedString]) {
                  
                  NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
-                 [pasteboard declareTypes:[NSArray arrayWithObject:pbType] owner:nil];
+                 [pasteboard declareTypes:@[pbType] owner:nil];
                  [pasteboard setString:typedString forType:pbType];
                  [lastImportedFindString release];
                  lastImportedFindString = [typedString retain];
@@ -2444,7 +2437,7 @@ cancelCompetion:
 
 - (BOOL)clipboardHasLink{      
     NSPasteboard *pasteboard =  [NSPasteboard generalPasteboard]; 
-    NSString *type = [pasteboard availableTypeFromArray: [NSArray arrayWithObjects: NSPasteboardTypeString,NSURLPboardType, nil]];
+    NSString *type = [pasteboard availableTypeFromArray: @[NSPasteboardTypeString,NSURLPboardType]];
     if (type) {
         NSString *pString=[[pasteboard stringForType:type] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];       
         NSURL *pUrl=[NSURL URLWithString:pString];
@@ -2466,7 +2459,7 @@ cancelCompetion:
     NSPredicate *bifoRefPred=[NSPredicate predicateWithFormat:@"SELF LIKE[cd] %@ OR SELF LIKE[cd] %@",@"*[*]",@"*[*]("];
     if((![bifoRefPred evaluateWithObject:bifoString])&&((![aftaString hasPrefix:@"]"])&&(![bifoString hasSuffix:@"["]))&&((![aftaString hasPrefix:@"\""])&&(![bifoString hasSuffix:@"\""]))&&((![aftaString hasPrefix:@">"])&&(![bifoString hasSuffix:@"<"]))&&((![aftaString hasPrefix:@"'"])&&(![bifoString hasSuffix:@"'"]))&&((![aftaString hasPrefix:@")"])&&(![bifoString hasSuffix:@"("]))){ 
         NSPasteboard *pasteboard =  [NSPasteboard generalPasteboard]; 
-        NSString *type = [pasteboard availableTypeFromArray: [NSArray arrayWithObjects: NSPasteboardTypeString,NSURLPboardType, nil]];
+        NSString *type = [pasteboard availableTypeFromArray: @[NSPasteboardTypeString,NSURLPboardType]];
         if (type) {
             NSString *pString=[[pasteboard stringForType:type] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];       
             NSURL *pUrl=[NSURL URLWithString:pString];

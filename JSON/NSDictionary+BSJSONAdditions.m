@@ -51,7 +51,7 @@
   	NSEnumerator *enumerator = [self keyEnumerator];
 	NSString *keyString = nil;
 	while ((keyString = [enumerator nextObject])) {
-		NSString *valueString = [BSJSONEncoder jsonStringForValue:[self objectForKey:keyString] withIndentLevel:level];
+		NSString *valueString = [BSJSONEncoder jsonStringForValue:self[keyString] withIndentLevel:level];
 		if (!first) {
 			[jsonString appendString:jsonValueSeparatorString];
 		}

@@ -39,7 +39,7 @@
     NSMutableString* result = [NSMutableString string];
     for (NSString* key in dict)
     {
-        [result appendFormat:@"--%@\nContent-Disposition: form-data; name=\"%@\"\n\n%@\n",[NSString MIMEBoundary],key,[dict objectForKey:key]];
+        [result appendFormat:@"--%@\nContent-Disposition: form-data; name=\"%@\"\n\n%@\n",[NSString MIMEBoundary],key,dict[key]];
     }
     [result appendFormat:@"\n--%@--\n",[NSString MIMEBoundary]];
     return result;
@@ -54,8 +54,9 @@
 
 +(void)initialize
 {
-  NSDictionary *appDefaults = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO]
-                                                          forKey:kDefaultMarkupPreviewVisible];
+	NSDictionary *appDefaults = @{
+		kDefaultMarkupPreviewVisible: @NO
+	};
 
   [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
   /* Initialize webInspector. */
@@ -214,7 +215,7 @@
 // Above webView methods from <http://stackoverflow.com/questions/2288582/embedded-webkit-script-callbacks-how/2293305#2293305>
 
 - (void)webView:(WebView *)sender decidePolicyForNavigationAction:(NSDictionary *)actionInformation request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener {
-    if (![[actionInformation objectForKey:@"WebActionNavigationTypeKey"] isEqualToNumber:[NSNumber numberWithInt:5]]) {
+    if (![actionInformation[@"WebActionNavigationTypeKey"] isEqualToNumber:@5]) {
 		[[NSWorkspace sharedWorkspace] openURL:[request URL]];
 		[listener ignore];
 	} else {
@@ -224,7 +225,7 @@
 
 - (void)webView:(WebView *)sender decidePolicyForNewWindowAction:(NSDictionary *)actionInformation request:(NSURLRequest *)request newFrameName:(NSString *)frameName decisionListener:(id<WebPolicyDecisionListener>)listener {
 	NSLog(@"NEW WIN ACTION SENDER: %@",sender);
-    [[NSWorkspace sharedWorkspace] openURL:[actionInformation objectForKey:WebActionOriginalURLKey]];
+    [[NSWorkspace sharedWorkspace] openURL:actionInformation[WebActionOriginalURLKey]];
     [listener ignore];
 }
 
@@ -283,13 +284,13 @@
     }
 
     // save visibility to defaults
-    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:[wnd isVisible]]
+    [[NSUserDefaults standardUserDefaults] setObject:@([wnd isVisible])
                                               forKey:kDefaultMarkupPreviewVisible];
 }
 
 -(void)windowWillClose:(NSNotification *)notification
 {
-	[[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:NO]
+	[[NSUserDefaults standardUserDefaults] setObject:@NO
                                               forKey:kDefaultMarkupPreviewVisible];
 	NSMenu *previewMenu = [[[NSApp mainMenu] itemWithTitle:@"Preview"] submenu];
 	[[previewMenu itemWithTitle:@"Toggle Preview Window"]setState:0];
@@ -481,11 +482,11 @@
   [request setHTTPMethod:@"POST"];
   [request addValue:@"8bit" forHTTPHeaderField:@"Content-Transfer-Encoding"];
   [request addValue: [NSString stringWithFormat:@"multipart/form-data; boundary=%@",[NSString MIMEBoundary]] forHTTPHeaderField: @"Content-Type"];
-  NSDictionary* postData = [NSDictionary dictionaryWithObjectsAndKeys:
-                            @"8c4205ec33d8f6caeaaaa0c10a14138c", @"key",
-                            noteTitle, @"title",
-                            processedString, @"body",
-                            nil];
+	NSDictionary* postData = @{
+		@"key": @"8c4205ec33d8f6caeaaaa0c10a14138c",
+		@"title": noteTitle,
+		@"body": processedString
+	};
   [request setHTTPBody: [[NSString multipartMIMEStringWithDictionary: postData] dataUsingEncoding: NSUTF8StringEncoding]];
 	NSHTTPURLResponse * response = nil;
 	NSError * error = nil;
@@ -680,7 +681,7 @@
 		[viewOnWebButton setHidden:YES];
 	} else {
 		NSPasteboard *pb = [NSPasteboard generalPasteboard];
-		NSArray *types = [NSArray arrayWithObjects:NSStringPboardType, nil];
+		NSArray *types = @[NSStringPboardType];
 		[pb declareTypes:types owner:self];
 		[pb setString:shareURL forType:NSStringPboardType];
 		[urlTextField setHidden:NO];

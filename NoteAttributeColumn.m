@@ -36,9 +36,11 @@
 
 + (NSDictionary*)standardDictionary {
 	static NSDictionary *standardDictionary = nil;
-	if (!standardDictionary)
-		standardDictionary = [[NSDictionary dictionaryWithObjectsAndKeys:
-			[NSFont systemFontOfSize:[NSFont smallSystemFontSize]], NSFontAttributeName, nil] retain];	
+	if (!standardDictionary) {
+		standardDictionary = [@{
+			NSFontAttributeName: [NSFont systemFontOfSize:[NSFont smallSystemFontSize]]
+		} retain];
+	}
 
 	return standardDictionary;
 }

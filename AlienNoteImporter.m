@@ -62,8 +62,8 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		NSArray *noteArray = [importer importedNotes];
 		if ([noteArray count] > 0) {
 			NSLog(@"importing BLOR");
-			NSData *passData = [[[importer documentSettings] objectForKey:RetrievedPasswordKey] dataUsingEncoding:NSUTF8StringEncoding];
-			BOOL shouldStoreInKeychain = [[[importer documentSettings] objectForKey:PasswordWasRetrievedFromKeychainKey] boolValue];
+			NSData *passData = [[importer documentSettings][RetrievedPasswordKey] dataUsingEncoding:NSUTF8StringEncoding];
+			BOOL shouldStoreInKeychain = [[importer documentSettings][PasswordWasRetrievedFromKeychainKey] boolValue];
 			[prefs setPassphraseData:passData inKeychain:shouldStoreInKeychain];
 			[prefs setDoesEncryption:YES];
 			
@@ -88,7 +88,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 
 + (NSString*)blorPath {
 	NSDictionary *oldDict = [[NSUserDefaults standardUserDefaults] persistentDomainForName:@"com.scrod.notationalvelocity"];
-	NSString *blorPath = [oldDict objectForKey:@"DatabaseLocation"];
+	NSString *blorPath = oldDict[@"DatabaseLocation"];
 	if (!blorPath) {
 		NSLog(@"Couldn't read old defaults--reverting to default location in prefs directory");
 		blorPath = [NSString stringWithFormat:@"%@/Library/Preferences/%@", NSHomeDirectory(), @"NotationalDatabase.blor"];
@@ -126,7 +126,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 	NSDictionary *pathAttributes = [[NSFileManager defaultManager]attributesAtPath:filename followLink:YES];
 //			NSDictionary *pathAttributes = [[NSFileManager defaultManager] fileAttributesAtPath:filename traverseLink:YES];
 	if ([[filename pathExtension] caseInsensitiveCompare:@"rtfd"] != NSOrderedSame &&
-		[[pathAttributes objectForKey:NSFileType] isEqualToString:NSFileTypeDirectory]) {
+		[pathAttributes[NSFileType] isEqualToString:NSFileTypeDirectory]) {
 		
 		importerSelector = @selector(notesInDirectory:);
 	} else {
@@ -234,7 +234,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
                 [[NSUserDefaults standardUserDefaults] setBool:shouldGrabCreationDates forKey:ShouldImportCreationDates];
                 NSArray *filePaths=[[openPanel URLs]valueForKey:@"path"];
                 
-                NSArray *notes=[NSArray array];
+                NSArray *notes=@[];
                 if (filePaths&&[filePaths count]>0) {
                     notes = [self notesWithPaths:filePaths];
                 }
@@ -291,7 +291,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 				NoteObject *noteObject = [[NoteObject alloc] initWithNoteBody:newString title:[getter userData] ? [getter userData] : urlString
 																	 delegate:nil format:SingleDatabaseFormat labels:nil];
 				
-				[receptionDelegate noteImporter:self importedNotes:[NSArray arrayWithObject:noteObject]];
+				[receptionDelegate noteImporter:self importedNotes:@[noteObject]];
 				[noteObject autorelease];
 			}
 		}			
@@ -327,12 +327,12 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		NSFileManager *fileMan = [NSFileManager defaultManager];
 		unsigned int i;
 		for (i=0; i<[paths count]; i++) {
-			NSString *path = [paths objectAtIndex:i];
+			NSString *path = paths[i];
 			NSArray *notes = nil;
 			 NSDictionary *pathAttributes = [fileMan attributesAtPath:path followLink:YES];
 //			NSDictionary *pathAttributes = [fileMan fileAttributesAtPath:path traverseLink:YES];
 			if ([[path pathExtension] caseInsensitiveCompare:@"rtfd"] != NSOrderedSame &&
-				[[pathAttributes objectForKey:NSFileType] isEqualToString:NSFileTypeDirectory]) {
+				[pathAttributes[NSFileType] isEqualToString:NSFileTypeDirectory]) {
 				notes = [self notesInDirectory:path];
 			} else {
 				notes = [self notesInFile:path];
@@ -357,7 +357,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 	NSString *extension = [[filename pathExtension] lowercaseString];
 	NSDictionary *attributes = [[NSFileManager defaultManager]attributesAtPath:filename followLink:YES];
     //[[NSFileManager defaultManager] fileAttributesAtPath:filename traverseLink:YES];
-	unsigned long fileType = [[attributes objectForKey:NSFileHFSTypeCode] unsignedLongValue];
+	unsigned long fileType = [attributes[NSFileHFSTypeCode] unsignedLongValue];
 	NSString *sourceIdentifierString = nil;
 	
 	NSMutableAttributedString *attributedStringFromData = nil;
@@ -381,7 +381,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		
 	} else if (fileType == RTFD_TYPE_ID || [extension isEqualToString:@"rtfd"]) {
 		NSFileWrapper *wrapper = [[[NSFileWrapper alloc] initWithPath:filename] autorelease];
-		if ([[attributes objectForKey:NSFileType] isEqualToString:NSFileTypeDirectory])
+		if ([attributes[NSFileType] isEqualToString:NSFileTypeDirectory])
 			attributedStringFromData = [[NSMutableAttributedString alloc] initWithRTFDFileWrapper:wrapper documentAttributes:NULL];
 		else
 			attributedStringFromData = [[NSMutableAttributedString alloc] initWithRTFD:[NSData uncachedDataFromFile:filename] documentAttributes:NULL];
@@ -469,9 +469,9 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		if (noteObject) {
 			if (bodyLoc > 0 && [attributedStringFromData length] >= bodyLoc + prefixedSourceLength) [noteObject setSelectedRange:NSMakeRange(prefixedSourceLength, bodyLoc)];
 			if (shouldGrabCreationDates) {
-				[noteObject setDateAdded:CFDateGetAbsoluteTime((CFDateRef)[attributes objectForKey:NSFileCreationDate])];
+				[noteObject setDateAdded:CFDateGetAbsoluteTime((CFDateRef)attributes[NSFileCreationDate])];
 			}
-			[noteObject setDateModified:CFDateGetAbsoluteTime((CFDateRef)[attributes objectForKey:NSFileModificationDate])];
+			[noteObject setDateModified:CFDateGetAbsoluteTime((CFDateRef)attributes[NSFileModificationDate])];
 			
 			return [noteObject autorelease];
 		} else {
@@ -500,7 +500,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		
 		NSString *itemPath = [filename stringByAppendingPathComponent:curObject];
 
-		if ([[[fileMan attributesAtPath:itemPath followLink:YES] objectForKey:NSFileType] isEqualToString:NSFileTypeRegular]) {
+		if ([[fileMan attributesAtPath:itemPath followLink:YES][NSFileType] isEqualToString:NSFileTypeRegular]) {
 			NSArray *notes = [self notesInFile:itemPath];
 			if (notes)
 				[array addObjectsFromArray:notes];
@@ -525,7 +525,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 	} else {
 		NoteObject *note = [self noteWithFile:filename];
 		if (note)
-			return [NSArray arrayWithObject:note];
+			return @[note];
 	}
 	return nil;
 }
@@ -540,7 +540,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
     [task setLaunchPath: readabilityPath];
 	
 	NSArray *arguments;
-    arguments = [NSArray arrayWithObjects: htmlFile, nil];
+    arguments = @[htmlFile];
     [task setArguments: arguments];
 	
 	NSPipe *rpipe;
@@ -572,7 +572,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
     [task setLaunchPath: readabilityPath];
 	
 	NSArray *arguments;
-    arguments = [NSArray arrayWithObjects: htmlFile, nil];
+    arguments = @[htmlFile];
     [task setArguments: arguments];
 	
 	NSPipe *rpipe;
@@ -668,7 +668,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		
 		unsigned int i;
 		for (i=0; i<[stickyNotes count]; i++) {
-			StickiesDocument *doc = [stickyNotes objectAtIndex:i];
+			StickiesDocument *doc = stickyNotes[i];
 			if ([doc isKindOfClass:[StickiesDocument class]]) {
 				NSMutableAttributedString *attributedString = [[[NSMutableAttributedString alloc] initWithRTFD:[doc RTFDData] documentAttributes:NULL] autorelease];
 				[attributedString removeAttachments];
@@ -709,14 +709,13 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		return nil;
 	}
 	
-	[documentSettings setObject:[NSNumber numberWithBool:[retriever canRetrieveFromKeychain]]
-						 forKey:PasswordWasRetrievedFromKeychainKey];
-	[documentSettings setObject:[retriever originalPasswordString] forKey:RetrievedPasswordKey];
+	documentSettings[PasswordWasRetrievedFromKeychainKey] = @([retriever canRetrieveFromKeychain]);
+	documentSettings[RetrievedPasswordKey] = [retriever originalPasswordString];
 	
     NSDictionary *dbAttrs = [[NSFileManager defaultManager]attributesAtPath:filename followLink:YES];
     //[[NSFileManager defaultManager] fileAttributesAtPath:filename traverseLink:YES];
-	NSDate *creationDate = [dbAttrs objectForKey:NSFileCreationDate];
-	NSDate *modificationDate = [dbAttrs objectForKey:NSFileModificationDate];
+	NSDate *creationDate = dbAttrs[NSFileCreationDate];
+	NSDate *modificationDate = dbAttrs[NSFileModificationDate];
 	
 	CFAbsoluteTime creationTime = CFAbsoluteTimeGetCurrent();
 	CFAbsoluteTime modificationTime = creationTime;
@@ -781,7 +780,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
             NSMutableString *s = [NSMutableString string];
             NSUInteger i;
             for (i = 1; i < count; ++i) {
-                NSString *entry = [fields objectAtIndex:i];
+                NSString *entry = fields[i];
                 if ([entry length] > 0)
                     [s appendString:[NSString stringWithFormat:@"%@\n", entry]];
             }
@@ -789,7 +788,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
             if (0 == [s length])
                 continue;
             
-            NSString *title = [fields objectAtIndex:0];
+            NSString *title = fields[0];
 			NSMutableAttributedString *attributedBody = [[[NSMutableAttributedString alloc] initWithString:s attributes:[[GlobalPrefs defaultPrefs] noteBodyAttributes]] autorelease];
 			[attributedBody addLinkAttributesForRange:NSMakeRange(0, [attributedBody length])];
 			[attributedBody addStrikethroughNearDoneTagsForRange:NSMakeRange(0, [attributedBody length])];

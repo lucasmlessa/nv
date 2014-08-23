@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 
 
-typedef enum { DarkMenuIcon, SelectedMenuIcon } StatusIconType;
+typedef NS_ENUM(NSInteger, StatusIconType) { DarkMenuIcon, SelectedMenuIcon } ;
 
 @interface StatusItemView : NSView {
 //    BOOL clicked;

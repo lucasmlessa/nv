@@ -100,13 +100,17 @@ static NSMutableParagraphStyle *LineBreakingStyle() {
 
 static NSDictionary *GrayTextAttributes() {
 	static NSDictionary *grayTextAttributes = nil;
-	if (!grayTextAttributes) grayTextAttributes = [[NSDictionary dictionaryWithObjectsAndKeys:[NSColor grayColor], NSForegroundColorAttributeName, nil] retain];
+	if (!grayTextAttributes) grayTextAttributes = [@{
+		NSForegroundColorAttributeName: [NSColor grayColor]
+	} retain];
 	return grayTextAttributes;
 }
 
 static NSDictionary *LineTruncAttributes() {
 	static NSDictionary *lineTruncAttributes = nil;
-	if (!lineTruncAttributes) lineTruncAttributes = [[NSDictionary dictionaryWithObjectsAndKeys:LineBreakingStyle(), NSParagraphStyleAttributeName, nil] retain];
+	if (!lineTruncAttributes) lineTruncAttributes = [@{
+		NSParagraphStyleAttributeName: LineBreakingStyle()
+	} retain];
 	return lineTruncAttributes;
 }
 
@@ -130,7 +134,7 @@ NSDictionary *LineTruncAttributesForTitle() {
             if (dateTest&&(dateTest.length>8)) {
                 multiplier=-6.1;
             }
-			[[titleTruncAttrs objectForKey:NSParagraphStyleAttributeName] setTailIndent: fontSize * multiplier]; //avg of -55 for ~11-12 font size
+			[titleTruncAttrs[NSParagraphStyleAttributeName] setTailIndent: fontSize * multiplier]; //avg of -55 for ~11-12 font size
 		}
 	}
 	return titleTruncAttrs;
@@ -169,14 +173,16 @@ static size_t EstimatedCharCountForWidth(float upToWidth) {
 	//title is black (no added colors) and truncated with LineTruncAttributesForTitle()
 	//body is gray and truncated with a variable tail indent, depending on intruding tags
 	
-	NSDictionary *bodyTruncDict = [NSDictionary dictionaryWithObjectsAndKeys:[[LineBreakingStyle() mutableCopy] autorelease], 
-								   NSParagraphStyleAttributeName, [NSColor grayColor], NSForegroundColorAttributeName, nil];
+	NSDictionary *bodyTruncDict = @{
+		NSParagraphStyleAttributeName: [[LineBreakingStyle() mutableCopy] autorelease],
+		NSForegroundColorAttributeName: [NSColor grayColor]
+	};
 	//set word-wrapping to let -[NSCell setTruncatesLastVisibleLine:] work
-	[[bodyTruncDict objectForKey:NSParagraphStyleAttributeName] setLineBreakMode:NSLineBreakByWordWrapping];
+	[bodyTruncDict[NSParagraphStyleAttributeName] setLineBreakMode:NSLineBreakByWordWrapping];
 	
 	if (intWidth > 0.0) {
 		//there are tags; add an appropriately-sized tail indent to the body
-		[[bodyTruncDict objectForKey:NSParagraphStyleAttributeName] setTailIndent:-intWidth];
+		[bodyTruncDict[NSParagraphStyleAttributeName] setTailIndent:-intWidth];
 	}
 	
 	[attributedStringPreview addAttributes:LineTruncAttributesForTitle() range:NSMakeRange(0, [self length])];
