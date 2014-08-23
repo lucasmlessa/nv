@@ -468,7 +468,7 @@
 
 -(IBAction)shareNote:(id)sender
 {
-  AppController *app = [NSApp delegate];
+	AppController *app = NTVAppDelegate();
 	NSString *noteTitle = [NSString stringWithFormat:@"%@",titleOfNote([app selectedNoteObject])];
   NSString *rawString = [app noteContent];
   SEL mode = [self markupProcessorSelector:[app currentPreviewMode]];
@@ -527,7 +527,7 @@
 - (void)savePanelDidEnd:(NSSavePanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo {
 	if (returnCode == NSFileHandlingPanelOKButton) {
 
-		AppController *app = [[NSApplication sharedApplication] delegate];
+		AppController *app = NTVAppDelegate();
 		NSString *rawString = [app noteContent];
 		NSString *processedString = [[[NSString alloc] init] autorelease];
 
@@ -555,7 +555,7 @@
 
 	}
 	// TODO high coupling; too many assumptions on architecture:
-	AppController *app = [NSApp delegate];
+	AppController *app = NTVAppDelegate();
 
 	NSSavePanel *savePanel = [NSSavePanel savePanel];
 	[savePanel setAccessoryView:accessoryView];

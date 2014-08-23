@@ -9,6 +9,10 @@
 #ifndef NTV_MACROS
 #define NTV_MACROS
 
+#import <Foundation/Foundation.h>
+
+@class AppController;
+
 #if !defined(NTV_ALWAYS_INLINE)
     #if defined(__GNUC__)
         #define NTV_ALWAYS_INLINE static __inline__ __attribute__((always_inline))
@@ -20,5 +24,9 @@
         #define NTV_ALWAYS_INLINE static __inline__
     #endif
 #endif
+
+NTV_ALWAYS_INLINE AppController *NTVAppDelegate(void) {
+	return (AppController *)[NSApp delegate];
+}
 
 #endif /* !NTV_MACROS */
