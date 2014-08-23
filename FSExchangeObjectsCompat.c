@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <sys/mount.h>
 
-__private_extern__ u_int32_t volumeCapabilities(const char *path)
+u_int32_t volumeCapabilities(const char *path)
 {
     struct attrlist alist;
     bzero(&alist, sizeof(alist));

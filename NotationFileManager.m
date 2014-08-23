@@ -28,6 +28,7 @@
 
 #import <Foundation/Foundation.h>
 #include <openssl/md5.h>
+#import "FSExchangeObjectsCompat.h"
 
 NSString *NotesDatabaseFileName = @"Notes & Settings";
 

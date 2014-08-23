@@ -51,6 +51,7 @@
 #import "NSFileManager+DirectoryLocations.h"
 #import "nvaDevConfig.h"
 #import <Sparkle/SUUpdater.h>
+#import "NSString_CustomTruncation.h"
 
 #define kSparkleUpdateFeedForLions @"http://abyss.designheresy.com/nvalt/updates.xml"
 #define kSparkleUpdateFeedForSnowLeopard @"http://abyss.designheresy.com/nvalt2/nvalt2snowleopardfeed.xml"

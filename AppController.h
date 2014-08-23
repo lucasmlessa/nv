@@ -49,6 +49,9 @@
 #define TextilePreview 13373
 #endif
 
+// what a hack
+extern void outletObjectAwoke(id sender);
+
 @interface AppController : NSObject <NSToolbarDelegate, NSTableViewDelegate, NSWindowDelegate, NSTextFieldDelegate, NSTextViewDelegate>
 {
 	IBOutlet NSMenuItem *fsMenuItem;

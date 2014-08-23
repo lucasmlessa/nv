@@ -11,7 +11,7 @@
 
 
 #import "EmptyView.h"
-//#import "AppController.h"
+#import "AppController.h"
 
 @implementation EmptyView
 
@@ -25,12 +25,8 @@
 }
 
 - (void)awakeFromNib {
+	[super awakeFromNib];
 	outletObjectAwoke(self);
-	/*
-	if (!bgCol) {
-		bgCol = [[[NSApp delegate] backgrndColor] retain];
-	}*/
-
 }
 
 - (void)mouseDown:(NSEvent*)anEvent {

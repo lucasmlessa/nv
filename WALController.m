@@ -493,10 +493,15 @@
     return object;
 }
 
+
 static CFStringRef SynchronizedNoteKeyDescription(const void *value) {
 
 	return value ? (CFStringRef)[NSString uuidStringWithBytes:*(CFUUIDBytes*)value] : NULL;
 }
+
+// TODO replace
+extern CFHashCode CFHashBytes(const uint8_t *, CFIndex);
+
 static CFHashCode SynchronizedNoteHash(const void * o) {
 	
 	return CFHashBytes(o, sizeof(CFUUIDBytes));
