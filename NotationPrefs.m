@@ -175,8 +175,8 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	[coder encodeInteger:notesStorageFormat forKey:VAR_STR(notesStorageFormat)];
 	[coder encodeBool:doesEncryption forKey:VAR_STR(doesEncryption)];
 	[coder encodeBool:storesPasswordInKeychain forKey:VAR_STR(storesPasswordInKeychain)];
-	[coder encodeInt:hashIterationCount forKey:VAR_STR(hashIterationCount)];
-	[coder encodeInt:keyLengthInBits forKey:VAR_STR(keyLengthInBits)];
+	[coder encodeInteger:hashIterationCount forKey:VAR_STR(hashIterationCount)];
+	[coder encodeInt64:keyLengthInBits forKey:VAR_STR(keyLengthInBits)];
 	[coder encodeBool:secureTextEntry forKey:VAR_STR(secureTextEntry)];
 	
 	[coder encodeBool:confirmFileDeletion forKey:VAR_STR(confirmFileDeletion)];
@@ -187,7 +187,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	for (i=0; i<4; i++) {	
 		[coder encodeObject:typeStrings[i] forKey:[VAR_STR(typeStrings) stringByAppendingFormat:@".%d",i]];
 		[coder encodeObject:pathExtensions[i] forKey:[VAR_STR(pathExtensions) stringByAppendingFormat:@".%d",i]];
-		[coder encodeInt:chosenExtIndices[i] forKey:[VAR_STR(chosenExtIndices) stringByAppendingFormat:@".%d",i]];
+		[coder encodeInteger:chosenExtIndices[i] forKey:[VAR_STR(chosenExtIndices) stringByAppendingFormat:@".%d",i]];
 	}
 	
 	[coder encodeObject:[self syncServiceAccountsForArchiving] forKey:VAR_STR(syncServiceAccounts)];
@@ -309,8 +309,8 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	const char *kcSyncAccountName = [self keychainSyncAccountNameForService:serviceName];
 	if (!kcSyncAccountName) return nil;
 	
-	OSStatus err = SecKeychainFindGenericPassword(NULL, strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
-												  strlen(kcSyncAccountName), kcSyncAccountName, &passwordLength, &passwordData, &returnedItem);
+	OSStatus err = SecKeychainFindGenericPassword(NULL, (UInt32)strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
+												  (UInt32)strlen(kcSyncAccountName), kcSyncAccountName, &passwordLength, &passwordData, &returnedItem);
 	if (err != noErr) {
 		NSLog(@"Error finding keychain password for service account %@: %d\n", serviceName, err);
 		return nil;
@@ -356,11 +356,11 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	return [[self syncAccountForServiceName:serviceName][@"enabled"] boolValue];
 }
 
-- (unsigned int)keyLengthInBits {
+- (size_t)keyLengthInBits {
     return keyLengthInBits;
 }
 
-- (unsigned int)hashIterationCount {
+- (NSInteger)hashIterationCount {
 	return hashIterationCount;
 }
 
@@ -424,8 +424,8 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	
 	const char *accountName = [self setKeychainIdentifier];
 	
-	OSStatus err = SecKeychainFindGenericPassword(NULL, strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
-											 strlen(accountName), accountName, NULL, NULL, &returnedItem);
+	OSStatus err = SecKeychainFindGenericPassword(NULL, (UInt32)strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
+											 (UInt32)strlen(accountName), accountName, NULL, NULL, &returnedItem);
 	if (err != noErr)
 		return NULL;
 	
@@ -449,8 +449,8 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	SecKeychainItemRef returnedItem = NULL;	
 	
 	OSStatus err = SecKeychainFindGenericPassword(NULL,
-												  strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
-												  strlen(accountName), accountName,
+												  (UInt32)strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
+												  (UInt32)strlen(accountName), accountName,
 												  &passwordLength, &passwordData,
 												  &returnedItem);
 	if (err != noErr) {
@@ -477,12 +477,12 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 		const char *accountName = [self setKeychainIdentifier];
 		
 		SecKeychainAttribute attrs[] = {
-		{ kSecAccountItemAttr, strlen(accountName), (char*)accountName },
-		{ kSecServiceItemAttr, strlen(KEYCHAIN_SERVICENAME), (char*)KEYCHAIN_SERVICENAME } };
+		{ kSecAccountItemAttr, (UInt32)strlen(accountName), (char*)accountName },
+		{ kSecServiceItemAttr, (UInt32)strlen(KEYCHAIN_SERVICENAME), (char*)KEYCHAIN_SERVICENAME } };
 		
 		const SecKeychainAttributeList attributes = { sizeof(attrs) / sizeof(attrs[0]), attrs };
 		
-		if (noErr != (status = SecKeychainItemModifyAttributesAndData(itemRef, &attributes, [data length], [data bytes]))) {
+		if (noErr != (status = SecKeychainItemModifyAttributesAndData(itemRef, &attributes, (UInt32)[data length], [data bytes]))) {
 			NSLog(@"Error modifying keychain data with new passphrase-data: %d", status);
 		}
 		
@@ -492,8 +492,8 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 		const char *accountName = [self setKeychainIdentifier];
 		
 		//add new data; item does not exist
-		if (noErr != (status = SecKeychainAddGenericPassword(NULL, strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
-															 strlen(accountName), accountName, [data length], [data bytes], NULL))) {
+		if (noErr != (status = SecKeychainAddGenericPassword(NULL, (UInt32)strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
+															 (UInt32)strlen(accountName), accountName, (UInt32)[data length], [data bytes], NULL))) {
 			NSLog(@"Error adding new passphrase item to keychain: %d", status);
 		}
 	}
@@ -509,7 +509,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 
 - (BOOL)canLoadPassphraseData:(NSData*)passData {
 	
-	int keyLength = keyLengthInBits/8;
+	size_t keyLength = keyLengthInBits/8;
 	
 	//compute master key given stored salt and # of iterations
 	NSData *computedMasterKey = [passData derivedKeyOfLength:keyLength salt:masterSalt iterations:hashIterationCount];
@@ -558,10 +558,10 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	[self setPassphraseData:passData inKeychain:inKeychain withIterations:hashIterationCount];
 }
 
-- (void)setPassphraseData:(NSData*)passData inKeychain:(BOOL)inKeychain withIterations:(int)iterationCount {
-	
+- (void)setPassphraseData:(NSData*)passData inKeychain:(BOOL)inKeychain withIterations:(NSInteger)iterationCount {
+
 	hashIterationCount = iterationCount;
-	int keyLength = keyLengthInBits/8;
+	size_t keyLength = keyLengthInBits/8;
 	
 	//generate and set random salt
 	[masterSalt release];
@@ -767,19 +767,19 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 		if (kcSyncAccountName) {
 			//insert this password into the keychain for this service
 			SecKeychainItemRef itemRef = NULL;
-			if (SecKeychainFindGenericPassword(NULL, strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME, strlen(kcSyncAccountName), kcSyncAccountName, NULL, NULL, &itemRef) != noErr) {
+			if (SecKeychainFindGenericPassword(NULL, strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME, (UInt32)strlen(kcSyncAccountName), kcSyncAccountName, NULL, NULL, &itemRef) != noErr) {
 				itemRef = NULL;
 			}
 			if (itemRef) {
 				//modify existing data; item already exists
 				SecKeychainAttribute attrs[] = {
-					{ kSecAccountItemAttr, strlen(kcSyncAccountName), (char*)kcSyncAccountName },
-					{ kSecServiceItemAttr, strlen(KEYCHAIN_SERVICENAME), (char*)KEYCHAIN_SERVICENAME } };
+					{ kSecAccountItemAttr, (UInt32)strlen(kcSyncAccountName), (char*)kcSyncAccountName },
+					{ kSecServiceItemAttr, (UInt32)strlen(KEYCHAIN_SERVICENAME), (char*)KEYCHAIN_SERVICENAME } };
 				
 				const SecKeychainAttributeList attributes = { sizeof(attrs) / sizeof(attrs[0]), attrs };
 				
 				OSStatus status = noErr;
-				if (noErr != (status = SecKeychainItemModifyAttributesAndData(itemRef, &attributes, [passwordData length], [passwordData bytes]))) {
+				if (noErr != (status = SecKeychainItemModifyAttributesAndData(itemRef, &attributes, (UInt32)[passwordData length], [passwordData bytes]))) {
 					NSLog(@"Error modifying keychain data with different service password: %d", status);
 				}
 				CFRelease(itemRef);
@@ -787,7 +787,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 				//add new data; item does not exist
 				OSStatus status = noErr;
 				if (noErr != (status = SecKeychainAddGenericPassword(NULL, strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME,
-																	 strlen(kcSyncAccountName), kcSyncAccountName, [passwordData length], [passwordData bytes], NULL))) {
+																	 (UInt32)strlen(kcSyncAccountName), kcSyncAccountName, (UInt32)[passwordData length], [passwordData bytes], NULL))) {
 					NSLog(@"Error adding new service password to keychain: %d", status);
 				}
 			}
@@ -809,7 +809,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 		const char *kcSyncAccountName = [self keychainSyncAccountNameForService:serviceName];
 		if (kcSyncAccountName) {
 			SecKeychainItemRef itemRef = NULL;
-			if (SecKeychainFindGenericPassword(NULL, strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME, strlen(kcSyncAccountName), kcSyncAccountName, NULL, NULL, &itemRef) != noErr) {
+			if (SecKeychainFindGenericPassword(NULL, strlen(KEYCHAIN_SERVICENAME), KEYCHAIN_SERVICENAME, (UInt32)strlen(kcSyncAccountName), kcSyncAccountName, NULL, NULL, &itemRef) != noErr) {
 				itemRef = NULL;
 			}	
 			if (itemRef) {
@@ -930,7 +930,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 - (NSString*)pathExtensionAtIndex:(NSInteger)pathIndex {
     return pathExtensions[notesStorageFormat][pathIndex];
 }
-- (unsigned int)indexOfChosenPathExtension {
+- (NSUInteger)indexOfChosenPathExtension {
 	return chosenExtIndices[notesStorageFormat];
 }
 - (NSString*)chosenPathExtensionForFormat:(NSInteger)format {
@@ -941,13 +941,14 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 }
 
 - (void)updateOSTypesArray {
-    if (!typeStrings[notesStorageFormat])
-	return;
+	if (!typeStrings[notesStorageFormat]) {
+		return;
+	}
     
-    unsigned int i, newSize = sizeof(OSType) * [typeStrings[notesStorageFormat] count];
+    size_t newSize = sizeof(OSType) * [typeStrings[notesStorageFormat] count];
     allowedTypes = (OSType*)realloc(allowedTypes, newSize);
 	
-    for (i=0; i<[typeStrings[notesStorageFormat] count]; i++)
+    for (NSUInteger i=0; i<[typeStrings[notesStorageFormat] count]; i++)
 		allowedTypes[i] = UTGetOSTypeFromString((CFStringRef)typeStrings[notesStorageFormat][i]);
 }
 

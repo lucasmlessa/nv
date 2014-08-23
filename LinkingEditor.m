@@ -958,11 +958,11 @@ copyRTFType:
 					[super deleteBackward:sender];
 				} else {
                     
-					unsigned tabWidth = [prefsController numberOfSpacesInTab];
-					unsigned indentWidth = 4;
+					NSInteger tabWidth = [prefsController numberOfSpacesInTab];
+					NSInteger indentWidth = 4;
 					BOOL usesTabs = ![prefsController softTabs];
 					NSRange leadingSpaceRange = paraRange;
-					unsigned leadingSpaces = [string numberOfLeadingSpacesFromRange:&leadingSpaceRange tabWidth:tabWidth];
+					NSInteger leadingSpaces = [string numberOfLeadingSpacesFromRange:&leadingSpaceRange tabWidth:tabWidth];
 					
 					if (charRange.location > NSMaxRange(leadingSpaceRange)) {
                         
@@ -982,7 +982,7 @@ copyRTFType:
 						}
 						
 						NSTextStorage *text = [self textStorage];
-						unsigned leadingIndents = leadingSpaces / indentWidth;
+						NSInteger leadingIndents = leadingSpaces / indentWidth;
 						NSString *replaceString;
 						
 						// If we were indented to an fractional level just go back to the last even multiple of indentWidth, if we were exactly on, go back a full level.

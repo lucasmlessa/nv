@@ -43,7 +43,7 @@
 }
 
 //1 for OK, 0 for cancelled, some other number for something else
-- (int)loadedUserPassphraseData {
+- (NSInteger)loadedUserPassphraseData {
 	
 	if (!window) {
 		if (![NSBundle loadNibNamed:@"PassphraseRetriever" owner:self])  {
@@ -75,7 +75,7 @@
 
 	[rememberKeychainButton setState:[notationPrefs storesPasswordInKeychain]];
 	
-	int result = [NSApp runModalForWindow:window];
+	NSInteger result = [NSApp runModalForWindow:window];
 	
 	[passphraseField setStringValue:@""];
 	[self textDidChange:nil];
@@ -112,7 +112,7 @@
 		
 		if ([rememberKeychainButton state])
 			[notationPrefs setKeychainData:passData];
-		[notationPrefs setStoresPasswordInKeychain:[rememberKeychainButton state]];
+		[notationPrefs setStoresPasswordInKeychain:!![rememberKeychainButton state]];
 
 		[NSApp stopModalWithCode:1];
 		[window close];

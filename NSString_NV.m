@@ -358,13 +358,13 @@ CFDateFormatterRef simplenoteDateFormatter(int lowPrecision) {
 }
 
 //the following three methods + function come courtesy of Mike Ferris' TextExtras
-+ (NSString *)tabbifiedStringWithNumberOfSpaces:(unsigned)origNumSpaces tabWidth:(unsigned)tabWidth usesTabs:(BOOL)usesTabs {
++ (NSString *)tabbifiedStringWithNumberOfSpaces:(NSInteger)origNumSpaces tabWidth:(NSInteger)tabWidth usesTabs:(BOOL)usesTabs {
 	static NSMutableString *sharedString = nil;
-	static unsigned numTabs = 0;
-    static unsigned numSpaces = 0;
+	static NSInteger numTabs = 0;
+    static NSInteger numSpaces = 0;
 	
-    int diffInTabs;
-    int diffInSpaces;
+    NSInteger diffInTabs;
+    NSInteger diffInSpaces;
 	
     // TabWidth of 0 means don't use tabs!
     if (!usesTabs || (tabWidth == 0)) {
@@ -382,7 +382,7 @@ CFDateFormatterRef simplenoteDateFormatter(int lowPrecision) {
     if (diffInTabs < 0) {
         [sharedString deleteCharactersInRange:NSMakeRange(0, -diffInTabs)];
     } else {
-        unsigned numToInsert = diffInTabs;
+        NSInteger numToInsert = diffInTabs;
         while (numToInsert > 0) {
             [sharedString replaceCharactersInRange:NSMakeRange(0, 0) withString:@"\t"];
             numToInsert--;
@@ -393,7 +393,7 @@ CFDateFormatterRef simplenoteDateFormatter(int lowPrecision) {
     if (diffInSpaces < 0) {
         [sharedString deleteCharactersInRange:NSMakeRange(numTabs, -diffInSpaces)];
     } else {
-        unsigned numToInsert = diffInSpaces;
+        NSInteger numToInsert = diffInSpaces;
         while (numToInsert > 0) {
             [sharedString replaceCharactersInRange:NSMakeRange(numTabs, 0) withString:@" "];
             numToInsert--;
@@ -405,14 +405,13 @@ CFDateFormatterRef simplenoteDateFormatter(int lowPrecision) {
     return sharedString;
 }
 
-- (unsigned)numberOfLeadingSpacesFromRange:(NSRange*)range tabWidth:(unsigned)tabWidth {
+- (NSInteger)numberOfLeadingSpacesFromRange:(NSRange *)range tabWidth:(NSInteger)tabWidth {
     // Returns number of spaces, accounting for expanding tabs.
     NSRange searchRange = (range ? *range : NSMakeRange(0, [self length]));
     unichar buff[100];
-    unsigned i = 0;
-    unsigned spaceCount = 0;
+    NSInteger spaceCount = 0;
     BOOL done = NO;
-    unsigned tabW = tabWidth;
+    NSInteger tabW = tabWidth;
     NSUInteger endOfWhiteSpaceIndex = NSNotFound;
 	
     if (!range || range->length == 0) {
@@ -421,7 +420,7 @@ CFDateFormatterRef simplenoteDateFormatter(int lowPrecision) {
     
     while ((searchRange.length > 0) && !done) {
         [self getCharacters:buff range:NSMakeRange(searchRange.location, ((searchRange.length > 100) ? 100 : searchRange.length))];
-        for (i=0; i < ((searchRange.length > 100) ? 100 : searchRange.length); i++) {
+        for (NSUInteger i=0; i < ((searchRange.length > 100) ? 100 : searchRange.length); i++) {
             if (buff[i] == (unichar)' ') {
                 spaceCount++;
             } else if (buff[i] == (unichar)'\t') {
@@ -556,7 +555,7 @@ BOOL IsHardLineBreakUnichar(unichar uchar, NSString *str, unsigned charIndex) {
 
 - (NSData *)decodeBase64WithNewlines:(BOOL)encodedWithNewlines {
     // Create a memory buffer containing Base64 encoded string data
-    BIO * mem = BIO_new_mem_buf((void *) [self UTF8String], strlen([self UTF8String]));
+    BIO * mem = BIO_new_mem_buf((void *) [self UTF8String], (int)strlen([self UTF8String]));
     
     // Push a Base64 filter so that reading from the buffer decodes it
     BIO * b64 = BIO_new(BIO_f_base64());

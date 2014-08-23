@@ -31,7 +31,7 @@
 	NSFont *font = self[NSFontAttributeName];
 	if (font) {
 		NSFontTraitMask traits = [[NSFontManager sharedFontManager] traitsOfFont:font];
-		return traits & desiredTrait;
+		return !!(traits & desiredTrait);
 	}
 	
 	return NO;
@@ -211,7 +211,7 @@
 	[self sortUsingFunction:(NSInteger (*)(id, id, void *))genericSortContextLast context:compare];
 }
 
-- (void)sortStableUsingFunction:(NSInteger (*)(id *, id *))compare usingBuffer:(id **)buffer ofSize:(unsigned int*)bufSize {
+- (void)sortStableUsingFunction:(NSInteger (*)(id *, id *))compare usingBuffer:(id **)buffer ofSize:(size_t *)bufSize {
 	CFIndex count = CFArrayGetCount((CFArrayRef)self);
 	
 	ResizeArray(buffer, count, bufSize);

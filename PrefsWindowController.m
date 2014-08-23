@@ -154,7 +154,7 @@
 }
 
 - (IBAction)changedUseETScrollbarsOnLion:(id)sender{
-    [prefsController setUseETScrollbarsOnLion:[useETScrollbarsOnLionButton state] sender:self];
+    [prefsController setUseETScrollbarsOnLion:!![useETScrollbarsOnLionButton state] sender:self];
 }
 
 - (IBAction)changedBackgroundTextColorWell:(id)sender {
@@ -167,21 +167,21 @@
 	[prefsController setSearchTermHighlightColor:[searchHighlightColorWell color] sender:self];
 }
 - (IBAction)changedHighlightSearchTerms:(id)sender {
-	[prefsController setShouldHighlightSearchTerms:[highlightSearchTermsButton state] sender:self];
+	[prefsController setShouldHighlightSearchTerms:!![highlightSearchTermsButton state] sender:self];
 }
 - (IBAction)changedStyledTextBehavior:(id)sender {
-    [prefsController setPastePreservesStyle:[styledTextButton state] sender:self];
+    [prefsController setPastePreservesStyle:!![styledTextButton state] sender:self];
 }
 - (IBAction)changedAutoSuggestLinks:(id)sender {
-    [prefsController setLinksAutoSuggested:[autoSuggestLinksButton state] sender:self];
+    [prefsController setLinksAutoSuggested:!![autoSuggestLinksButton state] sender:self];
 }
 
 - (IBAction)changedMakeURLsClickable:(id)sender {
-	[prefsController setMakeURLsClickable:[makeURLsClickable state] sender:self];
+	[prefsController setMakeURLsClickable:!![makeURLsClickable state] sender:self];
 }
 
 - (IBAction)changedNoteDeletion:(id)sender {
-	[prefsController setConfirmNoteDeletion:[confirmDeletionButton state] sender:self];
+	[prefsController setConfirmNoteDeletion:!![confirmDeletionButton state] sender:self];
 }
 
 - (IBAction)changedNotesFolderLocation:(id)sender {
@@ -189,11 +189,11 @@
 }
 
 - (IBAction)changedQuitBehavior:(id)sender {
-    [prefsController setQuitWhenClosingWindow:[quitWhenClosingButton state] sender:self];
+    [prefsController setQuitWhenClosingWindow:!![quitWhenClosingButton state] sender:self];
 }
 
 - (IBAction)changedSpellChecking:(id)sender {
-    [prefsController setCheckSpellingAsYouType:[checkSpellingButton state] sender:self];
+    [prefsController setCheckSpellingAsYouType:!![checkSpellingButton state] sender:self];
 }
 
 
@@ -243,15 +243,15 @@
 }
 
 - (IBAction)changedTitleCompletion:(id)sender {
-    [prefsController setAutoCompleteSearches:[completeNoteTitlesButton state] sender:self];
+    [prefsController setAutoCompleteSearches:!![completeNoteTitlesButton state] sender:self];
 }
 
 - (IBAction)changedSoftTabs:(id)sender {
-	[prefsController setSoftTabs:[softTabsButton state] sender:self];
+	[prefsController setSoftTabs:!![softTabsButton state] sender:self];
 }
 
 - (IBAction)changedUseFinderTags:(id)sender {
-	[prefsController setUseFinderTags:[useFinderTagsButton state] sender:self];
+	[prefsController setUseFinderTags:!![useFinderTagsButton state] sender:self];
 }
 
 - (void)settingChangedForSelectorString:(NSString*)selectorString {
@@ -325,7 +325,7 @@
 }
 
 - (IBAction)changedRTL:(id)sender {
-	[prefsController setRTL:[rtlButton state] sender:self];
+	[prefsController setRTL:!![rtlButton state] sender:self];
 	[NTVAppDelegate() updateRTL];
 }
 
@@ -458,7 +458,7 @@
     //for Brett's Markdownify/Readability import
 	[useMarkdownImportButton setState:[prefsController useMarkdownImport]];
 	[useReadabilityButton setState:[prefsController useReadability]];
-	[useReadabilityButton setEnabled:[useMarkdownImportButton state]];
+	[useReadabilityButton setEnabled:!![useMarkdownImportButton state]];
 	
     [altRowsButton setState:[prefsController alternatingRows]];
     [showGridButton setState:[prefsController showGrid]];
@@ -617,26 +617,26 @@ CGRect ScaleRectWithFactor(CGRect rect, CGFloat factor) {
 }
 
 - (IBAction)changedUseMarkdownImport:(id)sender {
-	[prefsController setUseMarkdownImport:[useMarkdownImportButton state] sender:self];
-	[useReadabilityButton setEnabled:[useMarkdownImportButton state]];
+	[prefsController setUseMarkdownImport:!![useMarkdownImportButton state] sender:self];
+	[useReadabilityButton setEnabled:!![useMarkdownImportButton state]];
 }
 
 - (IBAction)changedUseReadability:(id)sender {
-	[prefsController setUseReadability:[useReadabilityButton state] sender:self];
+	[prefsController setUseReadability:!![useReadabilityButton state] sender:self];
 }
 
 - (IBAction)changedAltRows:(id)sender {
-	[prefsController setAlternatingRows:[altRowsButton state] sender:self];
+	[prefsController setAlternatingRows:!![altRowsButton state] sender:self];
     [NTVAppDelegate() refreshNotesList];
 }
 
 - (IBAction)changedAutoPairing:(id)sender{
-	[prefsController setUseAutoPairing:[autoPairButton state]];
+	[prefsController setUseAutoPairing:!![autoPairButton state]];
     //  [[NSApp delegate] refreshNotesList];
 }
 
 - (IBAction)changedShowGrid:(id)sender {
-	[prefsController setShowGrid:[showGridButton state] sender:self];
+	[prefsController setShowGrid:!![showGridButton state] sender:self];
     [NTVAppDelegate() refreshNotesList];
 }
 

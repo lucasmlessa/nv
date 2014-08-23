@@ -180,7 +180,7 @@ static BOOL VolumeSupportsExchangeObjects(NotationController *controller) {
 			controller->volumeSupportsExchangeObjects = ( 0 != (volumeCapabilities(sfsb->f_mntonname) & VOL_CAP_INT_EXCHANGEDATA));
 		}
 	}
-	return controller->volumeSupportsExchangeObjects;
+	return !!controller->volumeSupportsExchangeObjects;
 }
 
 - (void)purgeOldPerDiskInfoFromNotes {
@@ -392,16 +392,15 @@ terminate:
 + (OSStatus)getDefaultNotesDirectoryRef:(FSRef*)notesDir {
     FSRef appSupportFoundRef;
     
-    OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &appSupportFoundRef);
+    OSStatus err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &appSupportFoundRef);
     if (err != noErr) {
-	NSLog(@"Unable to locate or create an Application Support directory: %d", err);
-	return err;
+		NSLog(@"Unable to locate or create an Application Support directory: %d", err);
+		return err;
     } else {
-	//now try to get Notational Database directory
-	if ((err = CreateDirectoryIfNotPresent(&appSupportFoundRef, (CFStringRef)@"Notational Data", notesDir)) != noErr) {
-	    
-	    return err;
-	}
+		//now try to get Notational Database directory
+		if ((err = CreateDirectoryIfNotPresent(&appSupportFoundRef, (CFStringRef)@"Notational Data", notesDir)) != noErr) {
+			return err;
+		}
     }
     return noErr;
 }
@@ -673,9 +672,9 @@ terminate:
 				// attempt to create new unique name
 				HFSUniStr255 newName = name;
 				char num[16];
-				int numLen;
+				UInt16 numLen;
 				
-				numLen = sprintf(num, "%d", i);
+				numLen = (UInt16)sprintf(num, "%d", i);
 				newName.unicode[origLen] = ' ';
 				for (j=0; j < numLen; j++)
 					newName.unicode[origLen + j + 1] = num[j];

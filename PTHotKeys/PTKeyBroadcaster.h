@@ -13,7 +13,7 @@
 {
 }
 
-+ (long)cocoaModifiersAsCarbonModifiers: (long)cocoaModifiers;
++ (int)cocoaModifiersAsCarbonModifiers: (NSEventModifierFlags)cocoaModifiers;
 
 @end
 

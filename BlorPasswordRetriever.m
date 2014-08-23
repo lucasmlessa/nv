@@ -124,7 +124,7 @@
 	[helpStringField setStringValue:[NSString stringWithFormat:NSLocalizedString(@"Please enter the passphrase to access notes in %@.",nil), 
 		[path stringByAbbreviatingWithTildeInPath]]];
 	
-	int result = [NSApp runModalForWindow:window];
+	NSInteger result = [NSApp runModalForWindow:window];
 	
 	NSString *passwordString = [passphraseField stringValue];
 	passwordData = [passwordString dataUsingEncoding:[NSString defaultCStringEncoding] allowLossyConversion:NO];

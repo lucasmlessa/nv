@@ -44,7 +44,7 @@
 }
 
 - (IBAction)discloseAdvancedSettings:(id)sender {
-	BOOL disclosed = [disclosureButton state];
+	BOOL disclosed = !![disclosureButton state];
 	int heightDifference = disclosed ? 118 : -118;
 	
 	if (disclosed) {
@@ -97,7 +97,7 @@
 	[verifyNewPasswordField setStringValue:@""];
 		
 	if ([resultDelegate respondsToSelector:@selector(passphrasePicker:choseAPassphrase:)])
-		[resultDelegate passphrasePicker:self choseAPassphrase:returnCode];
+		[resultDelegate passphrasePicker:self choseAPassphrase:!!returnCode];
 }
 
 
@@ -112,7 +112,7 @@
 	if ([pass isEqualToString:[verifyNewPasswordField stringValue]]) {
 		
 		[notationPrefs setPassphraseData:[pass dataUsingEncoding:NSUTF8StringEncoding] 
-							  inKeychain:[rememberNewButton state] 
+							  inKeychain:!![rememberNewButton state]
 						  withIterations:[keyDerivation hashIterationCount]];
 		
 		[NSApp endSheet:newPassphraseWindow returnCode:1];

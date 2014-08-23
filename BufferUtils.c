@@ -69,7 +69,7 @@ char *replaceString(char *oldString, const char *newString) {
 }
 
 
-void _ResizeBuffer(void ***buffer, unsigned int objCount, unsigned int *bufObjCount, unsigned int elemSize) {
+void _ResizeBuffer(void ***buffer, size_t objCount, size_t *bufObjCount, size_t elemSize) {
 	assert(buffer && bufObjCount && elemSize);
 	
 	if (*bufObjCount < objCount || !*buffer) {
@@ -97,15 +97,15 @@ int IsZeros(const void *s1, size_t n) {
 	return (1);
 }
 
-void modp_tolower_copy(char* dest, const char* str, int len) {
-	int i;
-	NSUInteger eax, ebx;
+void modp_tolower_copy(char *dest, const char *str, size_t len) {
+	size_t i;
+	uint64_t eax, ebx;
 	const uint8_t* ustr = (const uint8_t*) str;
-	const int leftover = len % sizeof(NSUInteger);
-	const int imax = len / sizeof(NSUInteger);
-	const NSUInteger* s = (const NSUInteger*) str;
-	NSUInteger* d = (NSUInteger*) dest;
-	for (i = 0; i != imax; ++i) {
+	const size_t leftover = len % sizeof(NSUInteger);
+	const size_t imax = len / sizeof(NSUInteger);
+	const size_t* s = (const NSUInteger*) str;
+	uint64_t * d = (uint64_t *) dest;
+	for (i = 0; i < imax; ++i) {
 		eax = s[i];
 		/*
 		 * This is based on the algorithm by Paul Hsieh
@@ -123,7 +123,7 @@ void modp_tolower_copy(char* dest, const char* str, int len) {
 		*d++ = eax + ebx;
 	}
 	
-	i = imax * sizeof(NSUInteger);
+	i = imax * sizeof(size_t);
 	dest = (char*) d;
 	switch (leftover) {
 #if __LP64__ || NS_BUILD_32_LIKE_64
@@ -136,6 +136,7 @@ void modp_tolower_copy(char* dest, const char* str, int len) {
 		case 2: *dest++ = (char) gsToLowerMap[ustr[i++]];
 		case 1: *dest++ = (char) gsToLowerMap[ustr[i]];
 		case 0: *dest = '\0';
+        default: break;
 	}
 }
 
@@ -213,11 +214,11 @@ int ContainsUInteger(const NSUInteger *uintArray, size_t count, NSUInteger auint
 }
 
 
-int ContainsHighAscii(const void *s1, size_t n) {
+Boolean ContainsHighAscii(const void *s1, size_t n) {
 	
-	register NSUInteger *intBuffer = (NSUInteger*)s1;
-	register NSUInteger i, integerCount = n/sizeof(NSUInteger);	
-	register NSUInteger pattern = 
+	register uint64_t *intBuffer = (uint64_t *)s1;
+	register uint64_t i, integerCount = n/sizeof(uint64_t);
+	register uint64_t pattern =
 #if __LP64__ || NS_BUILD_32_LIKE_64
 	0x8080808080808080;
 #else
@@ -226,20 +227,20 @@ int ContainsHighAscii(const void *s1, size_t n) {
 	
 	for (i=0; i<integerCount; i++ ) {
 		if (pattern & intBuffer[i]) {
-			return 1;
+			return true;
 		}
 	}
 	
 	unsigned char *charBuffer = (unsigned char*)s1;
-	NSUInteger leftOverCharCount = n % sizeof(NSUInteger);
+	uint64_t leftOverCharCount = n % sizeof(uint64_t);
 	
 	for (i = n - leftOverCharCount; i<n; i++) {
 		if (charBuffer[i] > 127) {
-			return 1;
+			return true;
 		}
 	}
 	
-	return 0;
+	return false;
 }
 
 CFStringRef CFStringFromBase10Integer(int quantity) {
@@ -283,13 +284,13 @@ void QuickSortBuffer(void **buffer, unsigned int objCount, int (*compar)(const v
 //these two methods manipulate notes' perdiskinfo groups, changing the buffers in place
 //on return, groupCount will be set to the number of perdiskinfo structs currently in the buffer
 
-void RemovePerDiskInfoWithTableIndex(UInt32 diskIndex, PerDiskInfo **perDiskGroups, unsigned int *groupCount) {
+void RemovePerDiskInfoWithTableIndex(UInt32 diskIndex, PerDiskInfo **perDiskGroups, size_t *groupCount) {
 	//used to periodically clean out attr-mod-times for disks that have not been seen in a while
 	
 	//if an entry exists, push everything below it upward and resize the buffer (or just copy to a new buffer)
 	//otherwise do nothing
 	
-	NSUInteger i = 0, count = *groupCount;
+	size_t i = 0, count = *groupCount;
 	
 	PerDiskInfo *groups = *perDiskGroups;
 	for (i=0; i<count; i++) {
@@ -305,14 +306,14 @@ void RemovePerDiskInfoWithTableIndex(UInt32 diskIndex, PerDiskInfo **perDiskGrou
 	}
 }
 
-unsigned int SetPerDiskInfoWithTableIndex(UTCDateTime *dateTime, UInt32 *nodeID, UInt32 diskIndex, PerDiskInfo **perDiskGroups, unsigned int *groupCount) {
+size_t SetPerDiskInfoWithTableIndex(UTCDateTime *dateTime, UInt32 *nodeID, UInt32 diskIndex, PerDiskInfo **perDiskGroups, size_t *groupCount) {
 	//if an entry for this diskIndex already exists, then just update it in place
 	//if an entry does not exist, then resize the buffer and add one at the end
 	//if one of dateTime or nodeID is NULL, then do not set it
 	
 	assert(nodeID || dateTime);
 	
-	NSUInteger i = 0, count = *groupCount;
+	size_t i = 0, count = *groupCount;
 	
 	PerDiskInfo *groups = *perDiskGroups;
 	for (i=0; i<count; i++) {
@@ -341,7 +342,7 @@ unsigned int SetPerDiskInfoWithTableIndex(UTCDateTime *dateTime, UInt32 *nodeID,
 
 COMPILE_ASSERT(sizeof(PerDiskInfo) == 16, PER_DISK_INFO_MUST_BE_16_BYTES);
 
-void CopyPerDiskInfoGroupsToOrder(PerDiskInfo **flippedGroups, unsigned int *existingCount, PerDiskInfo *perDiskGroups, size_t bufferSize, int toHostOrder) {
+void CopyPerDiskInfoGroupsToOrder(PerDiskInfo **flippedGroups, size_t *existingCount, PerDiskInfo *perDiskGroups, size_t bufferSize, int toHostOrder) {
 	//for decoding and encoding an array of PerDiskInfo structs as a single buffer
 	//swap between host order and big endian
 	//resizes flippedPairs if it is too small (based on *existingCount)
@@ -466,7 +467,7 @@ OSStatus FSRefReadData(FSRef *fsRef, size_t maximumReadSize, UInt64 *bufferSize,
 		err = FSReadFork(refNum, fsAtMark + modeOptions, 0, copyBufferSize, fullSizeBuffer + totalReadBytes, &readActualCount);
 		totalReadBytes += readActualCount;
     }
-    OSErr lastReadErr = err;
+    OSStatus lastReadErr = err;
 	
 	if ((err = FSCloseFork(refNum)) != noErr)
 		printf("FSCloseFork: error %d\n", (int)err);
@@ -510,7 +511,7 @@ OSStatus FSRefWriteData(FSRef *fsRef, size_t maximumWriteSize, UInt64 bufferSize
 			  buffer + totalWrittenBytes, &writeActualCount);
 	totalWrittenBytes += writeActualCount;
     }
-    OSErr writeError = err;
+    OSStatus writeError = err;
 	
 	if (truncateFile && (err = FSSetForkSize(refNum, fsFromStart, bufferSize))) {
 		printf("FSOpenFork: FSSetForkSize %d\n", (int)err);

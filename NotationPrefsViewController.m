@@ -140,10 +140,10 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
     //set up outlets to reflect new settings
     if (notationPrefs) {
 		
-		[keyLengthField setIntValue:[notationPrefs keyLengthInBits]];
-		[keyLengthStepper setIntValue:[notationPrefs keyLengthInBits]];
+		[keyLengthField setIntegerValue:[notationPrefs keyLengthInBits]];
+		[keyLengthStepper setIntegerValue:[notationPrefs keyLengthInBits]];
 		[self setEncryptionControlsState:[notationPrefs doesEncryption]];
-		[self setSeparateFileControlsState:[notationPrefs notesStorageFormat]];
+		[self setSeparateFileControlsState:([notationPrefs notesStorageFormat] != 0)];
 		[self updateRemoveKeychainItemStatus];
 		[confirmFileDeletionButton setState:[notationPrefs confirmFileDeletion]];
 		
@@ -299,7 +299,7 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 }
 
 - (IBAction)changedFileDeletionWarningSettings:(id)sender {
-    [notationPrefs setConfirmsFileDeletion:[confirmFileDeletionButton state]];
+    [notationPrefs setConfirmsFileDeletion:!![confirmFileDeletionButton state]];
 }
 
 - (IBAction)removeFromKeychain:(id)sender {
@@ -320,7 +320,7 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 
 - (void)notesStorageFormatDidChange {
 	notesStorageFormatInProgress = [notationPrefs notesStorageFormat];
-	[self setSeparateFileControlsState:notesStorageFormatInProgress];
+	[self setSeparateFileControlsState:!!notesStorageFormatInProgress];
 	
     [allowedExtensionsTable reloadData];
     [allowedTypesTable reloadData];
@@ -380,8 +380,8 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 }
 
 - (IBAction)toggledSyncing:(id)sender {
-	[notationPrefs setSyncEnabled:[enabledSyncButton state] forService:SimplenoteServiceName];
-	[self setSyncControlsState:[enabledSyncButton state]];
+	[notationPrefs setSyncEnabled:!![enabledSyncButton state] forService:SimplenoteServiceName];
+	[self setSyncControlsState:!![enabledSyncButton state]];
 }
 
 - (IBAction)syncFrequencyChange:(id)sender {
@@ -482,7 +482,7 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 }
 
 - (IBAction)changedSecureTextEntry:(id)sender {
-	[notationPrefs setSecureTextEntry:[secureTextEntryButton state]];
+	[notationPrefs setSecureTextEntry:!![secureTextEntryButton state]];
 }
 
 - (IBAction)changePassphrase:(id)sender {

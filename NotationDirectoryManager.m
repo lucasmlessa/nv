@@ -214,7 +214,7 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
     OSStatus status = noErr;
     FSIterator dirIterator;
     ItemCount totalObjects = 0, dirObjectCount = 0;
-    unsigned int i = 0, catIndex = 0;
+    size_t i = 0, catIndex = 0;
     
     //something like 16 VM pages used here?
     if (!fsCatInfoArray) fsCatInfoArray = (FSCatalogInfo *)calloc(kMaxFileIteratorCount, sizeof(FSCatalogInfo));
@@ -235,7 +235,7 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
 				
 				totalObjects += dirObjectCount;
 				if (totalObjects > totalCatEntriesCount) {
-					unsigned int oldCatEntriesCount = totalCatEntriesCount;
+					size_t oldCatEntriesCount = totalCatEntriesCount;
 					
 					totalCatEntriesCount = totalObjects;
 					catalogEntries = (NoteCatalogEntry *)realloc(catalogEntries, totalObjects * sizeof(NoteCatalogEntry));
@@ -353,8 +353,8 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
 
 - (void)makeNotesMatchCatalogEntries:(NoteCatalogEntry**)catEntriesPtrs ofSize:(size_t)catCount {
     
-    unsigned int aSize = [allNotes count];
-    unsigned int bSize = catCount;
+    NSUInteger aSize = [allNotes count];
+    size_t bSize = catCount;
     
 	ResizeArray(&allNotesBuffer, aSize, &allNotesBufferSize);
 	
@@ -372,7 +372,7 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
     //oldItems(a,i) = currentNotes
     //newItems(b,j) = catEntries;
     
-    unsigned int i, j, lastInserted = 0;
+    NSUInteger i, j, lastInserted = 0;
     
     for (i=0; i<aSize; i++) {
 		
@@ -445,7 +445,7 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
 
 //find renamed notes through unique file IDs
 - (void)processNotesAddedByCNID:(NSMutableArray*)addedEntries removed:(NSMutableArray*)removedEntries {
-	unsigned int aSize = [removedEntries count], bSize = [addedEntries count];
+	NSUInteger aSize = [removedEntries count], bSize = [addedEntries count];
     
     //sort on nodeID here
 	[addedEntries sortUnstableUsingFunction:compareCatalogValueNodeID];
@@ -457,7 +457,7 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
     //oldItems(a,i) = currentNotes
     //newItems(b,j) = catEntries;
     
-    unsigned int i, j, lastInserted = 0;
+    NSUInteger i, j, lastInserted = 0;
     
     for (i=0; i<aSize; i++) {
 		NoteObject *currentNote = removedEntries[i];

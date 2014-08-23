@@ -100,7 +100,7 @@ static CGFloat defaultTextPadding(void) {
     return printInfo;
 }
 
-- (void)setNumberOfPages:(unsigned)num {
+- (void)setNumberOfPages:(NSUInteger)num {
     if (numPages != num) {
 	NSRect oldFrame = [self frame];
         NSRect newFrame;
@@ -113,7 +113,7 @@ static CGFloat defaultTextPadding(void) {
     }
 }
 
-- (unsigned)numberOfPages {
+- (NSUInteger)numberOfPages {
     return numPages;
 }
     
@@ -134,7 +134,7 @@ static CGFloat defaultTextPadding(void) {
     return paperSize;
 }
 
-- (NSRect)documentRectForPageNumber:(unsigned)pageNumber {	/* First page is page 0, of course! */
+- (NSRect)documentRectForPageNumber:(NSInteger)pageNumber {	/* First page is page 0, of course! */
     NSRect rect = [self pageRectForPageNumber:pageNumber];
     rect.origin.x += [printInfo leftMargin] - defaultTextPadding();
     rect.origin.y += [printInfo topMargin];
@@ -142,7 +142,7 @@ static CGFloat defaultTextPadding(void) {
     return rect;
 }
 
-- (NSRect)pageRectForPageNumber:(unsigned)pageNumber {
+- (NSRect)pageRectForPageNumber:(NSInteger)pageNumber {
     NSRect rect;
     rect.size = [printInfo paperSize];
     rect.origin = [self frame].origin;
@@ -157,24 +157,21 @@ static CGFloat defaultTextPadding(void) {
 		NSUInteger lastPage = (NSUInteger)floorf(CGRectGetMaxY(rect) / (paperSize.height + [self pageSeparatorHeight]));
 
 		NSAssert(NO, @"MultiplePageView should not be drawing to screen");
-        
-//        [marginColor set];
-//        NSRectFill(rect);
 
- //       [lineColor set];
-		unsigned cnt;
+		NSUInteger cnt;
+
         for (cnt = firstPage; cnt <= lastPage; cnt++) {
-	    // Draw boundary around the page, making sure it doesn't overlap the document area in terms of pixels
-	    NSRect docRect = NSInsetRect([self centerScanRect:[self documentRectForPageNumber:cnt]], -1.0, -1.0);
-	    NSFrameRectWithWidth(docRect, 1.0);
+			// Draw boundary around the page, making sure it doesn't overlap the document area in terms of pixels
+			NSRect docRect = NSInsetRect([self centerScanRect:[self documentRectForPageNumber:(unsigned)cnt]], -1.0, -1.0);
+			NSFrameRectWithWidth(docRect, 1.0);
         }
 
         if ([[self superview] isKindOfClass:[NSClipView class]]) {
-	    NSColor *backgroundColor = [(NSClipView *)[self superview] backgroundColor];
-            [backgroundColor set];
-            for (cnt = firstPage; cnt <= lastPage; cnt++) {
-		NSRect pageRect = [self pageRectForPageNumber:cnt];
-		NSRectFill (NSMakeRect(pageRect.origin.x, NSMaxY(pageRect), pageRect.size.width, [self pageSeparatorHeight]));
+			NSColor *backgroundColor = [(NSClipView *)[self superview] backgroundColor];
+			[backgroundColor set];
+			for (cnt = firstPage; cnt <= lastPage; cnt++) {
+				NSRect pageRect = [self pageRectForPageNumber:(unsigned)cnt];
+				NSRectFill (NSMakeRect(pageRect.origin.x, NSMaxY(pageRect), pageRect.size.width, [self pageSeparatorHeight]));
             }
         }
     }
@@ -265,8 +262,8 @@ static CGFloat defaultTextPadding(void) {
 	[formfeed release];
 	
 	// force layout before printing
-	unsigned len;
-	unsigned loc = INT_MAX;
+	NSUInteger len;
+	NSUInteger loc = NSIntegerMax;
 	if (loc > 0 && (len = [pageStorage length]) > 0) {
 		NSRange glyphRange;
 		if (loc >= len) loc = len - 1;

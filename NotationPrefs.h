@@ -35,14 +35,15 @@ extern NSString *NotationPrefsDidChangeNotification;
 	//password(s) stored in keychain or otherwise encrypted using notes password
 	NSMutableDictionary *syncServiceAccounts;
 	
-	unsigned int hashIterationCount, keyLengthInBits;
-	
+	NSInteger hashIterationCount;
+	size_t keyLengthInBits;
+
 	NSColor *foregroundColor;
 	NSFont *baseBodyFont;
 	NSInteger notesStorageFormat;
 	BOOL confirmFileDeletion;
 	
-	unsigned int chosenExtIndices[4];
+	NSUInteger chosenExtIndices[4];
     NSMutableArray *typeStrings[4], *pathExtensions[4];
     OSType *allowedTypes;
 	
@@ -80,8 +81,8 @@ extern NSString *NotationPrefsDidChangeNotification;
 - (NSUInteger)syncFrequencyInMinutesForServiceName:(NSString*)serviceName;
 - (BOOL)syncNotesShouldMergeForServiceName:(NSString*)serviceName;
 - (BOOL)syncServiceIsEnabled:(NSString*)serviceName;
-- (unsigned int)keyLengthInBits;
-- (unsigned int)hashIterationCount;
+- (size_t)keyLengthInBits;
+- (NSInteger)hashIterationCount;
 - (UInt32)epochIteration;
 - (BOOL)firstTimeUsed;
 - (BOOL)secureTextEntry;
@@ -98,7 +99,7 @@ extern NSString *NotationPrefsDidChangeNotification;
 - (BOOL)canLoadPassphraseData:(NSData*)passData;
 - (BOOL)canLoadPassphrase:(NSString*)pass;
 - (void)setPassphraseData:(NSData*)passData inKeychain:(BOOL)inKeychain;
-- (void)setPassphraseData:(NSData*)passData inKeychain:(BOOL)inKeychain withIterations:(int)iterationCount;
+- (void)setPassphraseData:(NSData*)passData inKeychain:(BOOL)inKeychain withIterations:(NSInteger)iterationCount;
 - (BOOL)encryptDataInNewSession:(NSMutableData*)data;
 - (BOOL)decryptDataWithCurrentSettings:(NSMutableData*)data;
 - (NSData*)WALSessionKey;
@@ -126,7 +127,7 @@ extern NSString *NotationPrefsDidChangeNotification;
 //used to view tableviews
 - (NSString*)typeStringAtIndex:(NSInteger)typeIndex;
 - (NSString*)pathExtensionAtIndex:(NSInteger)pathIndex;
-- (unsigned int)indexOfChosenPathExtension;
+- (NSUInteger)indexOfChosenPathExtension;
 - (NSString*)chosenPathExtensionForFormat:(NSInteger)format;
 - (NSInteger)typeStringsCount;
 - (NSInteger)pathExtensionsCount;

@@ -62,11 +62,9 @@
 }
 
 - (BOOL)noteFileIsAlreadyDeleted:(NoteObject*)aNote {
-	unsigned count = [deletedNotes count];
+	NSUInteger count = [deletedNotes count];
 	if (count > 0) {
-		
-		unsigned int i;
-		for (i=0; i<count; i++) {
+		for (NSUInteger i = 0; i < count; ++i) {
 			NoteObject *curNote = deletedNotes[i];
 			if (compareFilename(&curNote, &aNote) == kCFCompareEqualTo) {
 				return YES;

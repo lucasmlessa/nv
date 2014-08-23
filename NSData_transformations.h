@@ -18,8 +18,8 @@
 - (BOOL) isCompressedFormat;
 
 + (NSMutableData *)randomDataOfLength:(int)len;
-- (NSData *)derivedKeyOfLength:(int)len salt:(NSData *)salt iterations:(int)count;
-- (unsigned long)CRC32;
+- (NSData *)derivedKeyOfLength:(NSUInteger)len salt:(NSData *)salt iterations:(NSUInteger)count;
+- (uint32_t)CRC32;
 
 - (NSString*)pathURLFromWebArchive;
 

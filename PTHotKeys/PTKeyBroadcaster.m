@@ -14,7 +14,7 @@ NSString *const PTKeyBroadcasterKeyEvent = @"PTKeyBroadcasterKeyEvent";
 
 @implementation PTKeyBroadcaster
 
-- (void)_bcastKeyCode: (short)keyCode modifiers: (long)modifiers
+- (void)_bcastKeyCode: (short)keyCode modifiers: (int)modifiers
 {
 	PTKeyCombo* keyCombo = [PTKeyCombo keyComboWithKeyCode: keyCode modifiers: modifiers];
 	NSDictionary* userInfo = @{
@@ -30,7 +30,7 @@ NSString *const PTKeyBroadcasterKeyEvent = @"PTKeyBroadcasterKeyEvent";
 - (void)_bcastEvent: (NSEvent*)event
 {
 	short keyCode;
-	long modifiers;
+	int modifiers;
 	
 	keyCode = [event keyCode];
 	modifiers = [event modifierFlags];
@@ -54,7 +54,7 @@ NSString *const PTKeyBroadcasterKeyEvent = @"PTKeyBroadcasterKeyEvent";
 	return YES;
 }
 
-+ (long)cocoaModifiersAsCarbonModifiers: (long)cocoaModifiers
++ (int)cocoaModifiersAsCarbonModifiers: (NSEventModifierFlags)cocoaModifiers
 {
 	static long cocoaToCarbon[6][2] =
 	{
@@ -66,10 +66,9 @@ NSString *const PTKeyBroadcasterKeyEvent = @"PTKeyBroadcasterKeyEvent";
 		//{ NSAlphaShiftKeyMask, alphaLock }, //Ignore this?
 	};
 
-	long carbonModifiers = 0;
-	int i;
-	
-	for( i = 0 ; i < 6; i++ )
+	int carbonModifiers = 0;
+
+	for(int i = 0 ; i < 6; i++ )
 		if( cocoaModifiers & cocoaToCarbon[i][0] )
 			carbonModifiers += cocoaToCarbon[i][1];
 	

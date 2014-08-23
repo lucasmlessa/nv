@@ -141,18 +141,18 @@
 	return str;
 }
 
-+ (NSString*)_stringForKeyCode: (short)keyCode
++ (NSString*)_stringForKeyCode: (long)keyCode
 {
 	NSDictionary* dict;
 	id key;
 	NSString* str;
 	
 	dict = [self _keyCodesDictionary];
-	key = [NSString stringWithFormat: @"%d", keyCode];
+	key = [NSString stringWithFormat: @"%ld", keyCode];
 	str = dict[key];
 	
 	if( !str )
-		str = [NSString stringWithFormat: @"%X", keyCode];
+		str = [NSString stringWithFormat: @"%lX", keyCode];
 	
 	return str;
 }

@@ -54,7 +54,7 @@ typedef struct _NoteFilterContext {
 	//for syncing to text file
 	UInt32 nodeID;
 	PerDiskInfo *perDiskInfoGroups;
-	unsigned int perDiskInfoGroupCount;
+	size_t perDiskInfoGroupCount;
 	BOOL shouldWriteToFile, didUnarchive;
 	
 	//for storing in write-ahead-log
@@ -199,7 +199,7 @@ NSInteger compareFileSize(id *a, id *b);
 - (void)removeFileFromDirectory;
 - (BOOL)removeUsingJournal:(WALStorageController*)wal;
 
-- (OSStatus)exportToDirectoryRef:(FSRef*)directoryRef withFilename:(NSString*)userFilename usingFormat:(int)storageFormat overwrite:(BOOL)overwrite;
+- (OSStatus)exportToDirectoryRef:(FSRef*)directoryRef withFilename:(NSString*)userFilename usingFormat:(NSInteger)storageFormat overwrite:(BOOL)overwrite;
 - (NSRange)nextRangeForWords:(NSArray*)words options:(unsigned)opts range:(NSRange)inRange;
 - (void)editExternallyUsingEditor:(ExternalEditor*)ed;
 - (void)abortEditingInExternalEditor;

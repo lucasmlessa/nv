@@ -83,7 +83,7 @@
 	// ok, we have some data 
 	NSPropertyListFormat formatFound;
 	NSString* errorString = nil;
-	id outObject = [NSPropertyListSerialization propertyListFromData:nsData mutabilityOption:kCFPropertyListImmutable format:&formatFound errorDescription:&errorString];
+	id outObject = [NSPropertyListSerialization propertyListFromData:nsData mutabilityOption:NSPropertyListImmutable format:&formatFound errorDescription:&errorString];
 	if (errorString) {
 		NSLog(@"%@: error deserializing labels: %@", NSStringFromSelector(_cmd), errorString);
 		[errorString autorelease];
@@ -138,7 +138,7 @@
 	NSData* dataToSendNS = nil;
 	if (plistObject) {
 		NSString *errorString = nil;
-		dataToSendNS = [NSPropertyListSerialization dataFromPropertyList:plistObject format:kCFPropertyListBinaryFormat_v1_0 errorDescription:&errorString];
+		dataToSendNS = [NSPropertyListSerialization dataFromPropertyList:plistObject format:NSPropertyListBinaryFormat_v1_0 errorDescription:&errorString];
 		if (errorString) {
 			NSLog(@"%@: error serializing labels: %@", NSStringFromSelector(_cmd), errorString);
 			[errorString autorelease];

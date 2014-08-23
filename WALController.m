@@ -228,16 +228,16 @@
 	WALRecordHeader record;
 	bzero(&record, sizeof(WALRecordHeader));
 	
-	record.originalDataLength = CFSwapInt32HostToBig([data length]);
+	record.originalDataLength = CFSwapInt32HostToBig((uint32_t)[data length]);
 	
 	size_t compressedDataBufferSize = [data length] + (( [data length] + 99 ) / 100 ) + 12;
 	Bytef *compressedDataBuffer = (Bytef *)malloc(compressedDataBufferSize);
 	
     //adapt nsdata to compression stream
 	compressionStream.next_in = (Bytef*)[data bytes];
-	compressionStream.avail_in = [data length];
+	compressionStream.avail_in = (uInt)[data length];
 	compressionStream.next_out = compressedDataBuffer;
-	compressionStream.avail_out = compressedDataBufferSize;
+	compressionStream.avail_out = (uInt)compressedDataBufferSize;
 	compressionStream.data_type = Z_BINARY;
 	
 	uLong previousOut = compressionStream.total_out;
@@ -271,7 +271,7 @@
 	//write length, checksum of data, record salt, then data itself
     //assert(sizeof(record) == sizeof(record.recordBuffer));
     
-    record.dataLength = CFSwapInt32HostToBig([data length]);
+    record.dataLength = CFSwapInt32HostToBig((uint32_t)[data length]);
     record.checksum = CFSwapInt32HostToBig([data CRC32]);
 	memcpy(record.saltBuffer, [recordSalt bytes], RECORD_SALT_LEN);
     
@@ -453,7 +453,7 @@
 	//decompress here
 	Bytef *uncompressedDataBuffer = (Bytef *)malloc(record.originalDataLength);
 	
-	compressionStream.avail_in = [presumablySerializedData length];
+	compressionStream.avail_in = (UInt)[presumablySerializedData length];
 	compressionStream.next_in = (Bytef*)[presumablySerializedData bytes];
 	compressionStream.avail_out = record.originalDataLength;
 	compressionStream.next_out = uncompressedDataBuffer;

@@ -32,7 +32,7 @@
 		if ([pass isEqualToString:[verifyChangedPasswordField stringValue]]) {
 			
 			[notationPrefs setPassphraseData:[pass dataUsingEncoding:NSUTF8StringEncoding] 
-								  inKeychain:[rememberChangeButton state] 
+								  inKeychain:!![rememberChangeButton state]
 							  withIterations:[keyDerivation hashIterationCount]];
 						
 			[NSApp endSheet:changePassphraseWindow returnCode:1];
@@ -82,7 +82,7 @@
 }
 
 - (IBAction)discloseAdvancedSettings:(id)sender {
-	BOOL disclosed = [disclosureButton state];
+	BOOL disclosed = !![disclosureButton state];
 	int heightDifference = disclosed ? 118 : -118;
 	
 	if (disclosed) {

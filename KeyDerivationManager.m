@@ -74,7 +74,7 @@
 	return view;
 }
 
-- (int)hashIterationCount {
+- (NSInteger)hashIterationCount {
 	return lastHashIterationCount;
 }
 
@@ -100,18 +100,18 @@
 	[hashDurationField setAttributedStringValue:[NSAttributedString timeDelayStringWithNumberOfSeconds:[sender doubleValue]]];
 }
 
-- (double)delayForHashIterations:(int)count {
+- (NSTimeInterval)delayForHashIterations:(NSInteger)count {
 	NSDate *before = [NSDate date];
 	[crapData derivedKeyOfLength:[notationPrefs keyLengthInBits]/8 salt:crapSalt iterations:count];
 	return [[NSDate date] timeIntervalSinceDate:before];
 }
 
-- (int)estimatedIterationsForDuration:(double)duration {
+- (NSInteger)estimatedIterationsForDuration:(NSTimeInterval)duration {
 	//we could compute several hash durations at varying counts and use polynomial interpolation, but that may be overkill
 	
-	int count = (int)((duration * (double)lastHashIterationCount) / (double)lastHashDuration);
+	NSInteger count = (NSInteger)((duration * (NSTimeInterval)lastHashIterationCount) / (NSTimeInterval)lastHashDuration);
 	
-	int minCount = MAX(2000, count);
+	NSInteger minCount = MAX(2000, count);
 	//on a 1GHz machine, don't make them wait more than a minute
 	return MIN(minCount, 9000000);
 }
