@@ -48,24 +48,25 @@
 	return NSFocusRingTypeNone;
 }
 
-- (float)tableFontFrameHeight {
-	return [(NotesTableView*)[self controlView] tableFontHeight] + 1.0f;
+- (CGFloat)tableFontFrameHeight {
+	return [(NotesTableView*)[self controlView] tableFontHeight] + 1.0;
 }
 
-- (NSRect)nv_titleRectForFrame:(NSRect)aFrame {
+- (CGRect)nv_titleRectForFrame:(CGRect)aFrame {
 	//fixed based on width of the cell
 
 	//height could justifiably vary based on wrapped height of title string-9.0
-	return NSMakeRect(aFrame.origin.x, aFrame.origin.y, aFrame.size.width, [self tableFontFrameHeight]);
+	aFrame.size.height = [self tableFontFrameHeight];
+	return aFrame;
 }
 
-- (NSRect)nv_tagsRectForFrame:(NSRect)frame {
+- (CGRect)nv_tagsRectForFrame:(CGRect)frame {
 	//if no tags, return a default small frame to allow adding them
-	float fontHeight = [self tableFontFrameHeight];
-	NSSize size = NSMakeSize(NSWidth(frame), fontHeight);
-	NSPoint pos = NSMakePoint(NSMinX(frame) + 3.0, (previewIsHidden ? NSMinY(frame) + fontHeight + size.height + 2.0 : NSMaxY(frame) - 2.0) - fontHeight);
+	CGFloat fontHeight = [self tableFontFrameHeight];
+	CGSize size = CGSizeMake(CGRectGetWidth(frame), fontHeight);
+	CGPoint pos = CGPointMake(CGRectGetMinX(frame) + 3.0, (previewIsHidden ? CGRectGetMinY(frame) + fontHeight + size.height + 2.0 : CGRectGetMaxY(frame) - 2.0) - fontHeight);
 	
-	return (NSRect){pos, size};
+	return (CGRect){pos, size};
 }
 
 - (NoteObject*)noteObject {
@@ -137,7 +138,7 @@ NSAttributedString *AttributedStringForSelection(NSAttributedString *str) {
 	if (textColor)
 		baseAttrs[NSForegroundColorAttributeName] = textColor;
 
-	float fontHeight = [tv tableFontHeight];
+	CGFloat fontHeight = [tv tableFontHeight];
 	
 	//if the sort-order is date-created, then show the date on which this note was created; otherwise show date modified.
 	unsigned int columnsBitmap = [[GlobalPrefs defaultPrefs] tableColumnsBitmap];

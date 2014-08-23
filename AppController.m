@@ -519,18 +519,18 @@ void outletObjectAwoke(id sender) {
 	}
 	
 	//tell us..
-	[prefsController registerWithTarget:self forChangesInSettings:
-	 @selector(setAliasDataForDefaultDirectory:sender:),  //when someone wants to load a new database
-	 @selector(setSortedTableColumnKey:reversed:sender:),  //when sorting prefs changed
-	 @selector(setNoteBodyFont:sender:),  //when to tell notationcontroller to restyle its notes
-	 @selector(setForegroundTextColor:sender:),  //ditto
-	 @selector(setBackgroundTextColor:sender:),  //ditto
-	 @selector(setTableFontSize:sender:),  //when to tell notationcontroller to regenerate the (now potentially too-short) note-body previews
-	 @selector(addTableColumn:sender:),  //ditto
-	 @selector(removeTableColumn:sender:),  //ditto
-	 @selector(setTableColumnsShowPreview:sender:),  //when to tell notationcontroller to generate or disable note-body previews
-	 @selector(setConfirmNoteDeletion:sender:),  //whether "delete note" should have an ellipsis
-	 @selector(setAutoCompleteSearches:sender:),@selector(setUseETScrollbarsOnLion:sender:), nil];   //when to tell notationcontroller to build its title-prefix connections
+    [prefsController registerWithTarget:self forChangesInSettings:
+            @selector(setAliasDataForDefaultDirectory:sender:),  //when someone wants to load a new database
+            @selector(setSortedTableColumnKey:reversed:sender:),  //when sorting prefs changed
+            @selector(setNoteBodyFont:sender:),  //when to tell notationcontroller to restyle its notes
+            @selector(setForegroundTextColor:sender:),  //ditto
+            @selector(setBackgroundTextColor:sender:),  //ditto
+            @selector(setTableFontSize:sender:),  //when to tell notationcontroller to regenerate the (now potentially too-short) note-body previews
+            @selector(addTableColumn:sender:),  //ditto
+            @selector(removeTableColumn:sender:),  //ditto
+            @selector(setTableColumnsShowPreview:sender:),  //when to tell notationcontroller to generate or disable note-body previews
+            @selector(setConfirmNoteDeletion:sender:),  //whether "delete note" should have an ellipsis
+            @selector(setAutoCompleteSearches:sender:), @selector(setUseETScrollbarsOnLion:sender:), nil];   //when to tell notationcontroller to build its title-prefix connections
 	
 	[self performSelector:@selector(runDelayedUIActionsAfterLaunch) withObject:nil afterDelay:0.0];
 }

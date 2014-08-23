@@ -51,7 +51,7 @@
 - (void)setPrintInfo:(NSPrintInfo *)anObject;
 - (NSPrintInfo *)printInfo;
 - (NSTextStorage*)textStorage;
-- (float)pageSeparatorHeight;
+- (CGFloat)pageSeparatorHeight;
 - (NSSize)documentSizeInPage;	/* Returns the area where the document can draw */
 - (NSRect)documentRectForPageNumber:(unsigned)pageNumber;	/* First page is page 0 */
 - (NSRect)pageRectForPageNumber:(unsigned)pageNumber;	/* First page is page 0 */

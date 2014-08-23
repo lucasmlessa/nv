@@ -25,7 +25,7 @@
 typedef struct _ViewLocationContext {
 	BOOL pivotRowWasEdge;
 	id nonRetainedPivotObject;
-	float verticalDistanceToPivotRow;
+	CGFloat verticalDistanceToPivotRow;
 } ViewLocationContext;
 
 
@@ -51,10 +51,10 @@ typedef struct _ViewLocationContext {
 	NSTextFieldCell *cachedCell;
 	
 	NSDictionary *loadStatusAttributes;
-	float loadStatusStringWidth;
+	CGFloat loadStatusStringWidth;
 	NSString *loadStatusString;
 	
-	float tableFontHeight;
+	CGFloat tableFontHeight;
 
 	NSInteger affinity;
 
@@ -66,11 +66,11 @@ typedef struct _ViewLocationContext {
 
 - (ViewLocationContext)viewingLocation;
 - (void)setViewingLocation:(ViewLocationContext)ctx;
-- (double)distanceFromRow:(NSUInteger)aRow forVisibleArea:(NSRect)visibleRect;
-- (void)scrollRowToVisible:(NSInteger)rowIndex withVerticalOffset:(float)offset;
+- (CGFloat)distanceFromRow:(NSUInteger)aRow forVisibleArea:(CGRect)visibleRect;
+- (void)scrollRowToVisible:(NSInteger)rowIndex withVerticalOffset:(CGFloat)offset;
 - (void)selectRowAndScroll:(NSInteger)row;
 
-- (float)tableFontHeight;
+- (CGFloat)tableFontHeight;
 
 - (BOOL)isActiveStyle;
 - (void)setShouldUseSecondaryHighlightColor:(BOOL)value;

@@ -2055,7 +2055,7 @@ cancelCompetion:
             }
         }
     }
-    if (always||([self textContainerInset].width!=insX)) {
+    if (always || !NTVFloatsEqual([self textContainerInset].width, insX)) {
         [self setTextContainerInset:NSMakeSize(insX, kDefaultTextInsetHeight)];
         return YES;
     }

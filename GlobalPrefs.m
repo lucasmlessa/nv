@@ -587,7 +587,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		NSFont *noteFont = [self noteBodyFont];
 		
 		if (![[prefsFont fontName] isEqualToString:[noteFont fontName]] || 
-			[prefsFont pointSize] != [noteFont pointSize]) {
+			!NTVFloatsEqual([prefsFont pointSize], [noteFont pointSize])) {
 			
 			NSLog(@"archived notationPrefs base font does not match current global default font!");
 			[self _setNoteBodyFont:prefsFont];
@@ -699,10 +699,10 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		while (numberOfSpaces--) {
 			[sizeString appendString:@" "];
 		}
-		NSDictionary *sizeAttribute = @{
+        NSDictionary *sizeAttribute = @{
 			NSFontAttributeName: bodyFont
 		};
-		float sizeOfTab = [sizeString sizeWithAttributes:sizeAttribute].width;
+		CGFloat sizeOfTab = [sizeString sizeWithAttributes:sizeAttribute].width;
 		[sizeString release];
 		
 		noteBodyParagraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
@@ -771,12 +771,17 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	SEND_CALLBACKS();
 }
 
-- (float)tableFontSize {
-	return [defaults floatForKey:TableFontSizeKey];
+- (CGFloat)tableFontSize {
+	NSNumber *value = [defaults objectForKey:TableFontSizeKey];
+#if CGFLOAT_IS_DOUBLE
+	return [value doubleValue];
+#else
+	return [value floatValue];
+#endif
 }
 
-- (void)setTableFontSize:(float)fontSize sender:(id)sender {
-	[defaults setFloat:fontSize forKey:TableFontSizeKey];
+- (void)setTableFontSize:(CGFloat)fontSize sender:(id)sender {
+	[defaults setObject:@(fontSize) forKey:TableFontSizeKey];
 	
 	SEND_CALLBACKS();
 }
@@ -895,7 +900,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	return bytes;
 }
 
-- (double)scrollOffsetOfLastSelectedNote {
+- (CGFloat)scrollOffsetOfLastSelectedNote {
 	return [defaults doubleForKey:LastScrollOffsetKey];
 }
 
@@ -1003,13 +1008,17 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	return [defaults boolForKey:KeepsMaxTextWidth];
 }
 
-- (CGFloat)maxNoteBodyWidth{	
-    
-	return [[defaults objectForKey:NoteBodyMaxWidth]floatValue];
+- (CGFloat)maxNoteBodyWidth{
+	NSNumber *value = [defaults objectForKey:NoteBodyMaxWidth];
+#if CGFLOAT_IS_DOUBLE
+	return [value doubleValue];
+#else
+	return [value floatValue];
+#endif
 }
 
 - (void)setMaxNoteBodyWidth:(CGFloat)maxWidth sender:(id)sender{
-	[defaults setObject:[NSNumber numberWithFloat:maxWidth] forKey:NoteBodyMaxWidth];
+	[defaults setObject:@(maxWidth) forKey:NoteBodyMaxWidth];
 //	[defaults synchronize];
 	SEND_CALLBACKS();
 }

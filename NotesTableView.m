@@ -160,9 +160,9 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 
 
 - (void)awakeFromNib {
-	[globalPrefs registerWithTarget:self forChangesInSettings:
-	 @selector(setTableFontSize:sender:),
-	 @selector(setHorizontalLayout:sender:),@selector(setShowGrid:sender:),@selector(setAlternatingRows:sender:), nil];
+    [globalPrefs registerWithTarget:self forChangesInSettings:
+            @selector(setTableFontSize:sender:),
+            @selector(setHorizontalLayout:sender:), @selector(setShowGrid:sender:), @selector(setAlternatingRows:sender:), nil];
 	
 	[self registerForDraggedTypes:@[NSFilenamesPboardType, NSRTFPboardType, NSRTFDPboardType, NSStringPboardType]];
 	
@@ -209,7 +209,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	[[NSApp delegate] addNotesFromPasteboard:[NSPasteboard generalPasteboard]];
 }
 
-- (float)tableFontHeight {
+- (CGFloat)tableFontHeight {
 	return tableFontHeight;
 }
 
@@ -286,7 +286,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 
 	NSLayoutManager *lm = [[NSLayoutManager alloc] init];
 	tableFontHeight = [lm defaultLineHeightForFont:font];
-	float h[4] = {(tableFontHeight * 3.0 + 5.0f), (tableFontHeight * 2.0 + 6.0f), (tableFontHeight + 2.0f), tableFontHeight + 2.0f};
+	CGFloat h[4] = {(tableFontHeight * 3.0 + 5.0f), (tableFontHeight * 2.0 + 6.0f), (tableFontHeight + 2.0f), tableFontHeight + 2.0f};
 	[self setRowHeight: horiz ? ([globalPrefs tableColumnsShowPreview] ? h[0] : 
 								 (ColumnIsSet(NoteLabelsColumn,[globalPrefs tableColumnsBitmap]) ? h[1] : h[2])) : h[3]];
 	[lm release];
@@ -323,7 +323,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
     }
 }
 
-- (double)distanceFromRow:(NSUInteger)aRow forVisibleArea:(NSRect)visibleRect {
+- (CGFloat)distanceFromRow:(NSUInteger)aRow forVisibleArea:(CGRect)visibleRect {
 	return [self rectOfRow:aRow].origin.y - visibleRect.origin.y;
 }
 
@@ -378,7 +378,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	}	
 }
 
-- (void)scrollRowToVisible:(NSInteger)rowIndex withVerticalOffset:(float)offset {
+- (void)scrollRowToVisible:(NSInteger)rowIndex withVerticalOffset:(CGFloat)offset {
 	NSRect rowRect = [self rectOfRow:rowIndex];
 	
 	rowRect.origin.y -= offset;

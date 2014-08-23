@@ -12,13 +12,13 @@
 
 @interface ETTransparentScroller : NSScroller {
     NSImage *knobTop, *knobVerticalFill, *knobBottom, *slotTop, *slotVerticalFill, *slotBottom;
-    float verticalPaddingLeft;
-    float verticalPaddingRight;
-    float verticalPaddingTop;
-    float verticalPaddingBottom;
-    float minKnobHeight;
-    float slotAlpha;
-    float knobAlpha;
+    CGFloat verticalPaddingLeft;
+    CGFloat verticalPaddingRight;
+    CGFloat verticalPaddingTop;
+    CGFloat verticalPaddingBottom;
+    CGFloat minKnobHeight;
+    CGFloat slotAlpha;
+    CGFloat knobAlpha;
 //    BOOL isOverlay;
     BOOL fillBackground;
 }

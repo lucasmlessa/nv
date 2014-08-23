@@ -24,8 +24,8 @@ extern void ResetFontRelatedTableAttributes();
 NSDictionary *LineTruncAttributesForTitle();
 
 - (NSString*)truncatedPreviewStringOfLength:(NSUInteger)bodyCharCount;
-- (NSAttributedString*)attributedSingleLinePreviewFromBodyText:(NSAttributedString*)bodyText upToWidth:(float)width;
+- (NSAttributedString*)attributedSingleLinePreviewFromBodyText:(NSAttributedString *)bodyText upToWidth:(CGFloat)width;
 - (NSAttributedString*)attributedSingleLineTitle;
-- (NSAttributedString*)attributedMultiLinePreviewFromBodyText:(NSAttributedString*)bodyText upToWidth:(float)upToWidth intrusionWidth:(float)intWidth;
+- (NSAttributedString*)attributedMultiLinePreviewFromBodyText:(NSAttributedString *)bodyText upToWidth:(CGFloat)upToWidth intrusionWidth:(CGFloat)intWidth;
 
 @end

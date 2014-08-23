@@ -152,8 +152,8 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2);
 
 - (NSInteger)numberOfSpacesInTab;
 
-- (float)tableFontSize;
-- (void)setTableFontSize:(float)fontSize sender:(id)sender;
+- (CGFloat)tableFontSize;
+- (void)setTableFontSize:(CGFloat)fontSize sender:(id)sender;
 
 - (void)setHorizontalLayout:(BOOL)value sender:(id)sender;
 - (BOOL)horizontalLayout;
@@ -164,7 +164,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2);
 - (NSString*)lastSelectedPreferencesPane;
 - (void)setLastSelectedPreferencesPane:(NSString*)pane sender:(id)sender;
 
-- (double)scrollOffsetOfLastSelectedNote;
+- (CGFloat)scrollOffsetOfLastSelectedNote;
 - (CFUUIDBytes)UUIDBytesOfLastSelectedNote;
 - (NSString*)lastSearchString;
 - (void)setLastSearchString:(NSString*)string selectedNote:(id<SynchronizedNote>)aNote scrollOffsetForTableView:(NotesTableView*)tv sender:(id)sender;

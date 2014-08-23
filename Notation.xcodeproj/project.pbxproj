@@ -643,6 +643,7 @@
 		DB30022019A8FCA800FAE64D /* NSArray+NTVFunctional.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSArray+NTVFunctional.h"; sourceTree = "<group>"; };
 		DB30022119A8FCA800FAE64D /* NSArray+NTVFunctional.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSArray+NTVFunctional.m"; sourceTree = "<group>"; };
 		DB327BE219A6B3C500947BAE /* zh */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = zh; path = zh.lproj/ServicesMenu.strings; sourceTree = "<group>"; };
+		DB41EE4919A9543F00AD6246 /* NTVMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NTVMath.h; sourceTree = "<group>"; };
 		DB98BBA019A90B1E00055B14 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		DB98BBA219A90B2500055B14 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		DB98BBA719A9110700055B14 /* NSData+NTVCommonDigest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+NTVCommonDigest.h"; sourceTree = "<group>"; };
@@ -1206,6 +1207,7 @@
 				213FAD520B3C6B52004C74BD /* FSExchangeObjectsCompat.c */,
 				5C4479DF17020153000AA45A /* nvaDevConfig.h */,
 				DB98BBDC19A9276F00055B14 /* NTVMacros.h */,
+				DB41EE4919A9543F00AD6246 /* NTVMath.h */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";

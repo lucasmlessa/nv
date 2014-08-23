@@ -58,8 +58,8 @@
 	return self;
 }
 
-static float defaultTextPadding(void) {
-    static float padding = -1;
+static CGFloat defaultTextPadding(void) {
+	static CGFloat padding = -1;
     if (padding < 0.0) {
         NSTextContainer *container = [[NSTextContainer alloc] init];
         padding = [container lineFragmentPadding];
@@ -117,7 +117,7 @@ static float defaultTextPadding(void) {
     return numPages;
 }
     
-- (float)pageSeparatorHeight {
+- (CGFloat)pageSeparatorHeight {
     return 5.0;
 }
 
@@ -150,19 +150,19 @@ static float defaultTextPadding(void) {
     return rect;
 }
 
-- (void)drawRect:(NSRect)rect {
+- (void)drawRect:(CGRect)rect {
     if ([[NSGraphicsContext currentContext] isDrawingToScreen]) {
-        NSSize paperSize = [printInfo paperSize];
-        unsigned firstPage = rect.origin.y / (paperSize.height + [self pageSeparatorHeight]);
-        unsigned lastPage = NSMaxY(rect) / (paperSize.height + [self pageSeparatorHeight]);
-        unsigned cnt;
-		
+		CGSize paperSize = [printInfo paperSize];
+		NSUInteger firstPage = (NSUInteger)floorf(CGRectGetMinY(rect) / (paperSize.height + [self pageSeparatorHeight]));
+		NSUInteger lastPage = (NSUInteger)floorf(CGRectGetMaxY(rect) / (paperSize.height + [self pageSeparatorHeight]));
+
 		NSAssert(NO, @"MultiplePageView should not be drawing to screen");
         
 //        [marginColor set];
 //        NSRectFill(rect);
 
  //       [lineColor set];
+		unsigned cnt;
         for (cnt = firstPage; cnt <= lastPage; cnt++) {
 	    // Draw boundary around the page, making sure it doesn't overlap the document area in terms of pixels
 	    NSRect docRect = NSInsetRect([self centerScanRect:[self documentRectForPageNumber:cnt]], -1.0, -1.0);
@@ -195,13 +195,13 @@ static float defaultTextPadding(void) {
     [[textView textStorage] replaceCharactersInRange:NSMakeRange(0, 0) withAttributedString:string];
 	
 	(void)[[textView layoutManager] glyphRangeForTextContainer:[textView textContainer]];
-	float containerHeight = [[textView layoutManager] usedRectForTextContainer:[textView textContainer]].size.height;
-	float pageHeight = textSize.height - defaultTextPadding() * 2.0; //[info paperSize].height - ([info topMargin] + [info bottomMargin]);
+	CGFloat containerHeight = [[textView layoutManager] usedRectForTextContainer:[textView textContainer]].size.height;
+	CGFloat pageHeight = textSize.height - defaultTextPadding() * 2.0; //[info paperSize].height - ([info topMargin] + [info bottomMargin]);
 	
 	//NSLog(@"text height: %g, page height: %g", containerHeight, pageHeight);
 	[textView release];
 	
-	return (int)ceil(containerHeight/pageHeight);	
+	return (int)ceilf(containerHeight/pageHeight);
 }
 
 + (NSView *)printableViewWithNotes:(NSArray*)notes {

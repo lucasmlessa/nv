@@ -16,7 +16,7 @@
 // Geometry
 - (void)_updateGeometry;
 - (MAWindowPosition)_bestSideForAutomaticPosition;
-- (float)_arrowInset;
+- (CGFloat)_arrowInset;
 
 // Drawing
 - (void)_updateBackground;
@@ -29,15 +29,22 @@
 
 @implementation MAAttachedWindow
 
+@synthesize borderWidth = borderWidth;
+@synthesize viewMargin = viewMargin;
+@synthesize arrowBaseWidth = arrowBaseWidth;
+@synthesize arrowHeight = arrowHeight;
+@synthesize hasArrow = hasArrow;
+@synthesize cornerRadius = cornerRadius;
+@synthesize drawsRoundCornerBesideArrow = drawsRoundCornerBesideArrow;
 
 #pragma mark Initializers
 
 
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
-                          inWindow:(NSWindow *)window 
-                            onSide:(MAWindowPosition)side 
-                        atDistance:(float)distance
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
+                          inWindow:(NSWindow *)window
+                            onSide:(MAWindowPosition)side
+                        atDistance:(CGFloat)distance
 {
     // Insist on having a valid view.
     if (!view) {
@@ -46,7 +53,7 @@
     }
     
     // Create dummy initial contentRect for window.
-    NSRect contentRect = NSZeroRect;
+    CGRect contentRect = CGRectZero;
     contentRect.size = [view frame].size;
 
 	self = [super initWithContentRect:contentRect
@@ -73,7 +80,7 @@
 	// Set up some sensible defaults for display.
 	_MABackgroundColor = [MAATTACHEDWINDOW_DEFAULT_BACKGROUND_COLOR copy];
 	borderColor = [MAATTACHEDWINDOW_DEFAULT_BORDER_COLOR copy];
-	borderWidth = 2.0;
+	self.borderWidth = 2.0;
 	viewMargin = 2.0;
 	arrowBaseWidth = 20.0;
 	arrowHeight = 16.0;
@@ -106,10 +113,10 @@
 }
 
 
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
-                          inWindow:(NSWindow *)window 
-                        atDistance:(float)distance
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
+                          inWindow:(NSWindow *)window
+                        atDistance:(CGFloat)distance
 {
     return (self = [self initWithView:view attachedToPoint:point
 							 inWindow:window onSide:MAPositionAutomatic
@@ -117,19 +124,19 @@
 }
 
 
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
-                            onSide:(MAWindowPosition)side 
-                        atDistance:(float)distance
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
+                            onSide:(MAWindowPosition)side
+                        atDistance:(CGFloat)distance
 {
     return (self = [self initWithView:view attachedToPoint:point inWindow:nil
 							   onSide:side atDistance:distance]);
 }
 
 
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
-                        atDistance:(float)distance
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
+                        atDistance:(CGFloat)distance
 {
     return (self = [self initWithView:view attachedToPoint:point
 							 inWindow:nil onSide:MAPositionAutomatic
@@ -137,8 +144,8 @@
 }
 
 
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
                           inWindow:(NSWindow *)window
 {
     return (self = [self initWithView:view attachedToPoint:point
@@ -147,8 +154,8 @@
 }
 
 
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
                             onSide:(MAWindowPosition)side
 {
     return (self = [self initWithView:view attachedToPoint:point
@@ -157,8 +164,8 @@
 }
 
 
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
 {
     return (self = [self initWithView:view attachedToPoint:point
 							 inWindow:nil onSide:MAPositionAutomatic
@@ -181,14 +188,14 @@
 
 - (void)_updateGeometry
 {
-    NSRect contentRect = NSZeroRect;
+    CGRect contentRect = CGRectZero;
     contentRect.size = [_view frame].size;
     
     // Account for viewMargin.
-    _viewFrame = NSMakeRect(viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR,
+    _viewFrame = CGRectMake(viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR,
                             viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR,
                             [_view frame].size.width, [_view frame].size.height);
-    contentRect = NSInsetRect(contentRect, 
+    contentRect = CGRectInset(contentRect,
                               -viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR, 
                               -viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR);
     
@@ -196,7 +203,7 @@
     // Note: we always leave room for the arrow, even if it currently set to 
     // not be shown. This is so it can easily be toggled whilst the window 
     // is visible, without altering the window's frame origin point.
-    float scaledArrowHeight = arrowHeight * MAATTACHEDWINDOW_SCALE_FACTOR;
+    CGFloat scaledArrowHeight = arrowHeight * MAATTACHEDWINDOW_SCALE_FACTOR;
     switch (_side) {
         case MAPositionLeft:
         case MAPositionLeftTop:
@@ -226,9 +233,9 @@
     
     // Position frame origin appropriately for _side, accounting for arrow-inset.
     contentRect.origin = (_window) ? [_window convertBaseToScreen:_point] : _point;
-    float arrowInset = [self _arrowInset];
-    float halfWidth = contentRect.size.width / 2.0;
-    float halfHeight = contentRect.size.height / 2.0;
+    CGFloat arrowInset = [self _arrowInset];
+    CGFloat halfWidth = contentRect.size.width / 2.0;
+    CGFloat halfHeight = contentRect.size.height / 2.0;
     switch (_side) {
         case MAPositionTopLeft:
             contentRect.origin.x -= contentRect.size.width - arrowInset;
@@ -311,18 +318,18 @@
 - (MAWindowPosition)_bestSideForAutomaticPosition
 {
     // Get all relevant geometry in screen coordinates.
-    NSRect screenFrame;
+    CGRect screenFrame;
     if (_window && [_window screen]) {
         screenFrame = [[_window screen] visibleFrame];
     } else {
          screenFrame = [[NSScreen mainScreen] visibleFrame];
     }
-    NSPoint pointOnScreen = (_window) ? [_window convertBaseToScreen:_point] : _point;
-    NSSize viewSize = [_view frame].size;
+    CGPoint pointOnScreen = (_window) ? [_window convertBaseToScreen:_point] : _point;
+    CGSize viewSize = [_view frame].size;
     viewSize.width += (viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR) * 2.0;
     viewSize.height += (viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR) * 2.0;
     MAWindowPosition side = MAPositionBottom; // By default, position us centered below.
-    float scaledArrowHeight = (arrowHeight * MAATTACHEDWINDOW_SCALE_FACTOR) + _distance;
+    CGFloat scaledArrowHeight = (arrowHeight * MAATTACHEDWINDOW_SCALE_FACTOR) + _distance;
     
     // We'd like to display directly below the specified point, since this gives a 
     // sense of a relationship between the point and this window. Check there's room.
@@ -343,11 +350,11 @@
         }
     }
     
-    float halfWidth = viewSize.width / 2.0;
-    float halfHeight = viewSize.height / 2.0;
+    CGFloat halfWidth = viewSize.width / 2.0;
+    CGFloat halfHeight = viewSize.height / 2.0;
     
-    NSRect parentFrame = (_window) ? [_window frame] : screenFrame;
-    float arrowInset = [self _arrowInset];
+    CGRect parentFrame = (_window) ? [_window frame] : screenFrame;
+    CGFloat arrowInset = [self _arrowInset];
     
     // We're currently at a primary side.
     // Try to avoid going outwith the parent area in the secondary dimension,
@@ -356,9 +363,9 @@
         case MAPositionBottom:
         case MAPositionTop:
             // Check to see if we go beyond the left edge of the parent area.
-            if (pointOnScreen.x - halfWidth < NSMinX(parentFrame)) {
+            if (pointOnScreen.x - halfWidth < CGRectGetMinX(parentFrame)) {
                 // We go beyond the left edge. Try using right position.
-                if (pointOnScreen.x + viewSize.width - arrowInset < NSMaxX(screenFrame)) {
+                if (pointOnScreen.x + viewSize.width - arrowInset < CGRectGetMaxX(screenFrame)) {
                     // We'd still be on-screen using right, so use it.
                     if (side == MAPositionBottom) {
                         side = MAPositionBottomRight;
@@ -366,9 +373,9 @@
                         side = MAPositionTopRight;
                     }
                 }
-            } else if (pointOnScreen.x + halfWidth >= NSMaxX(parentFrame)) {
+            } else if (pointOnScreen.x + halfWidth >= CGRectGetMaxX(parentFrame)) {
                 // We go beyond the right edge. Try using left position.
-                if (pointOnScreen.x - viewSize.width + arrowInset >= NSMinX(screenFrame)) {
+                if (pointOnScreen.x - viewSize.width + arrowInset >= CGRectGetMinX(screenFrame)) {
                     // We'd still be on-screen using left, so use it.
                     if (side == MAPositionBottom) {
                         side = MAPositionBottomLeft;
@@ -381,9 +388,9 @@
         case MAPositionRight:
         case MAPositionLeft:
             // Check to see if we go beyond the bottom edge of the parent area.
-            if (pointOnScreen.y - halfHeight < NSMinY(parentFrame)) {
+            if (pointOnScreen.y - halfHeight < CGRectGetMinY(parentFrame)) {
                 // We go beyond the bottom edge. Try using top position.
-                if (pointOnScreen.y + viewSize.height - arrowInset < NSMaxY(screenFrame)) {
+                if (pointOnScreen.y + viewSize.height - arrowInset < CGRectGetMaxY(screenFrame)) {
                     // We'd still be on-screen using top, so use it.
                     if (side == MAPositionRight) {
                         side = MAPositionRightTop;
@@ -391,9 +398,9 @@
                         side = MAPositionLeftTop;
                     }
                 }
-            } else if (pointOnScreen.y + halfHeight >= NSMaxY(parentFrame)) {
+            } else if (pointOnScreen.y + halfHeight >= CGRectGetMaxY(parentFrame)) {
                 // We go beyond the top edge. Try using bottom position.
-                if (pointOnScreen.y - viewSize.height + arrowInset >= NSMinY(screenFrame)) {
+                if (pointOnScreen.y - viewSize.height + arrowInset >= CGRectGetMinY(screenFrame)) {
                     // We'd still be on-screen using bottom, so use it.
                     if (side == MAPositionRight) {
                         side = MAPositionRightBottom;
@@ -411,9 +418,9 @@
 }
 
 
-- (float)_arrowInset
+- (CGFloat)_arrowInset
 {
-    float cornerInset = (drawsRoundCornerBesideArrow) ? cornerRadius : 0;
+    CGFloat cornerInset = (drawsRoundCornerBesideArrow) ? cornerRadius : 0;
     return (cornerInset + (arrowBaseWidth / 2.0)) * MAATTACHEDWINDOW_SCALE_FACTOR;
 }
 
@@ -452,9 +459,9 @@
     [bgPath fill];
     
     // Draw border if appropriate.
-    if (borderWidth > 0) {
+    if (self.borderWidth > 0) {
         // Double the borderWidth since we're drawing inside the path.
-        [bgPath setLineWidth:(borderWidth * 2.0) * MAATTACHEDWINDOW_SCALE_FACTOR];
+        [bgPath setLineWidth:(self.borderWidth * 2.0) * MAATTACHEDWINDOW_SCALE_FACTOR];
         [borderColor set];
         [bgPath stroke];
     }
@@ -478,19 +485,19 @@
      6. cornerRadius
      */
     
-    float scaleFactor = MAATTACHEDWINDOW_SCALE_FACTOR;
-    float scaledRadius = cornerRadius * scaleFactor;
-    float scaledArrowWidth = arrowBaseWidth * scaleFactor;
-    float halfArrowWidth = scaledArrowWidth / 2.0;
-    NSRect contentArea = NSInsetRect(_viewFrame,
+    CGFloat scaleFactor = MAATTACHEDWINDOW_SCALE_FACTOR;
+    CGFloat scaledRadius = cornerRadius * scaleFactor;
+    CGFloat scaledArrowWidth = arrowBaseWidth * scaleFactor;
+    CGFloat halfArrowWidth = scaledArrowWidth / 2.0;
+    CGRect contentArea = CGRectInset(_viewFrame,
                                      -viewMargin * scaleFactor,
                                      -viewMargin * scaleFactor);
-    float minX = ceilf(NSMinX(contentArea) * scaleFactor + 0.5f);
-	float midX = NSMidX(contentArea) * scaleFactor;
-	float maxX = floorf(NSMaxX(contentArea) * scaleFactor - 0.5f);
-	float minY = ceilf(NSMinY(contentArea) * scaleFactor + 0.5f);
-	float midY = NSMidY(contentArea) * scaleFactor;
-	float maxY = floorf(NSMaxY(contentArea) * scaleFactor - 0.5f);
+    CGFloat minX = ceilf(CGRectGetMinX(contentArea) * scaleFactor + 0.5f);
+	CGFloat midX = CGRectGetMidX(contentArea) * scaleFactor;
+	CGFloat maxX = floorf(CGRectGetMaxX(contentArea) * scaleFactor - 0.5f);
+	CGFloat minY = ceilf(CGRectGetMinY(contentArea) * scaleFactor + 0.5f);
+	CGFloat midY = CGRectGetMidY(contentArea) * scaleFactor;
+	CGFloat maxY = floorf(CGRectGetMaxY(contentArea) * scaleFactor - 0.5f);
 	
     NSBezierPath *path = [NSBezierPath bezierPath];
     [path setLineJoinStyle:NSRoundLineJoinStyle];
@@ -498,7 +505,7 @@
     // Begin at top-left. This will be either after the rounded corner, or 
     // at the top-left point if cornerRadius is zero and/or we're drawing 
     // the arrow at the top-left or left-top without a rounded corner.
-    NSPoint currPt = NSMakePoint(minX, maxY);
+    CGPoint currPt = CGPointMake(minX, maxY);
     if (scaledRadius > 0 &&
         (drawsRoundCornerBesideArrow || 
             (_side != MAPositionBottomRight && _side != MAPositionRightBottom)) 
@@ -506,7 +513,7 @@
         currPt.x += scaledRadius;
     }
     
-    NSPoint endOfLine = NSMakePoint(maxX, maxY);
+    CGPoint endOfLine = CGPointMake(maxX, maxY);
     BOOL shouldDrawNextCorner = NO;
     if (scaledRadius > 0 &&
         (drawsRoundCornerBesideArrow || 
@@ -665,13 +672,13 @@
         return;
     }
     
-    float scaleFactor = MAATTACHEDWINDOW_SCALE_FACTOR;
-    float scaledArrowWidth = arrowBaseWidth * scaleFactor;
-    float halfArrowWidth = scaledArrowWidth / 2.0;
-    float scaledArrowHeight = arrowHeight * scaleFactor;
-    NSPoint currPt = [path currentPoint];
-    NSPoint tipPt = currPt;
-    NSPoint endPt = currPt;
+    CGFloat scaleFactor = MAATTACHEDWINDOW_SCALE_FACTOR;
+    CGFloat scaledArrowWidth = arrowBaseWidth * scaleFactor;
+    CGFloat halfArrowWidth = scaledArrowWidth / 2.0;
+    CGFloat scaledArrowHeight = arrowHeight * scaleFactor;
+    CGPoint currPt = [path currentPoint];
+    CGPoint tipPt = currPt;
+    CGPoint endPt = currPt;
     
     // Note: we always build the arrow path in a clockwise direction.
     switch (_side) {
@@ -783,7 +790,7 @@
 #pragma mark Accessors
 
 
-- (void)setPoint:(NSPoint)point side:(MAWindowPosition)side
+- (void)setPoint:(CGPoint)point side:(MAWindowPosition)side
 {
 	// Thanks to Martin Redington.
 	_point = point;
@@ -795,7 +802,7 @@
 }
 
 
-- (NSColor *)windowBackgroundColor {
+- (NSColor *)backgroundColor {
     return [[_MABackgroundColor retain] autorelease];
 }
 
@@ -825,14 +832,9 @@
 }
 
 
-- (float)borderWidth {
-    return borderWidth;
-}
-
-
-- (void)setBorderWidth:(float)value {
-    if (borderWidth != value) {
-        float maxBorderWidth = viewMargin;
+- (void)setBorderWidth:(CGFloat)value {
+    if (!NTVFloatsEqual(borderWidth, value)) {
+        CGFloat maxBorderWidth = viewMargin;
         if (value <= maxBorderWidth) {
             borderWidth = value;
         } else {
@@ -844,14 +846,9 @@
 }
 
 
-- (float)viewMargin {
-    return viewMargin;
-}
-
-
-- (void)setViewMargin:(float)value {
-    if (viewMargin != value) {
-        viewMargin = MAX(value, 0.0);
+- (void)setViewMargin:(CGFloat)value {
+    if (!NTVFloatsEqual(viewMargin, value)) {
+        viewMargin = fmaxf(value, 0.0);
         
         // Adjust cornerRadius appropriately (which will also adjust arrowBaseWidth).
         [self setCornerRadius:cornerRadius];
@@ -859,13 +856,8 @@
 }
 
 
-- (float)arrowBaseWidth {
-    return arrowBaseWidth;
-}
-
-
-- (void)setArrowBaseWidth:(float)value {
-    float maxWidth = (MIN(_viewFrame.size.width, _viewFrame.size.height) + 
+- (void)setArrowBaseWidth:(CGFloat)value {
+    CGFloat maxWidth = (fminf(_viewFrame.size.width, _viewFrame.size.height) +
                       (viewMargin * 2.0)) - cornerRadius;
     if (drawsRoundCornerBesideArrow) {
         maxWidth -= cornerRadius;
@@ -880,13 +872,8 @@
 }
 
 
-- (float)arrowHeight {
-    return arrowHeight;
-}
-
-
-- (void)setArrowHeight:(float)value {
-    if (arrowHeight != value) {
+- (void)setArrowHeight:(CGFloat)value {
+    if (!NTVFloatsEqual(arrowHeight, value)) {
         arrowHeight = value;
         
         [self _redisplay];
@@ -894,12 +881,7 @@
 }
 
 
-- (float)hasArrow {
-    return hasArrow;
-}
-
-
-- (void)setHasArrow:(float)value {
+- (void)setHasArrow:(BOOL)value {
     if (hasArrow != value) {
         hasArrow = value;
         
@@ -908,32 +890,22 @@
 }
 
 
-- (float)cornerRadius {
-    return cornerRadius;
-}
-
-
-- (void)setCornerRadius:(float)value {
-    float maxRadius = ((MIN(_viewFrame.size.width, _viewFrame.size.height) + 
+- (void)setCornerRadius:(CGFloat)value {
+    CGFloat maxRadius = ((fminf(_viewFrame.size.width, _viewFrame.size.height) +
                         (viewMargin * 2.0)) - arrowBaseWidth) / 2.0;
     if (value <= maxRadius) {
         cornerRadius = value;
     } else {
         cornerRadius = maxRadius;
     }
-    cornerRadius = MAX(cornerRadius, 0.0);
+    cornerRadius = fmaxf(cornerRadius, 0.0);
     
     // Adjust arrowBaseWidth appropriately.
     [self setArrowBaseWidth:arrowBaseWidth];
 }
 
 
-- (float)drawsRoundCornerBesideArrow {
-    return drawsRoundCornerBesideArrow;
-}
-
-
-- (void)setDrawsRoundCornerBesideArrow:(float)value {
+- (void)setDrawsRoundCornerBesideArrow:(BOOL)value {
     if (drawsRoundCornerBesideArrow != value) {
         drawsRoundCornerBesideArrow = value;
         

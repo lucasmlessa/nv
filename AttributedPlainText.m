@@ -182,7 +182,7 @@ static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange)
 					[newAttributes removeObjectForKey:NSStrokeWidthAttributeName];
 				}
 			}
-			if (newFont && [newFont pointSize] != [currentFont pointSize]) {
+			if (newFont && !NTVFloatsEqual([newFont pointSize], [currentFont pointSize])) {
 				//also make the font have the same size
 				newFont = [fontMan convertFont:newFont toSize:[currentFont pointSize]];
 			}

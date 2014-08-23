@@ -21,7 +21,7 @@
 
 @interface NSBezierPath (NV)
 
-+ (NSBezierPath *)bezierPathWithRoundRectInRect:(NSRect)aRect radius:(float)radius;
++ (NSBezierPath *)bezierPathWithRoundRectInRect:(CGRect)aRect radius:(CGFloat)radius;
 
 + (NSBezierPath *)bezierPathWithLayoutManager:(NSLayoutManager*)layoutManager characterRange:(NSRange)charRange atPoint:(NSPoint)point;
 

@@ -54,7 +54,7 @@ typedef struct _NoteCatalogEntry {
 	DeletionManager *deletionManager;
 	id delegate;
 	
-	float titleColumnWidth;
+	CGFloat titleColumnWidth;
 	NoteAttributeColumn* sortColumn;
 	
     NoteObject **allNotesBuffer;
@@ -178,7 +178,7 @@ typedef struct _NoteCatalogEntry {
 - (void)resortAllNotes;
 - (void)sortAndRedisplayNotes;
 
-- (float)titleColumnWidth;
+- (CGFloat)titleColumnWidth;
 - (void)regeneratePreviewsForColumn:(NSTableColumn*)col visibleFilteredRows:(NSRange)rows forceUpdate:(BOOL)force;
 - (void)regenerateAllPreviews;
 

@@ -26,10 +26,10 @@
 
 
 NSAttributedString *AttributedStringForSelection(NSAttributedString *str);
-- (NSRect)nv_titleRectForFrame:(NSRect)aFrame;
-- (NSRect)nv_tagsRectForFrame:(NSRect)frame;
+- (CGRect)nv_titleRectForFrame:(CGRect)aFrame;
+- (CGRect)nv_tagsRectForFrame:(CGRect)frame;
 
-- (float)tableFontFrameHeight;
+- (CGFloat)tableFontFrameHeight;
 
 - (void)setPreviewIsHidden:(BOOL)value;
 + (NSColor*)dateColorForTint;

@@ -34,10 +34,10 @@
 
 typedef enum _MAWindowPosition {
     // The four primary sides are compatible with the preferredEdge of NSDrawer.
-    MAPositionLeft          = NSMinXEdge, // 0
-    MAPositionRight         = NSMaxXEdge, // 2
-    MAPositionTop           = NSMaxYEdge, // 3
-    MAPositionBottom        = NSMinYEdge, // 1
+    MAPositionLeft          = CGRectMinXEdge, // 0
+    MAPositionRight         = CGRectMaxXEdge, // 2
+    MAPositionTop           = CGRectMaxYEdge, // 3
+    MAPositionBottom        = CGRectMinYEdge, // 1
     MAPositionLeftTop       = 4,
     MAPositionLeftBottom    = 5,
     MAPositionRightTop      = 6,
@@ -51,22 +51,21 @@ typedef enum _MAWindowPosition {
 
 @interface MAAttachedWindow : NSWindow {
     NSColor *borderColor;
-    float borderWidth;
-    float viewMargin;
-    float arrowBaseWidth;
-    float arrowHeight;
+    CGFloat viewMargin;
+    CGFloat arrowBaseWidth;
+    CGFloat arrowHeight;
     BOOL hasArrow;
-    float cornerRadius;
+    CGFloat cornerRadius;
     BOOL drawsRoundCornerBesideArrow;
     
     @private
     NSColor *_MABackgroundColor;
     __weak NSView *_view;
     __weak NSWindow *_window;
-    NSPoint _point;
+    CGPoint _point;
     MAWindowPosition _side;
-    float _distance;
-    NSRect _viewFrame;
+    CGFloat _distance;
+    CGRect _viewFrame;
     BOOL _resizing;
 }
 
@@ -96,57 +95,49 @@ typedef enum _MAWindowPosition {
  */
 
 - (MAAttachedWindow *)initWithView:(NSView *)view           // designated initializer
-                   attachedToPoint:(NSPoint)point 
-                          inWindow:(NSWindow *)window 
-                            onSide:(MAWindowPosition)side 
-                        atDistance:(float)distance;
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
-                          inWindow:(NSWindow *)window 
-                        atDistance:(float)distance;
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
-                            onSide:(MAWindowPosition)side 
-                        atDistance:(float)distance;
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
-                        atDistance:(float)distance;
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
+                   attachedToPoint:(CGPoint)point
+                          inWindow:(NSWindow *)window
+                            onSide:(MAWindowPosition)side
+                        atDistance:(CGFloat)distance;
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
+                          inWindow:(NSWindow *)window
+                        atDistance:(CGFloat)distance;
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
+                            onSide:(MAWindowPosition)side
+                        atDistance:(CGFloat)distance;
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
+                        atDistance:(CGFloat)distance;
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
                           inWindow:(NSWindow *)window;
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point 
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point
                             onSide:(MAWindowPosition)side;
-- (MAAttachedWindow *)initWithView:(NSView *)view 
-                   attachedToPoint:(NSPoint)point;
+- (MAAttachedWindow *)initWithView:(NSView *)view
+                   attachedToPoint:(CGPoint)point;
 
 // Accessor methods
-- (void)setPoint:(NSPoint)point side:(MAWindowPosition)side;
-- (NSColor *)borderColor;
-- (void)setBorderColor:(NSColor *)value;
-- (float)borderWidth;
-- (void)setBorderWidth:(float)value;                   // See note 1 below.
-- (float)viewMargin;
-- (void)setViewMargin:(float)value;                    // See note 2 below.
-- (float)arrowBaseWidth;
-- (void)setArrowBaseWidth:(float)value;                // See note 2 below.
-- (float)arrowHeight;
-- (void)setArrowHeight:(float)value;                   // See note 2 below.
-- (float)hasArrow;
-- (void)setHasArrow:(float)value;
-- (float)cornerRadius;
-- (void)setCornerRadius:(float)value;                  // See note 2 below.
-- (float)drawsRoundCornerBesideArrow;                  // See note 3 below.
-- (void)setDrawsRoundCornerBesideArrow:(float)value;   // See note 2 below.
+@property (nonatomic, readonly) CGPoint point;
+- (void)setPoint:(CGPoint)point side:(MAWindowPosition)side;
+@property (nonatomic, retain) NSColor *borderColor;
+@property (nonatomic) CGFloat borderWidth;              // See note 1 below.
+@property (nonatomic) CGFloat viewMargin;               // See note 2 below.
+@property (nonatomic) CGFloat arrowBaseWidth;           // See note 2 below.
+@property (nonatomic) CGFloat arrowHeight;              // See note 2 below.
+@property (nonatomic) BOOL hasArrow;
+@property (nonatomic) CGFloat cornerRadius;             // See note 2 below.
+@property (nonatomic) BOOL drawsRoundCornerBesideArrow; // See note 3 below.
+
 - (void)setBackgroundImage:(NSImage *)value;
-- (NSColor *)windowBackgroundColor;                    // See note 4 below.
-- (void)setBackgroundColor:(NSColor *)value;
 
 /*
  Notes regarding accessor methods:
  
  1. The border is drawn inside the viewMargin area, expanding inwards; it does not 
-    increase the width/height of the window. You can use the -setBorderWidth: and 
+    increase the width/height of the window. You can use the -setBorderWidth: and
     -setViewMargin: methods together to achieve the exact look/geometry you want.
     (viewMargin is the distance between the edge of the view and the window edge.)
  

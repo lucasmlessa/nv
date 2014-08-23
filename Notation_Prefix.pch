@@ -25,6 +25,7 @@
 #if defined(__OBJC__) && __OBJC__
 #import <Cocoa/Cocoa.h>
 #import "NTVMacros.h"
+#import "NTVMath.h"
 #endif
 
 // As of DP6. Plan accordingly.

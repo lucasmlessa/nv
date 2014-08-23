@@ -28,7 +28,7 @@
     NSInteger (*reverseSortFunction) (id*, id*);
     id (*objectAttribute) (id, id, NSInteger);
 	SEL mutateObjectSelector;
-	float absoluteMinimumWidth;
+	CGFloat absoluteMinimumWidth;
 }
 
 + (NSDictionary*)standardDictionary;

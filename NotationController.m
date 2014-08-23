@@ -1545,15 +1545,15 @@ bail:
 	}
 }
 
-- (float)titleColumnWidth {
+- (CGFloat)titleColumnWidth {
 	return titleColumnWidth;
 }
 
 - (void)regeneratePreviewsForColumn:(NSTableColumn*)col visibleFilteredRows:(NSRange)rows forceUpdate:(BOOL)force {
 	
-	float width = [col width] - [NSScroller scrollerWidthForControlSize:NSRegularControlSize];
+	CGFloat width = [col width] - [NSScroller scrollerWidthForControlSize:NSRegularControlSize];
 	
-	if (force || roundf(width) != roundf(titleColumnWidth)) {
+	if (force || !NTVFloatsEqual(roundf(width), roundf(titleColumnWidth))) {
 		titleColumnWidth = width;
 		
 		//regenerate previews for visible rows immediately and post a delayed message to regenerate previews for all rows

@@ -219,11 +219,11 @@
 
 - (IBAction)changedTableText:(id)sender {
 	if (sender == tableTextMenuButton) {
-		if ([tableTextSizeField selectedTag] != 3) [tableTextSizeField setFloatValue:[prefsController tableFontSize]];
+		if ([tableTextSizeField selectedTag] != 3) [tableTextSizeField setDoubleValue:(double)[prefsController tableFontSize]];
 		[self performSelector:@selector(changedTableText:) withObject:nil afterDelay:0.0];
 	} else {
 		[window makeFirstResponder:window];
-		float newFontSize = 0.0;
+		CGFloat newFontSize = 0.0;
 		switch ([tableTextMenuButton selectedTag]) {
 			case 1:
 				newFontSize = [NSFont smallSystemFontSize];
@@ -415,12 +415,12 @@
     [tabKeyRadioMatrix setState:[prefsController tabKeyIndents] atRow:0 column:0];
     [tabKeyRadioMatrix setState:![prefsController tabKeyIndents] atRow:1 column:0];
     
-    float fontSize = [prefsController tableFontSize];
+    CGFloat fontSize = [prefsController tableFontSize];
     int fontButtonIndex = 3;
-    if (fontSize == [NSFont smallSystemFontSize]) fontButtonIndex = 0;
+    if (NTVFloatsEqual(fontSize, [NSFont smallSystemFontSize])) fontButtonIndex = 0;
     else if (fontSize == /*[NSFont systemFontSize]*/ SYSTEM_LIST_FONT_SIZE) fontButtonIndex = 1;
     [tableTextMenuButton selectItemAtIndex:fontButtonIndex];
-    [tableTextSizeField setFloatValue:fontSize];
+    [tableTextSizeField setDoubleValue:fontSize];
     [tableTextSizeField setHidden:(fontButtonIndex != 3)];
     
     [externalEditorMenuButton setMenu:[[ExternalEditorListController sharedInstance] addEditorPrefsMenu]];
@@ -538,17 +538,17 @@
 	
 	//fix this math to convert between window and view coordinates for resolution independence
 	
-	float userSpaceScaleFactor = [window userSpaceScaleFactor];
+	CGFloat userSpaceScaleFactor = [window userSpaceScaleFactor];
 	
     //to stop flicker, we make a temp blank view.
 	
-	NSRect windowContentFrame = ScaleRectWithFactor([[window contentView] frame], userSpaceScaleFactor);
+	CGRect windowContentFrame = ScaleRectWithFactor([[window contentView] frame], userSpaceScaleFactor);
     NSView *tempView = [[NSView alloc] initWithFrame:[[window contentView] frame]];
     [window setContentView:tempView];
     [tempView release];
     
-    NSRect newFrame = [window frame];
-	NSRect viewFrameForWindow = ScaleRectWithFactor([prefsView frame], userSpaceScaleFactor);
+    CGRect newFrame = [window frame];
+	CGRect viewFrameForWindow = ScaleRectWithFactor([prefsView frame], userSpaceScaleFactor);
     newFrame.size.height = viewFrameForWindow.size.height + ([window frame].size.height - windowContentFrame.size.height);
     newFrame.size.width = viewFrameForWindow.size.width;
     newFrame.origin.y += (windowContentFrame.size.height - viewFrameForWindow.size.height);
@@ -559,8 +559,8 @@
     [window setContentView:prefsView];
 }
 
-NSRect ScaleRectWithFactor(NSRect rect, float factor) {
-	NSRect newRect = rect;
+CGRect ScaleRectWithFactor(CGRect rect, CGFloat factor) {
+	CGRect newRect = rect;
 	newRect.size.width *= factor;
 	newRect.size.height *= factor;
 	newRect.origin.x *= factor;

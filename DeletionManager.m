@@ -166,12 +166,12 @@ void updateForVerifiedExistingNote(DeletionManager *self, NoteObject *goodNote) 
 }
 
 - (NSRect)windowSizeForNotesFromSender:(id)sender {
-	float oldHeight = 0.0;
-	float newHeight = 0.0;
-	NSRect newFrame = [sender frame];
-	NSSize intercellSpacing = [tableView intercellSpacing];
+	CGFloat oldHeight = 0.0;
+	CGFloat newHeight = 0.0;
+	CGRect newFrame = [sender frame];
+	CGSize intercellSpacing = [tableView intercellSpacing];
 	
-	int numRows = MIN(20, [tableView numberOfRows]);
+	NSInteger numRows = MIN(20, [tableView numberOfRows]);
 	newHeight = MAX(2, numRows) * ([tableView rowHeight] + intercellSpacing.height);	
 	oldHeight = [[[tableView enclosingScrollView] contentView] frame].size.height;
 	newHeight = [sender frame].size.height - oldHeight + newHeight;

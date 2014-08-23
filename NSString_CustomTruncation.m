@@ -26,7 +26,7 @@
 static NSMutableParagraphStyle *LineBreakingStyle();
 static NSDictionary *GrayTextAttributes();
 static NSDictionary *LineTruncAttributes();
-static size_t EstimatedCharCountForWidth(float upToWidth);
+static size_t EstimatedCharCountForWidth(CGFloat upToWidth);
 
 
 
@@ -119,7 +119,7 @@ NSDictionary *LineTruncAttributesForTitle() {
 	if (!titleTruncAttrs) {
 		GlobalPrefs *prefs = [GlobalPrefs defaultPrefs];
 		unsigned int bitmap = [prefs tableColumnsBitmap];
-		float fontSize = [prefs tableFontSize];
+		CGFloat fontSize = [prefs tableFontSize];
 		BOOL usesBold = ColumnIsSet(NoteLabelsColumn, bitmap) || ColumnIsSet(NoteDateCreatedColumn, bitmap) ||
 		ColumnIsSet(NoteDateModifiedColumn, bitmap) || [prefs tableColumnsShowPreview];
 		
@@ -140,13 +140,13 @@ NSDictionary *LineTruncAttributesForTitle() {
 	return titleTruncAttrs;
 }
 
-static size_t EstimatedCharCountForWidth(float upToWidth) {
+static size_t EstimatedCharCountForWidth(CGFloat upToWidth) {
 	return (size_t)(upToWidth / ([[GlobalPrefs defaultPrefs] tableFontSize] / 2.5f));
 }
 
 //LineTruncAttributesForTags would be variable, depending on the note; each preview string will have its own copy of the nsdictionary
 
-- (NSAttributedString*)attributedMultiLinePreviewFromBodyText:(NSAttributedString*)bodyText upToWidth:(float)upToWidth intrusionWidth:(float)intWidth {
+- (NSAttributedString*)attributedMultiLinePreviewFromBodyText:(NSAttributedString *)bodyText upToWidth:(CGFloat)upToWidth intrusionWidth:(CGFloat)intWidth {
 	//first line is title, truncated to a shorter width to account for date/time, using a negative -[NSMutableParagraphStyle setTailIndent:] value
 	//next "two" lines are wrapped body text, with a character-count estimation of essentially double that of a single-line preview
 	//also with an independent tailindent to account for a separately-drawn tags-string, if tags exist
@@ -204,7 +204,7 @@ static size_t EstimatedCharCountForWidth(float upToWidth) {
 }
 
 
-- (NSAttributedString*)attributedSingleLinePreviewFromBodyText:(NSAttributedString*)bodyText upToWidth:(float)upToWidth {
+- (NSAttributedString*)attributedSingleLinePreviewFromBodyText:(NSAttributedString *)bodyText upToWidth:(CGFloat)upToWidth {
 	
 	//compute the char count for this note based on the width of the title column and the length of the receiver
 	size_t bodyCharCount = EstimatedCharCountForWidth(upToWidth) - [self length];

@@ -456,10 +456,10 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 	return NO;
 }
 
-- (NSRect)windowWillUseStandardFrame:(NSWindow *)sender defaultFrame:(NSRect)defaultFrame {
+- (CGRect)windowWillUseStandardFrame:(NSWindow *)sender defaultFrame:(CGRect)defaultFrame {
 	
-	float oldHeight = 0.0;
-	float newHeight = 0.0;
+	CGFloat oldHeight = 0.0;
+	CGFloat newHeight = 0.0;
 	NSRect newFrame = [sender frame];
 	NSSize intercellSpacing = [bookmarksTableView intercellSpacing];
 	
