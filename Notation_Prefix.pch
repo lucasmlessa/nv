@@ -10,11 +10,27 @@
 #define MAC_OS_X_VERSION_10_7 1070
 #endif
 
+#ifndef MAC_OS_X_VERSION_10_8
+#define MAC_OS_X_VERSION_10_8 1080
+#endif
+
+#ifndef MAC_OS_X_VERSION_10_9
+#define MAC_OS_X_VERSION_10_9 1090
+#endif
+
+#ifndef MAC_OS_X_VERSION_10_10
+#define MAC_OS_X_VERSION_10_10 101000
+#endif
+
 #if defined(__OBJC__) && __OBJC__
 #import <Cocoa/Cocoa.h>
 #import "NTVMacros.h"
 #endif
 
+// As of DP6. Plan accordingly.
+#ifndef NSFoundationVersionNumber10_10
+#define NSFoundationVersionNumber10_10 1150.12
+#endif
 #ifndef NSFoundationVersionNumber10_9
 #define NSFoundationVersionNumber10_9 1056.00
 #endif
@@ -79,7 +95,9 @@ typedef char _COMPILE_ASSERT_SYMBOL(__LINE__, msg) [ ((test) ? 1 : -1) ]
 
 
 #define IsLionOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_7)
+#define IsMountainLionOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_8)
 #define IsMavericksOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_9)
+#define IsYosemiteOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_10)
 
 
 #define NOTES_MENU_ID 89
