@@ -27,8 +27,35 @@
 #include <CoreServices/CoreServices.h>
 #include <Carbon/Carbon.h>
 
-#define PASSWORD_SUGGESTIONS 0
+@protocol OldNSTextFinderDelegate <NSWindowDelegate>
 
+@optional
+
+- (void)performFindPanelAction:(id)fp8;
+- (void)performFindPanelAction:(int)fp8 forClient:(id)fp12;
+- (BOOL)validateFindPanelAction:(int)fp8 forClient:(id)fp12;
+- (void)windowDidUpdate:(id)fp8;
+
+@end
+
+@interface NSTextFinder (SnowLeopardPrivateAPI)
+
++ (instancetype)sharedTextFinder NS_DEPRECATED_MAC(10_5, 10_7);
+
+- (BOOL)loadFindStringFromPasteboard NS_DEPRECATED_MAC(10_5, 10_7);
+
+- (NSWindow *)findPanel:(BOOL)opt NS_DEPRECATED_MAC(10_5, 10_7);
+
+@property (nonatomic, copy, readonly) NSString *findString NS_DEPRECATED_MAC(10_5, 10_7);
+- (void)setFindString:(NSString *)fp8 writeToPasteboard:(BOOL)fp12 updateUI:(BOOL)fp16 NS_DEPRECATED_MAC(10_5, 10_7);
+
+@end
+
+@interface LinkingEditor () <OldNSTextFinderDelegate>
+
+@end
+
+#define PASSWORD_SUGGESTIONS 0
 
 #define kDefaultTextInsetWidth 8.0
 #define kDefaultTextInsetHeight 8.0

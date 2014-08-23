@@ -19,9 +19,13 @@
 @class NoteObject;
 @class GlobalPrefs;
 
-@interface LinkingEditor : NSTextView <NSLayoutManagerDelegate>
+@interface LinkingEditor : NSTextView <NSLayoutManagerDelegate
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+	, NSTextFinderClient
+#endif
+>
 {	
-    id textFinder;
+    NSTextFinder *textFinder;
     IBOutlet NSTextField *controlField;
     IBOutlet NotesTableView *notesTableView;
 	
