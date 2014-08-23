@@ -109,7 +109,7 @@
 - (BOOL)setFinderTags:(id)plistObject atFSPath:(const char*)path
 {
 	if (!path) return NO;
-	NSURL *url = [NSURL fileURLWithPath:[NSString stringWithCString:path]];
+	NSURL *url = [NSURL fileURLWithPath:@(path)];
 	NSArray *tagArray = [NSArray arrayWithArray:plistObject];
 	NSError *error;
 	if (![url setResourceValue:tagArray forKey:NSURLTagNamesKey error:&error])

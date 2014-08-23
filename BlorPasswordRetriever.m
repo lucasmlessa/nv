@@ -73,25 +73,28 @@
 		NSBeginAlertSheet(NSLocalizedString(@"Sorry, you entered an incorrect passphrase.",nil), NSLocalizedString(@"OK",nil), 
 						  nil, nil, window, nil, NULL, NULL, NULL, NSLocalizedString(@"Please try again.",nil));
 	}	
-	
+
 }
 
 - (NSData*)keychainPasswordData {
 	
-	NSString *keychainAccountString = [[path stringByAbbreviatingWithTildeInPath] lowercaseString];
-    if ([keychainAccountString length] > 255) keychainAccountString = [keychainAccountString substringToIndex:255];
+	NSString *accountString = [[path stringByAbbreviatingWithTildeInPath] lowercaseString];
+    if ([accountString length] > 255) accountString = [accountString substringToIndex:255];
 	
-    const char *keychainAccountCString = [[keychainAccountString dataUsingEncoding:
-				[NSString defaultCStringEncoding] allowLossyConversion:YES] bytes];
-	
+	UInt32 accountLen = (UInt32)[accountString maximumLengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+
+	static NSString *const serviceName = @"NV";
+	UInt32 serviceNameLen = (UInt32)[serviceName maximumLengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+
 	UInt32 len;
-	void *p = (void *)calloc(256, sizeof(char));
-	if (kcfindgenericpassword("NV", keychainAccountCString, 255, p, &len, NULL) != noErr) {
-		free(p);
+	void *p;
+	if (SecKeychainFindGenericPassword(NULL, serviceNameLen, serviceName.UTF8String, accountLen, accountString.UTF8String, &len, &p, NULL) != noErr) {
 		return NULL;
 	}
-	
-	return [NSData dataWithBytesNoCopy:p length:len freeWhenDone:YES];
+
+	NSData *ret = [NSData dataWithBytes:p length:len];
+	SecKeychainItemFreeContent(NULL, p);
+	return ret;
 }
 
 - (NSData*)validPasswordHashData {
