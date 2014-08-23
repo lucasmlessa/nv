@@ -2515,7 +2515,7 @@ cancelCompetion:
         }else{
             BOOL didIt=NO;
             NSArray *paragraphArray=[actPar componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
-            NSMutableCharacterSet *trimSet=[NSCharacterSet characterSetWithCharactersInString:insertString];            
+            NSMutableCharacterSet *trimSet=[NSMutableCharacterSet characterSetWithCharactersInString:insertString];
             [trimSet formUnionWithCharacterSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
             NSString *replaceString;
             NSUInteger xtraLength=0;
