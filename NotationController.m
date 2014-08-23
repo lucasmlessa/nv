@@ -1362,7 +1362,7 @@ bail:
     
 	//PHASE 3: reset found pointers in case have been cleared
 	NSUInteger filteredNoteCount = [notesListDataSource count];
-	NoteObject **notesBuffer = [notesListDataSource immutableObjects];
+	NoteObject *const *notesBuffer = [notesListDataSource immutableObjects];
 	
     if (didFilterNotes) {
 		
