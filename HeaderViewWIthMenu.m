@@ -12,9 +12,9 @@
 
 #import "HeaderViewWIthMenu.h"
 #import "NoteAttributeColumn.h"
+#import "NotesTableView.h"
 
-
-@interface HeaderViewWithMenu (Private)
+@interface NSTableHeaderView (Private)
 - (void)_resizeColumn:(NSInteger)resizedColIdx withEvent:(id)event;
 @end
 
