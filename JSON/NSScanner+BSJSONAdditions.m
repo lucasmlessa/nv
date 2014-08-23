@@ -317,7 +317,7 @@ const NSInteger jsonDoNotIndent = -1;
 	return [self scanString:jsonArrayEndString intoString:nil];
 }
 
-- (BOOL)scanJSONStringDelimiterString;
+- (BOOL)scanJSONStringDelimiterString
 {
 	return [self scanString:jsonStringDelimiterString intoString:nil];
 }

@@ -54,7 +54,7 @@
 				nil];
 }
 
-- (id)copyWithZone:(NSZone*)zone;
+- (id)copyWithZone:(NSZone*)zone
 {
 	return [self retain];
 }

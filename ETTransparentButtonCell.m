@@ -21,7 +21,7 @@ static NSColor *disabledColor, *enabledColor;
 
 @implementation ETTransparentButtonCell
 
-+ (void)initialize;
++ (void)initialize
 {
 	NSBundle *bundle = [NSBundle bundleForClass:[ETTransparentButtonCell class]];
 	

@@ -128,7 +128,7 @@ static id _sharedHotKeyCenter = nil;
     [self unregisterHotKey:[mHotKeys objectForKey:name]];
 }
 
-- (void) unregisterAllHotKeys;
+- (void) unregisterAllHotKeys
 {
     NSEnumerator *enumerator = [mHotKeys objectEnumerator];
     id thing;

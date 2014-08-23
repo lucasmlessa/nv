@@ -100,7 +100,7 @@
     fillBackground=fillIt;
 }
 
-- (void)drawRect:(NSRect)aRect;
+- (void)drawRect:(NSRect)aRect
 {       
         // Only draw if the slot is larger than the knob
     if (IsLionOrLater) {
@@ -126,7 +126,7 @@
    
 }
 
-- (void)drawKnob;
+- (void)drawKnob
 {
 	NSRect knobRect = [self rectForPart:NSScrollerKnob];
 
