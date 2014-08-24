@@ -210,19 +210,17 @@ beepReturn:
 	BOOL success = NO;
 	BOOL running = NO;
 	NSWorkspace	*workspace = [NSWorkspace sharedWorkspace];
-	NSArray	*runningApplications = [workspace launchedApplications];
-	NSEnumerator *enumerator = [runningApplications objectEnumerator];
-	NSDictionary *applicationInfo;
-	
+	NSArray	*runningApplications = [workspace runningApplications];
+
 	NSString *editorBundleIdentifier = [ed bundleIdentifier];
 	
-	while (nil != (applicationInfo = [enumerator nextObject])) {
-		NSString *bundleIdentifier = applicationInfo[@"NSApplicationBundleIdentifier"];
-		
+	for (NSRunningApplication *application in runningApplications) {
+		NSString *bundleIdentifier = application.bundleIdentifier;
+
 		if ([bundleIdentifier isEqualToString: editorBundleIdentifier]) {
 			running = YES;
 			// bring the app forward
-			success = [workspace launchApplication: applicationInfo[@"NSApplicationPath"]];
+			success = [application activateWithOptions:0];
 			break;
 		}
 	}
