@@ -65,6 +65,17 @@
 			[self modifiers] == [combo modifiers];
 }
 
+- (NSUInteger)hash
+{
+	NSUInteger prime = 31;
+	NSUInteger result = 1;
+
+	result = prime * result + mKeyCode;
+	result = prime * result + mModifiers;
+
+	return result;
+}
+
 #pragma mark -
 
 - (int)keyCode
