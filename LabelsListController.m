@@ -27,7 +27,7 @@
 #import "GlobalPrefs.h"
 #import "NSBezierPath_NV.h"
 #import "NSCollection_utils.h"
-
+#import "NotesTableView.h"
 
 @implementation LabelsListController
 
@@ -73,7 +73,7 @@
 	count = [filteredLabels count];
 	
 	//cfstringcompare here; strings always sorted alphabetically
-	mergesort((void *)objects, (size_t)count, sizeof(id), (int (*)(const void *, const void *))compareLabel);
+	[self sortStableUsingComparator:NTVLabelCompareName];
 }
 
 - (NSArray*)labelTitlesPrefixedByString:(NSString*)prefixString indexOfSelectedItem:(NSInteger *)anIndex minusWordSet:(NSSet*)antiSet {
@@ -81,19 +81,18 @@
 	NSMutableArray *objs = [[[allLabels allObjects] mutableCopy] autorelease];
 	NSMutableArray *titles = [NSMutableArray arrayWithCapacity:[allLabels count]];
 
-	[objs sortUnstableUsingFunction:(NSInteger (*)(id *, id *))compareLabel];
+	[objs sortWithOptions:NSSortConcurrent usingComparator:NTVLabelCompareName];
 	
-	CFStringRef prefix = (CFStringRef)prefixString;
-	NSUInteger i, titleLen, j = 0, shortestTitleLen = UINT_MAX;
-	
-	for (i=0; i<[objs count]; i++) {
-		CFStringRef title = (CFStringRef)titleOfLabel((LabelObject*)objs[i]);
-		
-		if (CFStringFindWithOptions(title, prefix, CFRangeMake(0, CFStringGetLength(prefix)), kCFCompareAnchored | kCFCompareCaseInsensitive, NULL)) {
-			
-			if (![antiSet containsObject:(id)title]) {
-				[titles addObject:(id)title];
-				if (anIndex && (titleLen = CFStringGetLength(title)) < shortestTitleLen) {
+	NSUInteger  titleLen, j = 0, shortestTitleLen = UINT_MAX;
+
+	for (LabelObject *label in objs) {
+		NSString *title = label.title;
+
+		NSRange range = [title rangeOfString:prefixString options:NSCaseInsensitiveSearch|NSAnchoredSearch];
+		if (range.length) {
+			if (![antiSet containsObject:title]) {
+				[titles addObject:title];
+				if (anIndex && (titleLen = title.length) < shortestTitleLen) {
 					*anIndex = j;
 					shortestTitleLen = titleLen;
 				}

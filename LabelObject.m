@@ -37,15 +37,9 @@
     return self;
 }
 
-force_inline NSString* titleOfLabel(LabelObject *label) {
-    return label->labelName;
-}
-
-int compareLabel(const void *one, const void *two) {
-	
-    return (int)CFStringCompare((CFStringRef)titleOfLabel(*(LabelObject**)one), 
-								(CFStringRef)titleOfLabel(*(LabelObject**)two), kCFCompareCaseInsensitive);
-}
+NSComparisonResult(^const NTVLabelCompareName)(LabelObject *, LabelObject *) = ^(LabelObject *one, LabelObject *two){
+	return [one.title compare:two.title options:NSCaseInsensitiveSearch];
+};
 
 - (NSString*)title {
     return labelName;

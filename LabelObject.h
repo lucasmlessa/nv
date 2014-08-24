@@ -21,6 +21,8 @@
 
 @class NoteObject;
 
+extern NSComparator const NTVLabelCompareName;
+
 @interface LabelObject : NSObject {
     NSString *labelName, *lowercaseName;
     NSMutableSet *notes;
@@ -28,13 +30,11 @@
     NSUInteger lowercaseHash;
 }
 
-NSString* titleOfLabel(LabelObject *label);
-int compareLabel(const void *one, const void *two);
-
 - (id)initWithTitle:(NSString*)name;
 - (NSString*)title;
-- (NSString*)associativeIdentifier;
 - (void)setTitle:(NSString*)title;
+
+- (NSString*)associativeIdentifier;
 - (void)addNote:(NoteObject*)note;
 - (void)addNoteSet:(NSSet*)noteSet;
 - (void)removeNote:(NoteObject*)note;
