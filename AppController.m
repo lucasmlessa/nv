@@ -1469,18 +1469,16 @@ void outletObjectAwoke(id sender) {
             selRange = [tagString rangeOfString:searchString options:NSBackwardsSearch];
             NSArray *theTags = [notesTableView labelCompletionsForString:searchString index:0];
             if ((theTags)&&([theTags count]>0)&&(![theTags[0] isEqualToString:@""])){
-                NSString *useStr;
-                for (useStr in theTags) {
+                for (NSString *useStr in theTags) {
                     if ([tagString rangeOfString:useStr].location==NSNotFound) {
-                        break;
+						tagString = [tagString substringToIndex:selRange.location];
+						tagString = [tagString stringByAppendingString:useStr];
+						selRange = NSMakeRange(selRange.location + selRange.length, useStr.length - searchString.length );
+						[tagEditor setTF:tagString];
+						[editor setSelectedRange:selRange];
+
+						break;
                     }
-                }
-                if (useStr) {
-                    tagString = [tagString substringToIndex:selRange.location];
-                    tagString = [tagString stringByAppendingString:useStr];
-                    selRange = NSMakeRange(selRange.location + selRange.length, useStr.length - searchString.length );
-                    [tagEditor setTF:tagString];
-                    [editor setSelectedRange:selRange];
                 }
             }
             isAutocompleting = NO;
