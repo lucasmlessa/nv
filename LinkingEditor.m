@@ -80,9 +80,6 @@
 
 @synthesize beforeString;
 @synthesize afterString;
-@synthesize activeParagraph;
-@synthesize activeParagraphBeforeCursor;
-@synthesize activeParagraphPastCursor;
 @synthesize managesTextWidth;
 
 CGFloat _perceptualDarkness(NSColor*a);
@@ -1655,12 +1652,7 @@ cancelCompetion:
 
 - (void)dealloc {
 	[[NSNotificationCenter defaultCenter] removeObserver: self];
-    if (IsLionOrLater) {
-        [textFinder release];
-    }
-    [activeParagraphPastCursor release];
-    [activeParagraph release];
-    [activeParagraphBeforeCursor release];
+    [textFinder release];
     [beforeString release];
     [afterString release];
     [controlField release];

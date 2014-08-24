@@ -51,9 +51,6 @@
     BOOL managesTextWidth;
 	NSString *beforeString;
 	NSString *afterString;
-    NSString *activeParagraph;
-    NSString *activeParagraphPastCursor;
-    NSString *activeParagraphBeforeCursor;
 //    BOOL clipboardHasLink;
 }
 
