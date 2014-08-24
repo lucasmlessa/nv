@@ -27,6 +27,8 @@
 
 @implementation PrefsWindowController
 
+@synthesize notationPrefsViewController = _notationPrefsViewController;
+
 - (id)init {
 	self = [super init];
 	if (!self) { return nil; }
@@ -374,10 +376,10 @@
 }
 
 - (NotationPrefsViewController*)notationPrefsViewController {
-	if (!notationPrefsViewController) {
-		notationPrefsViewController = [[NotationPrefsViewController alloc] init];
+	if (!_notationPrefsViewController) {
+		_notationPrefsViewController = [[NotationPrefsViewController alloc] init];
 	}
-	return notationPrefsViewController;
+	return _notationPrefsViewController;
 }
 
 - (NSView*)databaseView {

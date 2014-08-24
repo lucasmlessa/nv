@@ -40,8 +40,6 @@
     IBOutlet NSButton *togDockButton;
 	IBOutlet NSTextField *togDockLabel;
 	IBOutlet NSSlider *maxWidthSlider;	
-    IBOutlet NotationPrefsViewController *notationPrefsViewController;
-	IBOutlet NSComboBox *appList;
     IBOutlet NSButton *useMarkdownImportButton;
 	IBOutlet NSButton *useReadabilityButton;
     IBOutlet NSButton *showGridButton;
@@ -93,7 +91,7 @@
 - (void)changeDefaultDirectory;
 - (BOOL)getNewNotesRefFromOpenPanel:(FSRef*)notesDirectoryRef returnedPath:(NSString**)path;
 
-- (NotationPrefsViewController*)notationPrefsViewController;
+@property (nonatomic, strong, readonly) NotationPrefsViewController *notationPrefsViewController;
 - (NSView*)databaseView;
 - (void)addToolbarItemWithName:(NSString*)name;
 - (void)switchViews:(NSToolbarItem *)item;

@@ -39,7 +39,7 @@
                 <outlet property="tableTextSizeField" destination="178" id="246"/>
                 <outlet property="togDockButton" destination="430" id="450"/>
                 <outlet property="togDockLabel" destination="431" id="451"/>
-                <outlet property="useETScrollbarsOnLionButton" destination="578" id="582"/>
+                <outlet property="useETScrollbarsOnLionButton" destination="578" id="mk5-Hn-H2g"/>
                 <outlet property="useMarkdownImportButton" destination="522" id="532"/>
                 <outlet property="useReadabilityButton" destination="523" id="533"/>
                 <outlet property="window" destination="5" id="238"/>
