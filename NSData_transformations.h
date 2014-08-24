@@ -17,8 +17,6 @@
 - (NSMutableData *) uncompressedData;
 - (BOOL) isCompressedFormat;
 
-+ (NSMutableData *)randomDataOfLength:(int)len;
-- (NSData *)derivedKeyOfLength:(NSUInteger)len salt:(NSData *)salt iterations:(NSUInteger)count;
 - (uint32_t)CRC32;
 
 - (NSString*)pathURLFromWebArchive;
@@ -27,19 +25,5 @@
 + (NSData*)aliasDataForFSRef:(FSRef*)fsRef;
 - (NSMutableString*)newStringUsingBOMReturningEncoding:(NSStringEncoding*)encoding;
 + (NSData*)uncachedDataFromFile:(NSString*)filename;
-
-- (NSString *)encodeBase64;
-- (NSString *)encodeBase64WithNewlines:(BOOL)encodeWithNewlines;
-
-@end
-
-@interface NSMutableData (NVCryptoRelated)
-- (void)reverseBytes;
-
-- (BOOL)encryptAESDataWithKey:(NSData*)key iv:(NSData*)iv;
-- (BOOL)decryptAESDataWithKey:(NSData*)key iv:(NSData*)iv;
-
-- (BOOL)encryptDataWithCipher:(const EVP_CIPHER*)cipher key:(NSData*)key iv:(NSData*)iv;
-- (BOOL)decryptDataWithCipher:(const EVP_CIPHER*)cipher key:(NSData*)key iv:(NSData*)iv;
 
 @end

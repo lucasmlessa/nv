@@ -181,7 +181,7 @@
 			NSString *idStr = params[i];
 			
 			if ([idStr hasPrefix:@"NV="] && [idStr length] > 3) {
-				NSData *uuidData = [[[idStr substringFromIndex:3] stringByReplacingPercentEscapes] decodeBase64WithNewlines:NO];
+				NSData *uuidData = [[NSData alloc] initWithBase64Encoding:[[idStr substringFromIndex:3] stringByReplacingPercentEscapes]];
 				if ((foundNote = [notationController noteForUUIDBytes:(CFUUIDBytes*)[uuidData bytes]]))
 					goto handleFound;
 			}

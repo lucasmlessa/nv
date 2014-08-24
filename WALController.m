@@ -26,6 +26,7 @@
 #import "DeletedNoteObject.h"
 #import "NSCollection_utils.h"
 #import "NSString_NV.h"
+#import "NSData+NTVCrypto.h"
 
 //file descriptor based for lower level access
 
@@ -259,10 +260,11 @@
 	free(compressedDataBuffer);
     
 	//encrypt nsdata here using record salt and record key
-	NSData *recordSalt = [NSData randomDataOfLength:RECORD_SALT_LEN];
-	NSData *recordKey = [logSessionKey derivedKeyOfLength:[logSessionKey length] salt:recordSalt iterations:1];
-	
-	if (![data encryptAESDataWithKey:recordKey iv:[recordSalt subdataWithRange:NSMakeRange(0, 16)]]) {
+	NSData *recordSalt = [NSData ntv_randomDataOfLength:RECORD_SALT_LEN];
+	NSData *recordKey = [logSessionKey ntv_derivedKeyOfLength:[logSessionKey length] salt:recordSalt];
+	NSData *recordIV = [recordSalt subdataWithRange:NSMakeRange(0, 16)];
+
+	if (![data ntv_encryptDataWithKey:recordKey iv:recordIV]) {
 		NSLog(@"Couldn't encrypt WAL record data!");
 		return NO;
 	}
@@ -442,9 +444,10 @@
 	    
     //attempt to decrypt using record key based on record salt and log session key
 	NSData *recordSalt = [NSData dataWithBytesNoCopy:record.saltBuffer length:RECORD_SALT_LEN freeWhenDone:NO];
-	NSData *recordKey = [logSessionKey derivedKeyOfLength:[logSessionKey length] salt:recordSalt iterations:1];
+	NSData *recordKey = [logSessionKey ntv_derivedKeyOfLength:[logSessionKey length] salt:recordSalt];
+	NSData *recordIV = [recordSalt subdataWithRange:NSMakeRange(0, 16)];
 	
-	if (!([presumablySerializedData decryptAESDataWithKey:recordKey iv:[recordSalt subdataWithRange:NSMakeRange(0, 16)]])) {
+	if (!([presumablySerializedData ntv_decryptDataWithKey:recordKey iv:recordIV])) {
 		NSLog(@"Record decryption failed!");
 		return nil;
 	}

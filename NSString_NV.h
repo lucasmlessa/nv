@@ -58,8 +58,6 @@ CFDateFormatterRef simplenoteDateFormatter(int lowPrecision);
 - (CFUUIDBytes)uuidBytes;
 + (NSString*)uuidStringWithBytes:(CFUUIDBytes)bytes;
 
-- (NSData *)decodeBase64;
-- (NSData *)decodeBase64WithNewlines:(BOOL)encodedWithNewlines;
 - (NSString *)firstNumberFromStringWithinRange:(NSRange)subRange isInRange:(NSRange *)foundRange;
 - (NSInteger)isPairedCharacterWithMatchString:(NSString **)matchString;
 //- (NSTextView*)textViewWithFrame:(NSRect*)theFrame;

@@ -15,6 +15,7 @@
 #import "NotationPrefs.h"
 #import "KeyDerivationDelaySlider.h"
 #import "NSData_transformations.h"
+#import "NSData+NTVCrypto.h"
 
 @implementation KeyDerivationManager
 
@@ -26,7 +27,7 @@
 	
 	//compute initial test duration for the current iteration number
 	crapData = [[@"random crap" dataUsingEncoding:NSASCIIStringEncoding] retain];
-	crapSalt = [[NSData randomDataOfLength:256] retain];
+	crapSalt = [[NSData ntv_randomDataOfLength:256] retain];
 	
 	lastHashIterationCount = [notationPrefs hashIterationCount];
 	lastHashDuration = [self delayForHashIterations:lastHashIterationCount];
@@ -102,7 +103,7 @@
 
 - (NSTimeInterval)delayForHashIterations:(NSInteger)count {
 	NSDate *before = [NSDate date];
-	[crapData derivedKeyOfLength:[notationPrefs keyLengthInBits]/8 salt:crapSalt iterations:count];
+	[crapData ntv_derivedKeyOfLength:[notationPrefs keyLengthInBits]/8 salt:crapSalt iterations:count];
 	return [[NSDate date] timeIntervalSinceDate:before];
 }
 

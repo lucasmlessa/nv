@@ -1105,7 +1105,7 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 		NSString *syncID = syncServicesMD[svcs[i]][[[SyncSessionController allServiceClasses][i] nameOfKeyElement]];
 		if (syncID) idsDict[svcs[i]] = syncID;
 	}
-	idsDict[@"NV"] = [[NSData dataWithBytes:&uniqueNoteIDBytes length:16] encodeBase64WithNewlines:NO];
+	idsDict[@"NV"] = [[NSData dataWithBytes:&uniqueNoteIDBytes length:16] base64Encoding];
 	
 	return [NSURL URLWithString:[@"nvalt://find/" stringByAppendingFormat:@"%@/?%@", [titleString stringWithPercentEscapes], 
 								 [idsDict URLEncodedString]]];

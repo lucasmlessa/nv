@@ -26,6 +26,7 @@
 #import "NotationFileManager.h"
 #import "SecureTextEntryManager.h"
 #import "DiskUUIDEntry.h"
+#import "NSData+NTVCrypto.h"
 #include <CoreServices/CoreServices.h>
 #include <Security/Security.h>
 #include <ApplicationServices/ApplicationServices.h>
@@ -512,11 +513,11 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	size_t keyLength = keyLengthInBits/8;
 	
 	//compute master key given stored salt and # of iterations
-	NSData *computedMasterKey = [passData derivedKeyOfLength:keyLength salt:masterSalt iterations:hashIterationCount];
+	NSData *computedMasterKey = [passData ntv_derivedKeyOfLength:keyLength salt:masterSalt iterations:hashIterationCount];
 
 	//compute verify key given "verify" salt and 1 iteration
 	NSData *verifySalt = [NSData dataWithBytesNoCopy:VERIFY_SALT length:sizeof(VERIFY_SALT) freeWhenDone:NO];
-	NSData *computedVerifyKey = [computedMasterKey derivedKeyOfLength:keyLength salt:verifySalt iterations:1];
+	NSData *computedVerifyKey = [computedMasterKey ntv_derivedKeyOfLength:keyLength salt:verifySalt];
 	
 	//check against verify key data
 	if ([computedVerifyKey isEqualToData:verifierKey]) {
@@ -541,17 +542,18 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 
 	//create new dataSessionSalt and key here
 	[dataSessionSalt release];
-	dataSessionSalt = [[NSData randomDataOfLength:256] retain];
+	dataSessionSalt = [[NSData ntv_randomDataOfLength:256] retain];
 	
-	NSData *dataSessionKey = [masterKey derivedKeyOfLength:keyLengthInBits/8 salt:dataSessionSalt iterations:1];
-	
-	return [data encryptAESDataWithKey:dataSessionKey iv:[dataSessionSalt subdataWithRange:NSMakeRange(0, 16)]];
+	NSData *dataSessionKey = [masterKey ntv_derivedKeyOfLength:keyLengthInBits/8 salt:dataSessionSalt];
+	NSData *dataSessionIV = [dataSessionSalt subdataWithRange:NSMakeRange(0, 16)];
+
+	return [data ntv_encryptDataWithKey:dataSessionKey iv:dataSessionIV];
 }
 - (BOOL)decryptDataWithCurrentSettings:(NSMutableData*)data {
 	
-	NSData *dataSessionKey = [masterKey derivedKeyOfLength:keyLengthInBits/8 salt:dataSessionSalt iterations:1];
-	
-	return [data decryptAESDataWithKey:dataSessionKey iv:[dataSessionSalt subdataWithRange:NSMakeRange(0, 16)]];
+	NSData *dataSessionKey = [masterKey ntv_derivedKeyOfLength:keyLengthInBits/8 salt:dataSessionSalt];
+	NSData *dataSessionIV = [dataSessionSalt subdataWithRange:NSMakeRange(0, 16)];
+	return [data ntv_decryptDataWithKey:dataSessionKey iv:dataSessionIV];
 }
 
 - (void)setPassphraseData:(NSData*)passData inKeychain:(BOOL)inKeychain {
@@ -565,16 +567,16 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	
 	//generate and set random salt
 	[masterSalt release];
-	masterSalt = [[NSData randomDataOfLength:256] retain];
+	masterSalt = [[NSData ntv_randomDataOfLength:256] retain];
 
 	//compute and set master key given salt and # of iterations
 	[masterKey release];
-	masterKey = [[passData derivedKeyOfLength:keyLength salt:masterSalt iterations:hashIterationCount] retain];
+	masterKey = [[passData ntv_derivedKeyOfLength:keyLength salt:masterSalt iterations:hashIterationCount] retain];
 	
 	//compute and set verify key from master key
 	[verifierKey release];
 	NSData *verifySalt = [NSData dataWithBytesNoCopy:VERIFY_SALT length:sizeof(VERIFY_SALT) freeWhenDone:NO];
-	verifierKey = [[masterKey derivedKeyOfLength:keyLength salt:verifySalt iterations:1] retain];
+	verifierKey = [[masterKey ntv_derivedKeyOfLength:keyLength salt:verifySalt] retain];
 
 	//update keychain
 	[self setStoresPasswordInKeychain:inKeychain];
@@ -594,7 +596,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	if (!doesEncryption)
 		return [NSData dataWithBytesNoCopy:CONST_WAL_KEY length:sizeof(CONST_WAL_KEY) freeWhenDone:NO];
 
-	return [masterKey derivedKeyOfLength:keyLengthInBits/8 salt:sessionSalt iterations:1];
+	return [masterKey ntv_derivedKeyOfLength:keyLengthInBits/8 salt:sessionSalt];
 }
 
 - (void)setNotesStorageFormat:(NSInteger)formatID {
