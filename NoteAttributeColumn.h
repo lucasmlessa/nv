@@ -15,22 +15,12 @@
 #import <Cocoa/Cocoa.h>
 
 @class NotesTableView;
-/*
-@interface NoteTableHeaderCell : NSTableHeaderCell {
-	
-}
 
-@end
-*/
 
 /// return type is @c NSString or @c NSAttributedString, satisifying @c NSTableDataSource otherwise
 typedef id(^NTVNoteAttributeGetter)(NotesTableView *tv, id object, NSInteger row);
 
 @interface NoteAttributeColumn : NSTableColumn {
-	
-    NSInteger (*sortFunction) (id*, id*);
-    NSInteger (*reverseSortFunction) (id*, id*);
-    id (*objectAttribute) (id, id, NSInteger);
 	SEL mutateObjectSelector;
 	CGFloat absoluteMinimumWidth;
 }
@@ -41,13 +31,9 @@ SEL columnAttributeMutator(NoteAttributeColumn *col);
 id columnAttributeForObject(NotesTableView *tv, NoteAttributeColumn *col, id object, NSInteger row);
 - (void)updateWidthForHighlight;
 
-
-id (*dereferencingFunction(NoteAttributeColumn *col))(id, id, NSInteger);
-- (void)setDereferencingFunction:(id (*)(id, id, NSInteger))attributeFunction;
-- (void)setSortingFunction:(NSInteger (*)(id*, id*))sortFunction;
-- (NSInteger (*)(id*, id*))sortFunction;
-- (void)setReverseSortingFunction:(NSInteger (*)(id*, id*))aFunction;
-- (NSInteger (*)(id*, id*))reverseSortFunction;
+@property (nonatomic, copy) NSComparator comparator;
+@property (nonatomic, copy) NSComparator secondaryComparator;
+@property (nonatomic, copy) NTVNoteAttributeGetter attributeGetter;
 
 - (void)setResizingMaskNumber:(NSNumber*)resizingMaskNumber;
 

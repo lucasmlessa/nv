@@ -151,8 +151,9 @@ NSAttributedString *AttributedStringForSelection(NSAttributedString *str) {
 		} else if (ColumnIsSet(NoteDateCreatedColumn, columnsBitmap)) {
 			showDateCreated = YES;
 		}
-		
-		NSString *dateStr = (showDateCreated ? dateCreatedStringOfNote : dateModifiedStringOfNote)(tv, noteObject, NSNotFound);
+
+		NTVNoteAttributeGetter dateGetter = showDateCreated ? NTVNoteDateCreatedStringGetter : NTVNoteDateModifiedStringGetter;
+		NSString *dateStr = dateGetter(tv, noteObject, NSNotFound);
         CGFloat dateLength=70.0;
         if (dateStr.length>8) {
             dateLength+=(((CGFloat)dateStr.length-8.0)*2);

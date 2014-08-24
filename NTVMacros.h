@@ -37,6 +37,19 @@ NTV_ALWAYS_INLINE BOOL NTVFloatsEqual(CGFloat a, CGFloat b) {
 #endif
 }
 
+NTV_ALWAYS_INLINE NSComparator NTVReverseComparator(NSComparator ctor) {
+    if (!ctor) { return NULL; };
+    return [[^(id one, id two){
+        NSComparisonResult result = ctor(one, two);
+        if (result == NSOrderedAscending) {
+            return NSOrderedDescending;
+        } else if (result == NSOrderedDescending) {
+            return NSOrderedAscending;
+        }
+        return NSOrderedSame;
+    } copy] autorelease ];
+}
+
 #if !defined(NTVCompare)
 #define __NTVCompare__(A,B,L) ({ \
     __typeof__(A) __NSX_PASTE__(__a,L) = (A); \

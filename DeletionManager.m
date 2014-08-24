@@ -66,7 +66,7 @@
 	if (count > 0) {
 		for (NSUInteger i = 0; i < count; ++i) {
 			NoteObject *curNote = deletedNotes[i];
-			if (compareFilename(&curNote, &aNote) == kCFCompareEqualTo) {
+			if (NTVNoteCompareFilename(curNote, aNote) == NSOrderedSame) {
 				return YES;
 			}
 		}
@@ -197,7 +197,7 @@ void updateForVerifiedExistingNote(DeletionManager *self, NoteObject *goodNote) 
 	[confirmDeletionButton setState:![[notationController notationPrefs] confirmFileDeletion]];
 	
 	//sort notes by title
-	[deletedNotes sortUnstableUsingFunction:compareTitleString];
+	[deletedNotes sortWithOptions:NSSortConcurrent usingComparator:NTVNoteCompareTitle];
 	
 	[window setFrame:[self windowSizeForNotesFromSender:window] display:NO];
 	

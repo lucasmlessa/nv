@@ -58,8 +58,6 @@
 	notesListDataSource = [[FastListDataSource alloc] init];
 	deletionManager = [[DeletionManager alloc] initWithNotationController:self];
 	
-	allNotesBuffer = NULL;
-	allNotesBufferSize = 0;
 	manglingString = currentFilterStr = NULL;
 	lastWordInFilterStr = 0;
 	selectedNoteIndex = NSNotFound;
@@ -792,7 +790,7 @@ bail:
 	
 	//sort alphabetically to find shorter prefixes first
 	NSMutableArray *allNotesAlpha = [allNotes mutableCopy];
-	[allNotesAlpha sortStableUsingFunction:compareTitleString usingBuffer:&allNotesBuffer ofSize:&allNotesBufferSize];
+	[allNotesAlpha sortWithOptions:NSSortConcurrent|NSSortStable usingComparator:NTVNoteCompareTitle];
 	[allNotes makeObjectsPerformSelector:@selector(removeAllPrefixParentNotes)];
 
 	NSUInteger j, i = 0, count = [allNotesAlpha count];
@@ -1504,20 +1502,20 @@ bail:
 	NoteAttributeColumn *col = sortColumn;
 	if (col) {
 		BOOL reversed = [prefsController tableIsReverseSorted];
-		NSInteger (*sortFunction) (id *, id *) = (reversed ? [col reverseSortFunction] : [col sortFunction]);
-		NSInteger (*stringSortFunction) (id*, id*) = (reversed ? compareTitleStringReverse : compareTitleString);
-		
-		[allNotes sortStableUsingFunction:stringSortFunction usingBuffer:&allNotesBuffer ofSize:&allNotesBufferSize];
-		if (sortFunction != stringSortFunction)
-			[allNotes sortStableUsingFunction:sortFunction usingBuffer:&allNotesBuffer ofSize:&allNotesBufferSize];
-		
-		
+
+		NSComparator ctor = reversed ? NTVReverseComparator(col.comparator) : col.comparator;
+		NSComparator altCtor = reversed ? NTVReverseComparator(col.secondaryComparator) : col.secondaryComparator;
+
+		if (altCtor != NULL) {
+			[allNotes sortWithOptions:NSSortConcurrent|NSSortStable usingComparator:ctor];
+		}
+		[allNotes sortWithOptions:NSSortConcurrent|NSSortStable usingComparator:ctor];
+
 		if ([notesListDataSource count] != [allNotes count]) {
-				
-			[notesListDataSource sortStableUsingFunction:stringSortFunction];	
-		    if (sortFunction != stringSortFunction)
-				[notesListDataSource sortStableUsingFunction:sortFunction];
-			
+			if (altCtor != NULL) {
+				[notesListDataSource sortStableUsingComparator:altCtor];
+			}
+			[notesListDataSource sortStableUsingComparator:ctor];
 		} else {
 		    //mirror from allNotes; notesListDataSource is not filtered
 		    [notesListDataSource fillArrayFromArray:allNotes];
@@ -1533,13 +1531,14 @@ bail:
 	
 	if (col) {
 		BOOL reversed = [prefsController tableIsReverseSorted];
-	
-		NSInteger (*sortFunction) (id*, id*) = (reversed ? [col reverseSortFunction] : [col sortFunction]);
-		NSInteger (*stringSortFunction) (id*, id*) = (reversed ? compareTitleStringReverse : compareTitleString);
 
-		[allNotes sortStableUsingFunction:stringSortFunction usingBuffer:&allNotesBuffer ofSize:&allNotesBufferSize];
-		if (sortFunction != stringSortFunction)
-			[allNotes sortStableUsingFunction:sortFunction usingBuffer:&allNotesBuffer ofSize:&allNotesBufferSize];
+		NSComparator ctor = reversed ? NTVReverseComparator(col.comparator) : col.comparator;
+		NSComparator altCtor = reversed ? NTVReverseComparator(col.secondaryComparator) : col.secondaryComparator;
+
+		[allNotes sortWithOptions:NSSortConcurrent|NSSortStable usingComparator:ctor];
+		if (altCtor != NULL) {
+			[allNotes sortWithOptions:NSSortConcurrent|NSSortStable usingComparator:ctor];
+		}
 	}
 }
 
@@ -1596,7 +1595,6 @@ bail:
 	free(HFSUniNameArray);
     free(catalogEntries);
     free(sortedCatalogEntries);
-    free(allNotesBuffer);
 	
     [undoManager release];
     [notesListDataSource release];

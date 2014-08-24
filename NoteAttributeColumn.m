@@ -64,30 +64,9 @@ SEL columnAttributeMutator(NoteAttributeColumn *col) {
 }
 
 id columnAttributeForObject(NotesTableView *tv, NoteAttributeColumn *col, id object, NSInteger row) {
-	return col->objectAttribute(tv, object, row);
-}
-
-- (void)setDereferencingFunction:(id (*)(id, id, NSInteger))attributeFunction {
-    objectAttribute = attributeFunction;
-}
-
-- (void)setSortingFunction:(NSInteger (*)(id *, id *))aFunction {
-    sortFunction = aFunction;
-}
-
-- (NSInteger (*)(id *, id *))sortFunction {
-    return sortFunction;
-}
-
-- (void)setReverseSortingFunction:(NSInteger (*)(id*, id*))aFunction {
-    reverseSortFunction = aFunction;
-}
-
-- (NSInteger (*)(id*, id*))reverseSortFunction {
-    return reverseSortFunction;
-}
-id (*dereferencingFunction(NoteAttributeColumn *col))(id, id, NSInteger) {
-	return col->objectAttribute;
+	NTVNoteAttributeGetter getter = col.attributeGetter;
+	if (!getter) { return NULL; }
+	return getter(tv, object, row);
 }
 
 - (void)setResizingMaskNumber:(NSNumber*)resizingMaskNumber {

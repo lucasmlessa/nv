@@ -71,33 +71,39 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	allColumns = [[NSMutableArray alloc] initWithCapacity:4];
 	allColsDict = [[NSMutableDictionary alloc] initWithCapacity:4];
 	
-	id (*titleReferencor)(id, id, NSInteger) = [globalPrefs horizontalLayout] ? 
-	([globalPrefs tableColumnsShowPreview] ? unifiedCellForNote : unifiedCellSingleLineForNote) :
-	([globalPrefs tableColumnsShowPreview] ? tableTitleOfNote : titleOfNote2);
-	
-	NSString *colStrings[] = { NoteTitleColumnString, NoteLabelsColumnString, NoteDateModifiedColumnString, NoteDateCreatedColumnString };
-	SEL colMutators[] = { @selector(setTitleString:), @selector(setLabelString:), NULL, NULL };
-	id (*colReferencors[])(id, id, NSInteger) = {titleReferencor, labelColumnCellForNote, dateModifiedStringOfNote, dateCreatedStringOfNote };
-	NSInteger (*sortFunctions[])(id*, id*) = { compareTitleString, compareLabelString, compareDateModified, compareDateCreated };
-	NSInteger (*reverseSortFunctions[])(id*, id*) = { compareTitleStringReverse, compareLabelStringReverse, compareDateModifiedReverse, 
-		compareDateCreatedReverse };
+	NTVNoteAttributeGetter titleGetter = [globalPrefs horizontalLayout] ?
+	([globalPrefs tableColumnsShowPreview] ? NTVNoteUnifiedCellGetter : NTVNoteUnifiedCellSingleLineGetter):
+	([globalPrefs tableColumnsShowPreview] ? NTVNoteTableTitleGetter : NTVNoteTitleGetter );
 
-	for (NSUInteger i=0; i<sizeof(colStrings)/sizeof(NSString*); i++) {
-		NoteAttributeColumn *column = [[NoteAttributeColumn alloc] initWithIdentifier:colStrings[i]];
-		[column setEditable:(colMutators[i] != NULL)];
-		[column setHeaderCell:[[[NotesTableHeaderCell alloc] initTextCell:[[NSBundle mainBundle] localizedStringForKey:colStrings[i] value:@"" table:nil]] autorelease]];
+	NSArray *colIdentifiers = @[ NoteTitleColumnString, NoteLabelsColumnString, NoteDateModifiedColumnString, NoteDateCreatedColumnString ];
+	NSArray *colMutators = @[ NSStringFromSelector(@selector(setTitleString:)), NSStringFromSelector(@selector(setLabelString:)), NSNull.null, NSNull.null ];
+	NSArray *attributeGetters = @[ [[titleGetter copy] autorelease], NTVNoteLabelCellGetter, NTVNoteDateModifiedStringGetter, NTVNoteDateCreatedStringGetter ];
+	NSArray *colComparators = @[ NTVNoteCompareTitle, NTVNoteCompareLabelString, NTVNoteCompareDateModified, NTVNoteCompareDateCreated ];
+	NSArray *colComparatorsAlt = @[ NSNull.null, NTVNoteCompareTitle, NTVNoteCompareTitle, NTVNoteCompareTitle ];
 
-		[column setMutatingSelector:colMutators[i]];
-		[column setDereferencingFunction:colReferencors[i]];
-		[column setSortingFunction:sortFunctions[i]];
-		[column setReverseSortingFunction:reverseSortFunctions[i]];
+	[colIdentifiers enumerateObjectsUsingBlock:^(NSString *identifier, NSUInteger i, BOOL *stop) {
+		NoteAttributeColumn *column = [[NoteAttributeColumn alloc] initWithIdentifier:identifier];
+		[column setEditable:![colMutators[i] isEqual:NSNull.null]];
+		[column setHeaderCell:[[[NotesTableHeaderCell alloc] initTextCell:[[NSBundle mainBundle] localizedStringForKey:identifier value:@"" table:nil]] autorelease]];
+
+		NSString *selectorString = colMutators[i];
+		if (![selectorString isEqual:NSNull.null]) {
+			[column setMutatingSelector:NSSelectorFromString(selectorString)];
+		}
+		column.attributeGetter = attributeGetters[i];
+		column.comparator = colComparators[i];
+		NSComparator alt = colComparatorsAlt[i];
+		if (![alt isEqual:NSNull.null]) {
+			column.secondaryComparator = alt;
+		}
+
 		[column setResizingMask:NSTableColumnUserResizingMask];
-		
-		allColsDict[colStrings[i]] = column;
+
+		allColsDict[identifier] = column;
 		[allColumns addObject:column];
 		[column release];
-	}
-	
+	}];
+
 	[[self noteAttributeColumnForIdentifier:NoteLabelsColumnString] setDataCell: [[[LabelColumnCell alloc] init] autorelease]];
 	
 	[self _configureAttributesForCurrentLayout];
@@ -222,8 +228,8 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	activeStyle = YES;
 #endif
 	isActiveStyle = activeStyle;
-	[col setDereferencingFunction: [globalPrefs horizontalLayout] ? ([globalPrefs tableColumnsShowPreview] ? unifiedCellForNote : unifiedCellSingleLineForNote) : 
-	 ([globalPrefs tableColumnsShowPreview] ? (activeStyle ? properlyHighlightingTableTitleOfNote : tableTitleOfNote) : titleOfNote2)];
+	col.attributeGetter = globalPrefs.horizontalLayout ? ([globalPrefs tableColumnsShowPreview] ? NTVNoteUnifiedCellGetter : NTVNoteUnifiedCellSingleLineGetter) :
+	([globalPrefs tableColumnsShowPreview] ? (activeStyle ? NTVNoteHighlightedTableTitleGetter : NTVNoteTableTitleGetter) : NTVNoteTitleGetter);
 }
 
 - (void)updateTitleDereferencorState {

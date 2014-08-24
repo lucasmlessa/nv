@@ -35,12 +35,11 @@ NSInteger compareCatalogEntryName(const void *one, const void *two) {
 								(CFStringRef)((*(NoteCatalogEntry **)two)->filename), kCFCompareCaseInsensitive);
 }
 
-NSInteger compareCatalogValueNodeID(id *a, id *b) {
-	NoteCatalogEntry* aEntry = (NoteCatalogEntry*)[*(id*)a pointerValue];
-	NoteCatalogEntry* bEntry = (NoteCatalogEntry*)[*(id*)b pointerValue];
-	
-    return aEntry->nodeID - bEntry->nodeID;
-}
+static NSComparisonResult(^const NTVCatalogValueCompareNodeID)(NSValue *, NSValue *) = ^(NSValue *a, NSValue *b){
+	NoteCatalogEntry* aEntry = (NoteCatalogEntry*)[a pointerValue];
+	NoteCatalogEntry* bEntry = (NoteCatalogEntry*)[b pointerValue];
+	return NTVCompare(aEntry->nodeID, bEntry->nodeID);
+};
 
 NSInteger compareCatalogValueFileSize(id *a, id *b) {
 	NoteCatalogEntry* aEntry = (NoteCatalogEntry*)[*(id*)a pointerValue];
@@ -351,19 +350,8 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
 	return NO;
 }
 
-- (void)makeNotesMatchCatalogEntries:(NoteCatalogEntry**)catEntriesPtrs ofSize:(size_t)catCount {
-    
-    NSUInteger aSize = [allNotes count];
-    size_t bSize = catCount;
-    
-	ResizeArray(&allNotesBuffer, aSize, &allNotesBufferSize);
-	
-	NSAssert(allNotesBuffer != NULL, @"sorting buffer not initialized");
-	
-    NoteObject **currentNotes = allNotesBuffer;
-    [allNotes getObjects:(id*)currentNotes];
-	
-	mergesort((void *)allNotesBuffer, (size_t)aSize, sizeof(id), (int (*)(const void *, const void *))compareFilename);
+- (void)makeNotesMatchCatalogEntries:(NoteCatalogEntry **)catEntriesPtrs ofSize:(size_t)bSize {
+	NSArray *currentNotes = [allNotes sortedArrayWithOptions:NSSortConcurrent|NSSortStable usingComparator:NTVNoteCompareFilename];
 	mergesort((void *)catEntriesPtrs, (size_t)bSize, sizeof(NoteCatalogEntry*), (int (*)(const void *, const void *))compareCatalogEntryName);
 	
     NSMutableArray *addedEntries = [NSMutableArray array];
@@ -372,54 +360,53 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
     //oldItems(a,i) = currentNotes
     //newItems(b,j) = catEntries;
     
-    NSUInteger i, j, lastInserted = 0;
-    
-    for (i=0; i<aSize; i++) {
-		
+    NSUInteger lastInserted = 0;
+
+	for (NoteObject *currentNote in currentNotes) {
 		BOOL exitedEarly = NO;
-		for (j=lastInserted; j<bSize; j++) {
-			
+		for (NSUInteger j=lastInserted; j<bSize; j++) {
+
 			CFComparisonResult order = CFStringCompare((CFStringRef)(catEntriesPtrs[j]->filename),
-													   (CFStringRef)filenameOfNote(currentNotes[i]), 
+													   (CFStringRef)filenameOfNote(currentNote),
 													   kCFCompareCaseInsensitive);
 			if (order == kCFCompareGreaterThan) {    //if (A[i] < B[j])
 				lastInserted = j;
 				exitedEarly = YES;
-				
+
 				//NSLog(@"FILE DELETED (during): %@", filenameOfNote(currentNotes[i]));
-				[removedEntries addObject:currentNotes[i]];
+				[removedEntries addObject:currentNote];
 				break;
 			} else if (order == kCFCompareEqualTo) {			//if (A[i] == B[j])
 				//the name matches, so add this to changed iff its contents also changed
 				lastInserted = j + 1;
 				exitedEarly = YES;
-				
-				[self modifyNoteIfNecessary:currentNotes[i] usingCatalogEntry:catEntriesPtrs[j]];
-				
+
+				[self modifyNoteIfNecessary:currentNote usingCatalogEntry:catEntriesPtrs[j]];
+
 				break;
 			}
-			
+
 			//NSLog(@"FILE ADDED (during): %@", catEntriesPtrs[j]->filename);
 			if ([notationPrefs catalogEntryAllowed:catEntriesPtrs[j]])
 				[addedEntries addObject:[NSValue valueWithPointer:catEntriesPtrs[j]]];
 		}
-		
+
 		if (!exitedEarly) {
-			
+
 			//element A[i] "appended" to the end of list B
-			if (CFStringCompare((CFStringRef)filenameOfNote(currentNotes[i]),
-								(CFStringRef)(catEntriesPtrs[MIN(lastInserted, bSize-1)]->filename), 
+			if (CFStringCompare((CFStringRef)filenameOfNote(currentNote),
+								(CFStringRef)(catEntriesPtrs[MIN(lastInserted, bSize-1)]->filename),
 								kCFCompareCaseInsensitive) == kCFCompareGreaterThan) {
 				lastInserted = bSize;
-				
+
 				//NSLog(@"FILE DELETED (after): %@", filenameOfNote(currentNotes[i]));
-				[removedEntries addObject:currentNotes[i]];
+				[removedEntries addObject:currentNote];
 			}
 		}
-		
-    }
+
+	}
     
-    for (j=lastInserted; j<bSize; j++) {
+    for (NSUInteger j=lastInserted; j<bSize; j++) {
 		
 		//NSLog(@"FILE ADDED (after): %@", catEntriesPtrs[j]->filename);
 		if ([notationPrefs catalogEntryAllowed:catEntriesPtrs[j]])
@@ -431,8 +418,8 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
 	} else {
 		
 		if (![removedEntries count]) {
-			for (i=0; i<[addedEntries count]; i++) {
-				[self addNoteFromCatalogEntry:(NoteCatalogEntry*)[addedEntries[i] pointerValue]];
+			for (NSValue *addedEntryPtr in addedEntries) {
+				[self addNoteFromCatalogEntry:(NoteCatalogEntry*)[addedEntryPtr pointerValue]];
 			}
 		}
 		
@@ -448,8 +435,8 @@ void FSEventsCallback(ConstFSEventStreamRef stream, void* info, size_t num_event
 	NSUInteger aSize = [removedEntries count], bSize = [addedEntries count];
     
     //sort on nodeID here
-	[addedEntries sortUnstableUsingFunction:compareCatalogValueNodeID];
-	[removedEntries sortUnstableUsingFunction:compareNodeID];
+	[addedEntries sortWithOptions:NSSortConcurrent usingComparator:NTVCatalogValueCompareNodeID];
+	[removedEntries sortWithOptions:NSSortConcurrent usingComparator:NTVNoteCompareNodeID];
 	
 	NSMutableArray *hfsAddedEntries = [NSMutableArray array];
 	NSMutableArray *hfsRemovedEntries = [NSMutableArray array];
