@@ -157,7 +157,6 @@
 		case NSScrollerNoPart:
         {
 			return [self bounds];
-			break;
 		}
         case NSScrollerKnob:
 		{
@@ -188,7 +187,6 @@
 			
 			return knobRect;
 		}
-			break;	
 		case NSScrollerKnobSlot:
 		{
 			NSRect slotRect=[self bounds];
@@ -198,13 +196,10 @@
             slotRect.size.height=roundf(slotRect.size.height-(verticalPaddingTop+verticalPaddingBottom));
 			return slotRect;
 		}
-			break;
 		case NSScrollerIncrementLine:
 			return NSZeroRect;
-			break;
 		case NSScrollerDecrementLine:
 			return NSZeroRect;
-			break;
 		case NSScrollerIncrementPage:
 		{
 			NSRect incrementPageRect;
@@ -218,7 +213,6 @@
             
 			return incrementPageRect;
 		}
-			break;
 		case NSScrollerDecrementPage:
 		{
 			NSRect decrementPageRect;
@@ -229,12 +223,7 @@
             
 			return decrementPageRect;
 		}
-			break;
-		default:
-			break;
 	}
-	
-	return NSZeroRect;
 }
 
 @end
