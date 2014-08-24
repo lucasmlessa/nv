@@ -1548,7 +1548,7 @@ bail:
 
 - (void)regeneratePreviewsForColumn:(NSTableColumn*)col visibleFilteredRows:(NSRange)rows forceUpdate:(BOOL)force {
 	
-	CGFloat width = [col width] - [NSScroller scrollerWidthForControlSize:NSRegularControlSize];
+	CGFloat width = [col width] - [NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:col.tableView.enclosingScrollView.scrollerStyle];
 	
 	if (force || !NTVFloatsEqual(roundf(width), roundf(titleColumnWidth))) {
 		titleColumnWidth = width;
