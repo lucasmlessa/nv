@@ -8,12 +8,13 @@
 
 #import <math.h>
 #import <tgmath.h>
+#import <CoreGraphics/CGBase.h>
 #import "NTVMacros.h"
 
 #ifndef __cplusplus
 
-#ifndef NTV_MATH
-#define NTV_MATH
+#ifndef NTV_TG_MATH
+#define NTV_TG_MATH
 
 #define roundf(__x)     __tg_round(__tg_promote1((__x))(__x))
 #define floorf(__x)     __tg_floor(__tg_promote1((__x))(__x))
@@ -29,6 +30,21 @@
 #define sinf(__x)       __tg_sin(__tg_promote1((__x))(__x))
 #define tanf(__x)       __tg_tan(__tg_promote1((__x))(__x))
 
-#endif /* NTV_MATH */
+#endif /* NTV_TG_MATH */
 
 #endif /* !defined (__cplusplus) */
+
+#ifndef NTV_MATH
+#define NTV_MATH
+
+NTV_ALWAYS_INLINE CGFloat rroundf(CGFloat pt, CGFloat scale){
+	return (scale > 0) ? (__tg_round(pt * scale) / scale) : __tg_round(pt);
+}
+NTV_ALWAYS_INLINE CGFloat rceilf(CGFloat pt, CGFloat scale){
+	return (scale > 0) ? (__tg_ceil(pt * scale) / scale) : __tg_ceil(pt);
+}
+NTV_ALWAYS_INLINE CGFloat rfloorf(CGFloat pt, CGFloat scale){
+	return (scale > 0) ? (__tg_floor(pt * scale) / scale) : __tg_floor(pt);
+}
+
+#endif /* NTV_MATH */

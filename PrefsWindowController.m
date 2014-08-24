@@ -535,20 +535,15 @@
 	NSAssert(prefsView != nil, @"switching to a nil prefs view!");
     
 	[[NSFontPanel sharedFontPanel] close];
+
 	
-	//fix this math to convert between window and view coordinates for resolution independence
-	
-	CGFloat userSpaceScaleFactor = [window userSpaceScaleFactor];
-	
-    //to stop flicker, we make a temp blank view.
-	
-	CGRect windowContentFrame = ScaleRectWithFactor([[window contentView] frame], userSpaceScaleFactor);
+	CGRect windowContentFrame = [window convertRectToScreen:[[window contentView] frame]];
     NSView *tempView = [[NSView alloc] initWithFrame:[[window contentView] frame]];
     [window setContentView:tempView];
     [tempView release];
     
     CGRect newFrame = [window frame];
-	CGRect viewFrameForWindow = ScaleRectWithFactor([prefsView frame], userSpaceScaleFactor);
+	CGRect viewFrameForWindow = [window convertRectToScreen:[prefsView frame]];
     newFrame.size.height = viewFrameForWindow.size.height + ([window frame].size.height - windowContentFrame.size.height);
     newFrame.size.width = viewFrameForWindow.size.width;
     newFrame.origin.y += (windowContentFrame.size.height - viewFrameForWindow.size.height);

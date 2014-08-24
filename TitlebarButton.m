@@ -179,10 +179,10 @@
 
 		if (0 <= _initialDragPoint.x && 0 <= _initialDragPoint.y) {
 			NSWindow *win = [self window];
-			NSPoint p = [win convertBaseToScreen:[event locationInWindow]];
+			NSPoint p = [win convertRectToScreen:(CGRect){ event.locationInWindow, CGSizeZero }].origin;
 			NSRect sr = [[win screen] frame];
 			NSRect wr = [win frame];
-			
+
 			NSPoint origin = NSMakePoint(p.x - _initialDragPoint.x, p.y - _initialDragPoint.y);
 			if (NSMaxY(sr) < origin.y + wr.size.height) {
 				origin.y = sr.origin.y + (sr.size.height - wr.size.height);
@@ -199,7 +199,7 @@
 - (void)mouseDown:(NSEvent *)theEvent {
 		
 	NSRect frame = [[self window] frame];
-    _initialDragPoint = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
+	_initialDragPoint = [[self window] convertRectToScreen:(CGRect){ theEvent.locationInWindow, CGSizeZero }].origin;
     _initialDragPoint.x -= frame.origin.x;
     _initialDragPoint.y -= frame.origin.y;
 	

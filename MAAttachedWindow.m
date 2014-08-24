@@ -9,7 +9,6 @@
 
 #define MAATTACHEDWINDOW_DEFAULT_BACKGROUND_COLOR [NSColor colorWithCalibratedWhite:0.1 alpha:0.75]
 #define MAATTACHEDWINDOW_DEFAULT_BORDER_COLOR [NSColor whiteColor]
-#define MAATTACHEDWINDOW_SCALE_FACTOR [[NSScreen mainScreen] userSpaceScaleFactor]
 
 @interface MAAttachedWindow (MAPrivateMethods)
 
@@ -192,47 +191,46 @@
     contentRect.size = [_view frame].size;
     
     // Account for viewMargin.
-    _viewFrame = CGRectMake(viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR,
-                            viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR,
+    _viewFrame = CGRectMake(viewMargin,
+                            viewMargin,
                             [_view frame].size.width, [_view frame].size.height);
     contentRect = CGRectInset(contentRect,
-                              -viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR, 
-                              -viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR);
+                              -viewMargin,
+                              -viewMargin);
     
     // Account for arrowHeight in new window frame.
     // Note: we always leave room for the arrow, even if it currently set to 
     // not be shown. This is so it can easily be toggled whilst the window 
     // is visible, without altering the window's frame origin point.
-    CGFloat scaledArrowHeight = arrowHeight * MAATTACHEDWINDOW_SCALE_FACTOR;
     switch (_side) {
         case MAPositionLeft:
         case MAPositionLeftTop:
         case MAPositionLeftBottom:
-            contentRect.size.width += scaledArrowHeight;
+            contentRect.size.width += arrowHeight;
             break;
         case MAPositionRight:
         case MAPositionRightTop:
         case MAPositionRightBottom:
-            _viewFrame.origin.x += scaledArrowHeight;
-            contentRect.size.width += scaledArrowHeight;
+            _viewFrame.origin.x += arrowHeight;
+            contentRect.size.width += arrowHeight;
             break;
         case MAPositionTop:
         case MAPositionTopLeft:
         case MAPositionTopRight:
-            _viewFrame.origin.y += scaledArrowHeight;
-            contentRect.size.height += scaledArrowHeight;
+            _viewFrame.origin.y += arrowHeight;
+            contentRect.size.height += arrowHeight;
             break;
         case MAPositionBottom:
         case MAPositionBottomLeft:
         case MAPositionBottomRight:
-            contentRect.size.height += scaledArrowHeight;
+            contentRect.size.height += arrowHeight;
             break;
         default:
             break; // won't happen, but this satisfies gcc with -Wall
     }
     
     // Position frame origin appropriately for _side, accounting for arrow-inset.
-    contentRect.origin = (_window) ? [_window convertBaseToScreen:_point] : _point;
+	contentRect.origin = (_window) ? [_window convertRectToScreen:(CGRect){ _point, CGSizeZero }].origin : _point;
     CGFloat arrowInset = [self _arrowInset];
     CGFloat halfWidth = contentRect.size.width / 2.0;
     CGFloat halfHeight = contentRect.size.height / 2.0;
@@ -324,12 +322,12 @@
     } else {
          screenFrame = [[NSScreen mainScreen] visibleFrame];
     }
-    CGPoint pointOnScreen = (_window) ? [_window convertBaseToScreen:_point] : _point;
+    CGPoint pointOnScreen = (_window) ? [_window convertRectToScreen:(CGRect){ _point, CGSizeZero }].origin : _point;
     CGSize viewSize = [_view frame].size;
-    viewSize.width += (viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR) * 2.0;
-    viewSize.height += (viewMargin * MAATTACHEDWINDOW_SCALE_FACTOR) * 2.0;
+    viewSize.width += viewMargin * 2.0;
+    viewSize.height += viewMargin * 2.0;
     MAWindowPosition side = MAPositionBottom; // By default, position us centered below.
-    CGFloat scaledArrowHeight = (arrowHeight * MAATTACHEDWINDOW_SCALE_FACTOR) + _distance;
+    CGFloat scaledArrowHeight = arrowHeight + _distance;
     
     // We'd like to display directly below the specified point, since this gives a 
     // sense of a relationship between the point and this window. Check there's room.
@@ -421,7 +419,7 @@
 - (CGFloat)_arrowInset
 {
     CGFloat cornerInset = (drawsRoundCornerBesideArrow) ? cornerRadius : 0;
-    return (cornerInset + (arrowBaseWidth / 2.0)) * MAATTACHEDWINDOW_SCALE_FACTOR;
+    return (cornerInset + (arrowBaseWidth / 2.0));
 }
 
 
@@ -461,7 +459,7 @@
     // Draw border if appropriate.
     if (self.borderWidth > 0) {
         // Double the borderWidth since we're drawing inside the path.
-        [bgPath setLineWidth:(self.borderWidth * 2.0) * MAATTACHEDWINDOW_SCALE_FACTOR];
+        [bgPath setLineWidth:(self.borderWidth * 2.0)];
         [borderColor set];
         [bgPath stroke];
     }
@@ -485,19 +483,17 @@
      6. cornerRadius
      */
     
-    CGFloat scaleFactor = MAATTACHEDWINDOW_SCALE_FACTOR;
-    CGFloat scaledRadius = cornerRadius * scaleFactor;
-    CGFloat scaledArrowWidth = arrowBaseWidth * scaleFactor;
-    CGFloat halfArrowWidth = scaledArrowWidth / 2.0;
-    CGRect contentArea = CGRectInset(_viewFrame,
-                                     -viewMargin * scaleFactor,
-                                     -viewMargin * scaleFactor);
-    CGFloat minX = ceilf(CGRectGetMinX(contentArea) * scaleFactor + 0.5f);
-	CGFloat midX = CGRectGetMidX(contentArea) * scaleFactor;
-	CGFloat maxX = floorf(CGRectGetMaxX(contentArea) * scaleFactor - 0.5f);
-	CGFloat minY = ceilf(CGRectGetMinY(contentArea) * scaleFactor + 0.5f);
-	CGFloat midY = CGRectGetMidY(contentArea) * scaleFactor;
-	CGFloat maxY = floorf(CGRectGetMaxY(contentArea) * scaleFactor - 0.5f);
+	CGFloat scale = _window.backingScaleFactor;
+	CGFloat scaledRadius = cornerRadius;
+	CGFloat scaledArrowWidth = arrowBaseWidth;
+    CGFloat halfArrowWidth = arrowBaseWidth / 2.0;
+    CGRect contentArea = CGRectInset(_viewFrame, -viewMargin, -viewMargin);
+	CGFloat minX = rceilf(CGRectGetMinX(contentArea) + 0.5, scale);
+	CGFloat midX = CGRectGetMidX(contentArea);
+	CGFloat maxX = rfloorf(CGRectGetMaxX(contentArea) - 0.5, scale);
+	CGFloat minY = rceilf(CGRectGetMinY(contentArea) + 0.5, scale);
+	CGFloat midY = CGRectGetMidY(contentArea);
+	CGFloat maxY = rfloorf(CGRectGetMaxY(contentArea) - 0.5, scale);
 	
     NSBezierPath *path = [NSBezierPath bezierPath];
     [path setLineJoinStyle:NSRoundLineJoinStyle];
@@ -672,10 +668,7 @@
         return;
     }
     
-    CGFloat scaleFactor = MAATTACHEDWINDOW_SCALE_FACTOR;
-    CGFloat scaledArrowWidth = arrowBaseWidth * scaleFactor;
-    CGFloat halfArrowWidth = scaledArrowWidth / 2.0;
-    CGFloat scaledArrowHeight = arrowHeight * scaleFactor;
+    CGFloat halfArrowWidth = arrowBaseWidth / 2.0;
     CGPoint currPt = [path currentPoint];
     CGPoint tipPt = currPt;
     CGPoint endPt = currPt;
@@ -686,33 +679,33 @@
         case MAPositionLeftTop:
         case MAPositionLeftBottom:
             // Arrow points towards right. We're starting from the top.
-            tipPt.x += scaledArrowHeight;
+            tipPt.x += arrowHeight;
             tipPt.y -= halfArrowWidth;
-            endPt.y -= scaledArrowWidth;
+            endPt.y -= arrowBaseWidth;
             break;
         case MAPositionRight:
         case MAPositionRightTop:
         case MAPositionRightBottom:
             // Arrow points towards left. We're starting from the bottom.
-            tipPt.x -= scaledArrowHeight;
+            tipPt.x -= arrowHeight;
             tipPt.y += halfArrowWidth;
-            endPt.y += scaledArrowWidth;
+            endPt.y += arrowBaseWidth;
             break;
         case MAPositionTop:
         case MAPositionTopLeft:
         case MAPositionTopRight:
             // Arrow points towards bottom. We're starting from the right.
-            tipPt.y -= scaledArrowHeight;
+            tipPt.y -= arrowHeight;
             tipPt.x -= halfArrowWidth;
-            endPt.x -= scaledArrowWidth;
+            endPt.x -= arrowBaseWidth;
             break;
         case MAPositionBottom:
         case MAPositionBottomLeft:
         case MAPositionBottomRight:
             // Arrow points towards top. We're starting from the left.
-            tipPt.y += scaledArrowHeight;
+            tipPt.y += arrowHeight;
             tipPt.x += halfArrowWidth;
-            endPt.x += scaledArrowWidth;
+            endPt.x += arrowBaseWidth;
             break;
         default:
             break; // won't happen, but this satisfies gcc with -Wall

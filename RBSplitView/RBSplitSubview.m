@@ -483,62 +483,63 @@ static animationData* currentAnimation = NULL;
 // drag view as designated by the delegate.
 - (void)mouseDown:(NSEvent*)theEvent {
     if ([theEvent clickCount]<2) {
-	NSWindow* window = [self window];
-	NSPoint where = [theEvent locationInWindow];
-	if (actDivider<NSNotFound) {
-		// Cache divider# here for the loop
-		NSUInteger thediv = actDivider;
-        // The mouse down was inside an alternate drag view; actDivider was just set in hitTest.
-		RBSplitView* sv = [self splitView];
-		NSPoint point = [sv convertPoint:where fromView:nil];
-		[[RBSplitView cursor:RBSVDragCursor] push];
-		NSPoint base = NSZeroPoint;
-        // Record the current divider coordinate.
-		CGFloat divc = [sv RB___dividerOrigin:thediv];
-		BOOL ishor = [sv isHorizontal];
-		[sv RB___setDragging:YES];
-        // Loop while the button is down.
-		while ((theEvent = [NSApp nextEventMatchingMask:NSLeftMouseDownMask|NSLeftMouseDraggedMask|NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES])&&([theEvent type]!=NSLeftMouseUp)) {
-            // Set up a local autorelease pool for the loop to prevent buildup of temporary objects.
-			NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-			NSDisableScreenUpdates();
-            // This does the actual movement.
-			[sv RB___trackMouseEvent:theEvent from:point withBase:base inDivider:thediv];
-			if ([sv mustAdjust]) {
-                // If something changed, we clear fractions and redisplay.
-				[sv RB___setMustClearFractions];
-				[sv display];
+		NSWindow* window = [self window];
+		NSPoint where = [theEvent locationInWindow];
+		if (actDivider<NSNotFound) {
+			// Cache divider# here for the loop
+			NSUInteger thediv = actDivider;
+			// The mouse down was inside an alternate drag view; actDivider was just set in hitTest.
+			RBSplitView* sv = [self splitView];
+			NSPoint point = [sv convertPoint:where fromView:nil];
+			[[RBSplitView cursor:RBSVDragCursor] push];
+			NSPoint base = NSZeroPoint;
+			// Record the current divider coordinate.
+			CGFloat divc = [sv RB___dividerOrigin:thediv];
+			BOOL ishor = [sv isHorizontal];
+			[sv RB___setDragging:YES];
+			// Loop while the button is down.
+			while ((theEvent = [NSApp nextEventMatchingMask:NSLeftMouseDownMask|NSLeftMouseDraggedMask|NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES])&&([theEvent type]!=NSLeftMouseUp)) {
+				// Set up a local autorelease pool for the loop to prevent buildup of temporary objects.
+				NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+				NSDisableScreenUpdates();
+				// This does the actual movement.
+				[sv RB___trackMouseEvent:theEvent from:point withBase:base inDivider:thediv];
+				if ([sv mustAdjust]) {
+					// If something changed, we clear fractions and redisplay.
+					[sv RB___setMustClearFractions];
+					[sv display];
+				}
+				// Change the drag point by the actual amount moved.
+				CGFloat newc = [sv RB___dividerOrigin:thediv];
+				DIM(point) += newc-divc;
+				divc = newc;
+				NSEnableScreenUpdates();
+				[pool drain];
 			}
-            // Change the drag point by the actual amount moved.
-			CGFloat newc = [sv RB___dividerOrigin:thediv];
-			DIM(point) += newc-divc;
-			divc = newc;
-			NSEnableScreenUpdates();
-			[pool drain];
+			[sv RB___setDragging:NO];
+			[NSCursor pop];
+			actDivider = NSNotFound;
+			return;
 		}
-		[sv RB___setDragging:NO];
-		[NSCursor pop];
-		actDivider = NSNotFound;
-		return;
-	}
-	if (canDragWindow&&[window isMovableByWindowBackground]&&![[self couplingSplitView] background]) {
-        // If we get here, it's a textured (metal) window, the mouse has gone down on an non-opaque portion
-        // of the subview, and our RBSplitView has a transparent background. RBSplitView returns NO to
-        // mouseDownCanMoveWindow, but the window should move here - after all, the window background
-        // is visible right here! So we fake it and move the window as intended. Mwahahaha!
-		where =  [window convertBaseToScreen:where];
-		NSPoint origin = [window frame].origin;
-        // Now we loop handling mouse events until we get a mouse up event.
-		while ((theEvent = [NSApp nextEventMatchingMask:NSLeftMouseDownMask|NSLeftMouseDraggedMask|NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES])&&([theEvent type]!=NSLeftMouseUp)) {
-            // Set up a local autorelease pool for the loop to prevent buildup of temporary objects.
-			NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-			NSPoint now = [window convertBaseToScreen:[theEvent locationInWindow]];
-			origin.x += now.x-where.x;
-			origin.y += now.y-where.y;
-            // Move the window by the mouse displacement since the last event.
-			[window setFrameOrigin:origin];
-			where = now;
-			[pool drain];
+
+		if (canDragWindow && [window isMovableByWindowBackground] && ![[self couplingSplitView] background]) {
+			// If we get here, it's a textured (metal) window, the mouse has gone down on an non-opaque portion
+			// of the subview, and our RBSplitView has a transparent background. RBSplitView returns NO to
+			// mouseDownCanMoveWindow, but the window should move here - after all, the window background
+			// is visible right here! So we fake it and move the window as intended. Mwahahaha!
+			CGPoint whereOnScreen = [window convertRectToScreen:(CGRect){ where, CGSizeZero }].origin;
+			NSPoint origin = [window frame].origin;
+			// Now we loop handling mouse events until we get a mouse up event.
+			while ((theEvent = [NSApp nextEventMatchingMask:NSLeftMouseDownMask|NSLeftMouseDraggedMask|NSLeftMouseUpMask untilDate:[NSDate distantFuture] inMode:NSEventTrackingRunLoopMode dequeue:YES])&&([theEvent type]!=NSLeftMouseUp)) {
+				// Set up a local autorelease pool for the loop to prevent buildup of temporary objects.
+				@autoreleasepool {
+					NSPoint now = [window convertRectToScreen:(CGRect){ [theEvent locationInWindow], CGSizeZero }].origin;
+					origin.x += now.x-whereOnScreen.x;
+					origin.y += now.y-whereOnScreen.y;
+					// Move the window by the mouse displacement since the last event.
+					[window setFrameOrigin:origin];
+					whereOnScreen = now;
+				}
             }
 		}
 	} 
