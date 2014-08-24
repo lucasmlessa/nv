@@ -21,7 +21,6 @@
 #import "SyncResponseFetcher.h"
 #import "SimplenoteSession.h"
 #import "NSString_NV.h"
-#import "NSDictionary+BSJSONAdditions.h"
 #import "SynchronizedNoteProtocol.h"
 #import "NoteObject.h"
 #import "DeletedNoteObject.h"
@@ -142,22 +141,17 @@
 	if ([fetcher headers][@"X-Simperium-Version"]) {
 		version = [[fetcher headers][@"X-Simperium-Version"] integerValue];
 	}
-	NSString *bodyString = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-	
-	NSDictionary *rawObject = nil;
-	@try {
-		rawObject = [NSDictionary dictionaryWithJSONString:bodyString];
+
+	NSError *error = nil;
+	NSDictionary *rawObject = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+	if (!rawObject) {
+		NSLog(@"Error while parsing Simplenote JSON note object: %@", error);
+		return nil;
 	}
-	@catch (NSException *e) {
-		NSLog(@"Exception while parsing Simplenote JSON note object: %@", [e reason]);
-	}
-	@finally {
-		if (!rawObject)
-			return nil;
-	}
+
 	NSURL *url = [fetcher requestURL];
 	NSUInteger index = [[url pathComponents] indexOfObject:@"i"];
-	NSString *key;
+	NSString *key = nil;
 	if (index > 0 && index+1 < [[url pathComponents] count]) {
 		key = [url pathComponents][(index+1)];
 	}
@@ -174,7 +168,7 @@
     if (!content)
         content = @"";
     
-	entry[@"key"] = key;
+	if (key) { entry[@"key"] = key; }
 	entry[@"version"] = @(version);
 	entry[@"deleted"] = deleted;
 	// Normalize dates from unix epoch timestamps to mac os x epoch timestamps
@@ -323,10 +317,11 @@
 			noteURL = [SimplenoteSession simperiumURLWithPath:[NSString stringWithFormat:@"/Note/i/%@", info[@"key"]] parameters:params];
 		}
 	}
+	NSData *POSTData = [NSJSONSerialization dataWithJSONObject:rawObject options:0 error:NULL];
 	NSDictionary *headers = @{
 		@"X-Simperium-Token": simperiumToken
 	};
-	SyncResponseFetcher *fetcher = [[SyncResponseFetcher alloc] initWithURL:noteURL POSTData:[[rawObject jsonStringValue] dataUsingEncoding:NSUTF8StringEncoding] headers:headers contentType:@"application/json" delegate:self];
+	SyncResponseFetcher *fetcher = [[SyncResponseFetcher alloc] initWithURL:noteURL POSTData:POSTData headers:headers contentType:@"application/json" delegate:self];
 	[fetcher setRepresentedObject:aNote];
 	return [fetcher autorelease];
 }
@@ -356,9 +351,9 @@
 	//in keeping with nv's behavior with sn api1, deleting only marks a note as deleted.
 	//may want to implement actual purging (using HTTP DELETE) in the future
 	NSURL *noteURL = [SimplenoteSession simperiumURLWithPath:[NSString stringWithFormat:@"/Note/i/%@", info[@"key"]] parameters:nil];
-	NSData *postData = [[@{
+	NSData *postData = [NSJSONSerialization dataWithJSONObject:@{
 		@"deleted": @1
-	} jsonStringValue] dataUsingEncoding:NSUTF8StringEncoding];
+	} options:0 error:NULL];
 	NSDictionary *headers = @{
 		@"X-Simperium-Token": simperiumToken
 	};
@@ -390,16 +385,12 @@
 }
 
 - (NSDictionary*)preparedDictionaryWithFetcher:(SyncResponseFetcher*)fetcher receivedData:(NSData*)data {
-	NSString *bodyString = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-	
-	NSDictionary *rawObject = nil;
-	@try {
-		rawObject = [NSDictionary dictionaryWithJSONString:bodyString];
+	NSError *error = nil;
+	NSDictionary *rawObject = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+	if (!rawObject) {
+		NSLog(@"Error while parsing Simplenote JSON note object: %@", error);
 	}
-	@catch (NSException *e) {
-		NSLog(@"Exception while parsing Simplenote JSON note object: %@", [e reason]);
-	}
-	
+
 	NSString *keyString = nil;
 	NSURL *url = [fetcher requestURL];
 	NSUInteger index = [[url pathComponents] indexOfObject:@"i"];
@@ -414,7 +405,7 @@
 	NSMutableDictionary *result = [NSMutableDictionary dictionaryWithCapacity:5];
 	NSMutableDictionary *syncMD = [NSMutableDictionary dictionaryWithCapacity:5];
 	if (rawObject) {
-		syncMD[@"key"] = keyString;
+		if (keyString) { syncMD[@"key"] = keyString; }
 		syncMD[@"create"] = @([[NSDate dateWithTimeIntervalSince1970:[rawObject[@"creationDate"] doubleValue]] timeIntervalSinceReferenceDate]);
 		syncMD[@"modify"] = @([[NSDate dateWithTimeIntervalSince1970:[rawObject[@"modificationDate"] doubleValue]] timeIntervalSinceReferenceDate]);
 		syncMD[@"version"] = @(version);
@@ -490,7 +481,8 @@
 	} else {
 		NSLog(@"Hmmm. Fetcher %@ doesn't have a represented object. op = %@", fetcher, NSStringFromSelector(fetcherOpSEL));
 	}
-	result[@"key"] = keyString;
+
+	if (keyString) { result[@"key"] = keyString; }
 	
 	
 	return result;

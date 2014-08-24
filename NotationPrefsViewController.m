@@ -28,7 +28,6 @@
 #import "PassphraseChanger.h"
 #import "NSFileManager_NV.h"
 //#import "AppController.h"
-#import "NSDictionary+BSJSONAdditions.h"
 
 @implementation FileKindListView 
 
@@ -453,15 +452,15 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 - (void)startLoginVerifier {
 	if (!loginVerifier && [[syncAccountField stringValue] length] && [[syncPasswordField stringValue] length]) {
 		NSURL *loginURL = [SimplenoteSession authURLWithPath:@"/authorize/" parameters:nil];
+		NSData *POSTData = [NSJSONSerialization dataWithJSONObject:@{
+			@"username": [syncAccountField stringValue],
+			@"password": [syncPasswordField stringValue]
+		} options:0 error:NULL];
 		NSDictionary *headers = @{
 			@"X-Simperium-API-Key": kSimperiumAPIKey
 		};
-		NSDictionary *login = @{
-			@"username": [syncAccountField stringValue],
-			@"password": [syncPasswordField stringValue]
-		};
 
-		loginVerifier = [[SyncResponseFetcher alloc] initWithURL:loginURL POSTData:[[login jsonStringValue] dataUsingEncoding:NSUTF8StringEncoding] headers:headers contentType:@"application/json" delegate:self];
+		loginVerifier = [[SyncResponseFetcher alloc] initWithURL:loginURL POSTData:POSTData headers:headers contentType:@"application/json" delegate:self];
 
 		[loginVerifier start];
 		[self setVerificationStatus:VERIFY_IN_PROGRESS withString:@""];
