@@ -758,9 +758,14 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 }
 #endif
 
-
-- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)isLocal {
-	return isLocal ? NSDragOperationNone : NSDragOperationCopy;
+- (NSDragOperation)draggingSession:(NSDraggingSession *)session sourceOperationMaskForDraggingContext:(NSDraggingContext)context
+{
+	switch (context) {
+		case NSDraggingContextOutsideApplication:
+			return NSDragOperationCopy;
+		default:
+			return NSDragOperationNone;
+	}
 }
 
 //- (void)mouseUp:(NSEvent *)theEvent{
