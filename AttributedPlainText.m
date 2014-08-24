@@ -20,13 +20,9 @@
 #import "NSCollection_utils.h"
 #import "GlobalPrefs.h"
 #import "NSString_NV.h"
-#import <AutoHyperlinks/AutoHyperlinks.h>
-
 
 NSString *NVHiddenDoneTagAttributeName = @"NVDoneTag";
 NSString *NVHiddenBulletIndentAttributeName = @"NVBulletIndentTag";
-
-static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange);
 
 @implementation NSMutableAttributedString (AttributedPlainText)
 
@@ -206,109 +202,40 @@ static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange)
 	if (!changedRange.length)
 		return;
 	
-	//lazily loads Adium's BSD-licensed Auto-Hyperlinks:
-	//http://trac.adium.im/wiki/AutoHyperlinksFramework
-	
-	static Class AHHyperlinkScanner = Nil;
-	static Class AHMarkedHyperlink = Nil;
-	if (!AHHyperlinkScanner || !AHMarkedHyperlink) {
-		if (![[NSBundle bundleWithPath:[[[NSBundle mainBundle] privateFrameworksPath] stringByAppendingPathComponent:@"AutoHyperlinks.framework"]] load]) {
-			NSLog(@"Could not load AutoHyperlinks framework");
-			return;
-		}
-		AHHyperlinkScanner = NSClassFromString(@"AHHyperlinkScanner");
-		AHMarkedHyperlink = NSClassFromString(@"AHMarkedHyperlink");
-	}
-	
-	id scanner = [AHHyperlinkScanner hyperlinkScannerWithString:[[self string] substringWithRange:changedRange]];
-	id markedLink = nil;
-	while ((markedLink = [scanner nextURI])) {
-		NSURL *markedLinkURL = nil;
-		if ((markedLinkURL = [markedLink URL]) && !([markedLinkURL isFileURL] && [[markedLinkURL absoluteString] 
-																				  rangeOfString:@"/.file/" options:NSLiteralSearch].location != NSNotFound)) {
-			[self addAttribute:NSLinkAttributeName value:markedLinkURL 
-						 range:NSMakeRange([markedLink range].location + changedRange.location, [markedLink range].length)];
-		}
-	}
+	static dispatch_once_t onceToken;
+	static NSDataDetector *URLDetector = nil;
+	static NSRegularExpression *searchLinkDetector = nil;
+	dispatch_once(&onceToken, ^{
+		URLDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:NULL];
+		searchLinkDetector = [NSRegularExpression regularExpressionWithPattern:@"\\[\\[((?! )[\\w ]*)\\]\\]" options:NSRegularExpressionUseUnicodeWordBoundaries error:NULL];
+	});
 
-	//also detect double-bracketed URLs here
-	[self _addDoubleBracketedNVLinkAttributesForRange:changedRange];
-}
+	[URLDetector enumerateMatchesInString:self.string options:0 range:changedRange usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
+		if (result.resultType != NSTextCheckingTypeLink) { return; }
 
-- (void)_addDoubleBracketedNVLinkAttributesForRange:(NSRange)changedRange {
-	//add link attributes for [[wiki-style links to other notes or search terms]] 
-	
-	static NSMutableCharacterSet *antiInteriorSet = nil;
-	if (!antiInteriorSet) {
-		antiInteriorSet = [[NSMutableCharacterSet characterSetWithCharactersInString:@"[]"] retain];
-		[antiInteriorSet formUnionWithCharacterSet:[NSCharacterSet whitespaceCharacterSet]];
-		[antiInteriorSet formUnionWithCharacterSet:[NSCharacterSet illegalCharacterSet]];
-		[antiInteriorSet formUnionWithCharacterSet:[NSCharacterSet controlCharacterSet]];
-	}
-	
-	NSString *string = [self string];
-	NSUInteger nextScanLoc = 0;
-	NSRange scanRange = changedRange;
-	
-	while (NSMaxRange(scanRange) <= NSMaxRange(changedRange)) {
-		
-		NSUInteger begin = [string rangeOfString:@"[[" options:NSLiteralSearch range:scanRange].location;
-		if (begin == NSNotFound) break;
-		begin += 2;
-		NSUInteger end = [string rangeOfString:@"]]" options:NSLiteralSearch 
-										 range:NSMakeRange(begin, changedRange.length - (begin - changedRange.location))].location;
-		if (end == NSNotFound) break;
+		NSURL *markedLinkURL = result.URL;
+		if (!markedLinkURL || markedLinkURL.isFileURL || [markedLinkURL.absoluteString rangeOfString:@"/.file/" options:NSLiteralSearch].location != NSNotFound) { return; }
 
-		NSRange blockRange = NSMakeRange(begin, (end - begin));
+		[self addAttribute:NSLinkAttributeName value:markedLinkURL range:result.range];
+	}];
 
-		//double-braces must directly abut the search terms
-		//capture inner invalid "[["s, but not inner invalid "]]"s;
-		//because scanning, which is left to right, could be cancelled prematurely otherwise
-		if ([antiInteriorSet characterIsMember:[string characterAtIndex:begin]]) {
-			nextScanLoc = begin;
-			goto nextBlock;
-		}
-		//when encountering a newline in the midst of opposing double-brackets, 
-		//continue scanning after the newline instead of after the end-brackets; avoid certain traps that change the behavior of multi- vs single-line scans
-		NSRange newlineRange = [string rangeOfCharacterFromSet:[NSCharacterSet newlineCharacterSet] options:NSLiteralSearch range:blockRange];
-		if (newlineRange.location != NSNotFound) {
-			nextScanLoc = newlineRange.location + 1;
-			goto nextBlock;
+	// add link attributes for [[wiki-style links to other notes or search terms]]
+	[searchLinkDetector enumerateMatchesInString:self.string options:0 range:changedRange usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
+		NSRange trimmedRange;
+		NSString *trimmedText;
+
+		if (result.numberOfRanges > 1) {
+			trimmedRange = [result rangeAtIndex:1];
+			trimmedText = [self.string substringWithRange:trimmedRange];
+		} else {
+			NSString *nonTrimmedMatch = [self.string substringWithRange:result.range];
+			trimmedText = [nonTrimmedMatch stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"[]"]];
+			trimmedRange = [self.string rangeOfString:trimmedText options:NSLiteralSearch range:result.range];
 		}
 
-		if (![antiInteriorSet characterIsMember:[string characterAtIndex:NSMaxRange(blockRange) - 1]] && !_StringWithRangeIsProbablyObjC(string, blockRange)) {
-			
-			[self addAttribute:NSLinkAttributeName value:
-			 [NSURL URLWithString:[@"nvalt://find/" stringByAppendingString:[[string substringWithRange:blockRange] stringWithPercentEscapes]]] range:blockRange];
-		}
-		//continue the scan starting at the end of the current block
-		nextScanLoc = NSMaxRange(blockRange) + 2;
-
-	nextBlock:
-		scanRange = NSMakeRange(nextScanLoc, changedRange.length - (nextScanLoc - changedRange.location));
-	}
-}
-
-static BOOL _StringWithRangeIsProbablyObjC(NSString *string, NSRange blockRange) {
-	//assuming this range is bookended with matching double-brackets,
-	//does the block contain unbalanced inner square brackets?
-	
-	NSUInteger rightBracketLoc = [string rangeOfString:@"]" options:NSLiteralSearch range:blockRange].location;
-	NSUInteger leftBracketLoc = [string rangeOfString:@"[" options:NSLiteralSearch range:blockRange].location; 
-	
-	//no brackets of either variety
-	if (rightBracketLoc == NSNotFound && leftBracketLoc == NSNotFound) return NO;
-	
-	//has balanced inner brackets; right bracket exists and is actually to the right of the left bracket
-	if (rightBracketLoc != NSNotFound && rightBracketLoc > leftBracketLoc) return NO;
-	
-	//no right bracket or no left bracket
-	return YES;
-	
-	//this still doesn't catch something like "[[content prefixWithSourceString:[[getter url] absoluteString]] length];"
-	//an improvement would be to use rangeOfCharacterFromSet:@"[]" to count all the left and right brackets from left to right;
-	//a leftbracket would increment a count, a right bracket would decrement it; at the end of blockRange, the count should be 0
-	//this is left as an exercise to the anal-retentive reader
+		NSURL *URL = [NSURL URLWithString:[@"nv://find/" stringByAppendingString:trimmedText.stringWithPercentEscapes]];
+		[self addAttribute:NSLinkAttributeName value:URL range:trimmedRange];
+	}];
 }
 
 - (void)addStrikethroughNearDoneTagsForRange:(NSRange)changedRange {

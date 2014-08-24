@@ -209,7 +209,6 @@
 		934C3FB414FDA06A000D14BA /* template.html in Resources */ = {isa = PBXBuildFile; fileRef = 934C3FB014FDA069000D14BA /* template.html */; };
 		934C3FB514FDA06A000D14BA /* templateclean.html in Resources */ = {isa = PBXBuildFile; fileRef = 934C3FB114FDA069000D14BA /* templateclean.html */; };
 		934C3FB914FDA74F000D14BA /* NSFileManager+DirectoryLocations.m in Sources */ = {isa = PBXBuildFile; fileRef = 934C3FB814FDA74F000D14BA /* NSFileManager+DirectoryLocations.m */; };
-		937E6783138C250E0099DF47 /* AutoHyperlinks.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 937E6781138C24980099DF47 /* AutoHyperlinks.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		93A158BC133C304D00E1E7DA /* Markdownify.nvhelp in Resources */ = {isa = PBXBuildFile; fileRef = 93A158BB133C304D00E1E7DA /* Markdownify.nvhelp */; };
 		93A158BE133C497400E1E7DA /* Notality.icns in Resources */ = {isa = PBXBuildFile; fileRef = 93A158BD133C497400E1E7DA /* Notality.icns */; };
 		93B348281371547800658F98 /* HUDIconLock.png in Resources */ = {isa = PBXBuildFile; fileRef = 93B348241371547800658F98 /* HUDIconLock.png */; };
@@ -246,7 +245,6 @@
 		DB41EE4C19AA329800AD6246 /* NSData+NTVCrypto.m in Sources */ = {isa = PBXBuildFile; fileRef = DB41EE4B19AA329800AD6246 /* NSData+NTVCrypto.m */; };
 		DB41EE4F19AA40AD00AD6246 /* NSApplication+NTVActivationPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = DB41EE4E19AA40AD00AD6246 /* NSApplication+NTVActivationPolicy.m */; };
 		DB98BB9D19A909FD00055B14 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 213623E50B92AA4E008C0830 /* Sparkle.framework */; };
-		DB98BB9E19A909FD00055B14 /* AutoHyperlinks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 937E6781138C24980099DF47 /* AutoHyperlinks.framework */; };
 		DB98BB9F19A90A1800055B14 /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 213623E50B92AA4E008C0830 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DB98BBA119A90B1E00055B14 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB98BBA019A90B1E00055B14 /* libz.dylib */; };
 		DB98BBA319A90B2500055B14 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB98BBA219A90B2500055B14 /* libcrypto.dylib */; };
@@ -274,7 +272,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				937E6783138C250E0099DF47 /* AutoHyperlinks.framework in CopyFiles */,
 				DB98BB9F19A90A1800055B14 /* Sparkle.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -584,7 +581,6 @@
 		934C3FB114FDA069000D14BA /* templateclean.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = templateclean.html; sourceTree = "<group>"; };
 		934C3FB714FDA74F000D14BA /* NSFileManager+DirectoryLocations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSFileManager+DirectoryLocations.h"; sourceTree = "<group>"; };
 		934C3FB814FDA74F000D14BA /* NSFileManager+DirectoryLocations.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSFileManager+DirectoryLocations.m"; sourceTree = "<group>"; };
-		937E6781138C24980099DF47 /* AutoHyperlinks.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AutoHyperlinks.framework; sourceTree = "<group>"; };
 		93A158BB133C304D00E1E7DA /* Markdownify.nvhelp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Markdownify.nvhelp; sourceTree = "<group>"; };
 		93A158BD133C497400E1E7DA /* Notality.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Notality.icns; sourceTree = "<group>"; };
 		93B348241371547800658F98 /* HUDIconLock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = HUDIconLock.png; path = Images/HUDIconLock.png; sourceTree = "<group>"; };
@@ -785,7 +781,6 @@
 				DB98BBA319A90B2500055B14 /* libcrypto.dylib in Frameworks */,
 				DB98BBA119A90B1E00055B14 /* libz.dylib in Frameworks */,
 				DB98BB9D19A909FD00055B14 /* Sparkle.framework in Frameworks */,
-				DB98BB9E19A909FD00055B14 /* AutoHyperlinks.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1218,7 +1213,6 @@
 				DB98BBA219A90B2500055B14 /* libcrypto.dylib */,
 				DB98BBA019A90B1E00055B14 /* libz.dylib */,
 				213623E50B92AA4E008C0830 /* Sparkle.framework */,
-				937E6781138C24980099DF47 /* AutoHyperlinks.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
