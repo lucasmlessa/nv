@@ -214,54 +214,6 @@ NSComparisonResult(^const NTVNoteCompareFileSize)(NoteObject *, NoteObject *) = 
 	return NTVCompare(one->logicalSize, two->logicalSize);
 };
 
-NSInteger compareDateModified(id *one, id *two) {
-	return NTVNoteCompareDateModified(*(NoteObject**)one, *(NoteObject**)two);
-}
-
-NSInteger compareDateCreated(id *one, id *two) {
-	return NTVNoteCompareDateCreated(*(NoteObject**)one, *(NoteObject**)two);
-}
-
-NSInteger compareLabelString(id *one, id *two) {
-	return NTVNoteCompareLabelString(*(NoteObject**)one, *(NoteObject**)two);
-}
-
-NSInteger compareUniqueNoteIDBytes(id *one, id *two) {
-	return NTVNoteCompareUniqueIDs(*(NoteObject**)one, *(NoteObject**)two);
-}
-
-NSInteger compareTitleString(id *one, id *two) {
-	return NTVNoteCompareTitle(*(NoteObject**)one, *(NoteObject**)two);
-}
-
-NSInteger compareDateModifiedReverse(id *one, id *two) {
-	return NTVNoteCompareDateModified(*(NoteObject**)two, *(NoteObject**)one);
-}
-
-NSInteger compareDateCreatedReverse(id *one, id *two) {
-	return NTVNoteCompareDateCreated(*(NoteObject**)two, *(NoteObject**)one);
-}
-
-NSInteger compareLabelStringReverse(id *one, id *two) {
-	return NTVNoteCompareLabelString(*(NoteObject**)two, *(NoteObject**)one);
-}
-
-NSInteger compareTitleStringReverse(id *one, id *two) {
-	return NTVNoteCompareTitle(*(NoteObject**)two, *(NoteObject**)one);
-}
-
-NSInteger compareFilename(id *one, id *two) {
-	return NTVNoteCompareFilename(*(NoteObject**)one, *(NoteObject**)two);
-}
-
-NSInteger compareNodeID(id *one, id *two) {
-	return NTVNoteCompareNodeID(*(NoteObject**)one, *(NoteObject**)two);
-}
-
-NSInteger compareFileSize(id *one, id *two) {
-	return NTVNoteCompareFileSize(*(NoteObject**)one, *(NoteObject**)two);
-}
-
 #include "SynchronizedNoteMixIns.h"
 
 //syncing w/ server and from journal;
@@ -276,12 +228,6 @@ DefModelAttrAccessor(createdDateOfNote, createdDate)
 DefModelAttrAccessor(storageFormatOfNote, currentFormatID)
 DefModelAttrAccessor(fileEncodingOfNote, fileEncoding)
 DefModelAttrAccessor(prefixParentsOfNote, prefixParentNotes)
-
-DefColAttrAccessor(titleOfNote2, titleString)
-DefColAttrAccessor(dateCreatedStringOfNote, dateCreatedString)
-DefColAttrAccessor(dateModifiedStringOfNote, dateModifiedString)
-
-
 
 - (NSAttributedString *)tableTitleString
 {
@@ -307,25 +253,6 @@ DefColAttrAccessor(dateModifiedStringOfNote, dateModifiedString)
 - (NSString *)dateModifiedString
 {
 	return dateModifiedString;
-}
-
-force_inline id tableTitleOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	return NTVNoteTableTitleGetter(tv, note, row);
-}
-force_inline id properlyHighlightingTableTitleOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	return NTVNoteHighlightedTableTitleGetter(tv, note, row);
-}
-
-force_inline id labelColumnCellForNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	return NTVNoteLabelCellGetter(tv, note, row);
-}
-
-force_inline id unifiedCellSingleLineForNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	return NTVNoteUnifiedCellSingleLineGetter(tv, note, row);
-}
-
-force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	return NTVNoteUnifiedCellGetter(tv, note, row);
 }
 
 id(^const NTVNoteUnifiedCellGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
