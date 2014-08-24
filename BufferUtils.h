@@ -17,10 +17,8 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
-
-#define ResizeArray(__DirectBuffer, __objCount, __bufObjCount)	_ResizeBuffer((void***)(__DirectBuffer), (__objCount), (__bufObjCount), sizeof(typeof(**(__DirectBuffer))))
+#include <Carbon/Carbon.h>
 
 #define UTCDateTimeIsEmpty(__UTCDT) (*(int64_t*)&((__UTCDT)) == 0LL)
 
@@ -39,7 +37,6 @@ typedef struct _PerDiskInfo {
 } PerDiskInfo;
 
 char *replaceString(char *oldString, const char *newString);
-void _ResizeBuffer(void ***buffer, size_t objCount, size_t *bufSize, size_t elemSize);
 int IsZeros(const void *s1, size_t n);
 int ContainsUInteger(const NSUInteger *uintArray, size_t count, NSUInteger auint);
 void modp_tolower_copy(char *dest, const char *str, size_t len);
@@ -48,9 +45,6 @@ void replace_breaks(char *str, size_t up_to_len);
 Boolean ContainsHighAscii(const void *s1, size_t n);
 CFStringRef CFStringFromBase10Integer(int quantity);
 unsigned DumbWordCount(const void *s1, size_t len);
-NSInteger genericSortContextFirst(int (*context) (void*, void*), void* one, void* two);
-NSInteger genericSortContextLast(void* one, void* two, int (*context) (void*, void*));
-void QuickSortBuffer(void **buffer, unsigned int objCount, int (*compar)(const void *, const void *));
 
 void RemovePerDiskInfoWithTableIndex(UInt32 diskIndex, PerDiskInfo **perDiskGroups, size_t *groupCount);
 size_t SetPerDiskInfoWithTableIndex(UTCDateTime *dateTime, UInt32 *nodeID, UInt32 diskIndex, PerDiskInfo **perDiskGroups, size_t *groupCount);

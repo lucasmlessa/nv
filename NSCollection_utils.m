@@ -204,23 +204,3 @@
 }
 
 @end
-
-@implementation NSMutableArray (Sorting)
-
-- (void)sortUnstableUsingFunction:(NSInteger (*)(id *, id *))compare {
-	[self sortUsingFunction:(NSInteger (*)(id, id, void *))genericSortContextLast context:compare];
-}
-
-- (void)sortStableUsingFunction:(NSInteger (*)(id *, id *))compare usingBuffer:(id **)buffer ofSize:(size_t *)bufSize {
-	CFIndex count = CFArrayGetCount((CFArrayRef)self);
-	
-	ResizeArray(buffer, count, bufSize);
-	
-	CFArrayGetValues((CFArrayRef)self, CFRangeMake(0, [self count]), (const void **)*buffer);
-	
-	mergesort((void *)*buffer, (size_t)count, sizeof(id), (int (*)(const void *, const void *))compare);
-	
-	CFArrayReplaceValues((CFMutableArrayRef)self, CFRangeMake(0, count), (const void **)*buffer, count);
-}
-
-@end

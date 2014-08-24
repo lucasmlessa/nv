@@ -18,7 +18,6 @@
 
 
 #include "BufferUtils.h"
-#include <string.h>
 
 static const unsigned char gsToLowerMap[256] = {
 '\0', 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, '\t',
@@ -69,7 +68,7 @@ char *replaceString(char *oldString, const char *newString) {
 }
 
 
-void _ResizeBuffer(void ***buffer, size_t objCount, size_t *bufObjCount, size_t elemSize) {
+static void _ResizeBuffer(void ***buffer, size_t objCount, size_t *bufObjCount, size_t elemSize) {
 	assert(buffer && bufObjCount && elemSize);
 	
 	if (*bufObjCount < objCount || !*buffer) {
@@ -84,6 +83,9 @@ void _ResizeBuffer(void ***buffer, size_t objCount, size_t *bufObjCount, size_t 
 	}
 	
 }
+
+#define ResizeArray(__DirectBuffer, __objCount, __bufObjCount)	_ResizeBuffer((void***)(__DirectBuffer), (__objCount), (__bufObjCount), sizeof(typeof(**(__DirectBuffer))))
+
 
 int IsZeros(const void *s1, size_t n) {
 	if (n != 0) {
@@ -265,20 +267,6 @@ unsigned DumbWordCount(const void *s1, size_t len) {
 //	printf("bacon: %u\n", count);
 
 	return count;
-}
-
-NSInteger genericSortContextFirst(int (*context) (void*, void*), void* one, void* two) {
-	
-	return context(one, two);
-}
-
-NSInteger genericSortContextLast(void* one, void* two, int (*context) (void*, void*)) {
-	
-	return context(&one, &two);
-}
-
-void QuickSortBuffer(void **buffer, unsigned int objCount, int (*compar)(const void *, const void *)) {
-	qsort_r((void *)buffer, (size_t)objCount, sizeof(void*), compar, (int (*)(void *, const void *, const void *))genericSortContextFirst);
 }
 
 //these two methods manipulate notes' perdiskinfo groups, changing the buffers in place
