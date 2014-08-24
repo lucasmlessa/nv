@@ -209,7 +209,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	[typeStrings[i] release];
 	[pathExtensions[i] release];
     }
-    if (allowedTypes)
+
 	free(allowedTypes);
 	
 	[syncServiceAccounts release];

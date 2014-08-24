@@ -90,15 +90,10 @@ static void setCatalogNodeID(NoteObject *note, UInt32 cnid);
 	[dateCreatedString release];
 	[prefixParentNotes release];
 	
-	if (perDiskInfoGroups)
-		free(perDiskInfoGroups);
-		
-	if (cTitle)
-		free(cTitle);
-	if (cContents)
-		free(cContents);
-	if (cLabels)
-	    free(cLabels);
+	free(perDiskInfoGroups);
+	free(cTitle);
+	free(cContents);
+	free(cLabels);
 	
 	[super dealloc];
 }
@@ -1124,9 +1119,7 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 }
 
 - (void)invalidateFSRef {
-	//bzero(&noteFileRef, sizeof(FSRef));
-	if (noteFileRef)
-		free(noteFileRef);
+	free(noteFileRef);
 	noteFileRef = NULL;
 }
 

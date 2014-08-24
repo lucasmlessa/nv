@@ -278,9 +278,7 @@ static inline CGFloat fMAX(CGFloat a,CGFloat b) {
 
 // Frees retained objects when going away.
 - (void)dealloc {
-	if (dividers) {
-		free(dividers);
-	}
+	free(dividers);
 	[autosaveName release];
 	[divider release];
 	[background release];
@@ -1480,10 +1478,8 @@ static inline CGFloat fMAX(CGFloat a,CGFloat b) {
 	NSUInteger divcount = subcount-1;
 	if (divcount<1) {
         // No dividers at all.
-		if (dividers) {
-			free(dividers);
-			dividers = NULL;
-		}
+		free(dividers);
+		dividers = NULL;
 	} else {
         // Try to allocate or resize if we already have a dividers array.
 		NSUInteger divsiz = sizeof(NSRect)*divcount;

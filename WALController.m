@@ -102,8 +102,7 @@
 }
 
 - (void)dealloc {
-	if (journalFile)
-		free(journalFile);
+	free(journalFile);
 	[logSessionKey release];
 	
 	[super dealloc];

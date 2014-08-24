@@ -282,7 +282,7 @@
 	
 	NSLog(@"verified %lu notes in %g s", [notesToVerify count], (float)[[NSDate date] timeIntervalSinceDate:date]);
 returnResult:
-	if (notesData) free(notesData);
+	free(notesData);
 	return @(result);
 }
 
@@ -307,8 +307,7 @@ returnResult:
 		} @catch (NSException *e) {
 			NSLog(@"Error unarchiving notes and preferences from data (%@, %@)", [e name], [e reason]);
 			
-			if (notesData)
-				free(notesData);
+			free(notesData);
 			
 			//perhaps this shouldn't be an error, but the user should instead have the option of overwriting the DB with a new one?
 			return kCoderErr;
@@ -352,8 +351,7 @@ returnResult:
 	
 	[self makeForegroundTextColorMatchGlobalPrefs];
 	
-	if(notesData)
-	    free(notesData);
+	free(notesData);
 	
 	return noErr;
 }
@@ -1594,16 +1592,11 @@ bail:
 	[notationPrefs setDelegate:nil];
 	[allNotes makeObjectsPerformSelector:@selector(setDelegate:) withObject:nil];
 
-	if (fsCatInfoArray)
-		free(fsCatInfoArray);
-	if (HFSUniNameArray)
-		free(HFSUniNameArray);
-    if (catalogEntries)
-		free(catalogEntries);
-    if (sortedCatalogEntries)
-		free(sortedCatalogEntries);
-    if (allNotesBuffer)
-		free(allNotesBuffer);
+	free(fsCatInfoArray);
+	free(HFSUniNameArray);
+    free(catalogEntries);
+    free(sortedCatalogEntries);
+    free(allNotesBuffer);
 	
     [undoManager release];
     [notesListDataSource release];

@@ -666,7 +666,7 @@ static animationData* currentAnimation = NULL;
 					currentAnimation->resizing = resize;
 					[sv RB___setDragging:YES];
 				}
-			} else if (currentAnimation) {
+			} else {
 				free(currentAnimation);
 				currentAnimation = NULL;
 			}
