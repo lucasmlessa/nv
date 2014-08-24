@@ -116,6 +116,13 @@
 	return (count != oldCount);
 }
 
+- (void)sortStableUsingComparator:(NSComparator)compare
+{
+	mergesort_b((void *)objects, (size_t)count, sizeof(id), ^int(const void *a, const void *b) {
+		return compare(*(id *)a, *(id *)b);
+	});
+}
+
 - (void)sortStableUsingFunction:(NSInteger (*)(id *, id *))compare {
 	
 	mergesort((void *)objects, (size_t)count, sizeof(id), (int (*)(const void *, const void *))compare);

@@ -34,6 +34,7 @@
 - (void)fillArrayFromArray:(NSArray*)array;
 - (BOOL)filterArrayUsingFunction:(BOOL (*)(id, void*))present context:(void*)context;
 
+- (void)sortStableUsingComparator:(NSComparator)compare;
 - (void)sortStableUsingFunction:(NSInteger (*)(id *, id *))compare;
 
 - (void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject 
