@@ -25,6 +25,7 @@
 #import "NotationController.h"
 #import "BufferUtils.h"
 #import "SynchronizedNoteProtocol.h"
+#import "NoteAttributeColumn.h"
 
 @class LabelObject;
 @class WALStorageController;
@@ -62,9 +63,6 @@ typedef struct _NoteFilterContext {
 	
 	//not determined until it's time to read to or write from a text file
 	FSRef *noteFileRef;
-
-	//the first for syncing w/ NV server, as the ID cannot be encrypted
-	CFUUIDBytes uniqueNoteIDBytes;
 	
 	NSMutableDictionary *syncServicesMD;
 	
@@ -74,6 +72,9 @@ typedef struct _NoteFilterContext {
 	//each note has its own undo manager--isn't that nice?
 	NSUndoManager *undoManager;
 @public
+
+	//the first for syncing w/ NV server, as the ID cannot be encrypted
+	CFUUIDBytes uniqueNoteIDBytes;
 	NSMutableArray *prefixParentNotes;
 	NSString *filename;
 	NSString *titleString, *labelString;
@@ -84,22 +85,30 @@ typedef struct _NoteFilterContext {
 	CFAbsoluteTime modifiedDate, createdDate;
 }
 
+extern NSComparator const NTVNoteCompareDateModified;
+extern NSComparator const NTVNoteCompareDateCreated;
+extern NSComparator const NTVNoteCompareLabelString;
+extern NSComparator const NTVNoteCompareUniqueIDs;
+extern NSComparator const NTVNoteCompareTitle;
 
-NSInteger compareDateModified(id *a, id *b);
-NSInteger compareDateCreated(id *a, id *b);
-NSInteger compareLabelString(id *a, id *b);
-NSInteger compareTitleString(id *a, id *b);
-NSInteger compareUniqueNoteIDBytes(id *a, id *b);
+extern NSComparator const NTVNoteCompareFilename;
+extern NSComparator const NTVNoteCompareNodeID;
+extern NSComparator const NTVNoteCompareFileSize;
 
+DEPRECATED_ATTRIBUTE NSInteger compareDateModified(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareDateCreated(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareLabelString(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareTitleString(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareUniqueNoteIDBytes(id *a, id *b);
 
-NSInteger compareDateModifiedReverse(id *a, id *b);
-NSInteger compareDateCreatedReverse(id *a, id *b);
-NSInteger compareLabelStringReverse(id *a, id *b);
-NSInteger compareTitleStringReverse(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareDateModifiedReverse(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareDateCreatedReverse(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareLabelStringReverse(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareTitleStringReverse(id *a, id *b);
 
-NSInteger compareFilename(id *a, id *b);
-NSInteger compareNodeID(id *a, id *b);
-NSInteger compareFileSize(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareFilename(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareNodeID(id *a, id *b);
+DEPRECATED_ATTRIBUTE NSInteger compareFileSize(id *a, id *b);
 
 //syncing w/ server and from journal
 - (CFUUIDBytes *)uniqueNoteIDBytes;
@@ -130,15 +139,25 @@ NSInteger compareFileSize(id *a, id *b);
 #define DefModelAttrAccessor(__FName, __IVar) force_inline typeof (((NoteObject *)0)->__IVar) __FName(NoteObject *note) { return note->__IVar; }
 
 	//return types are NSString or NSAttributedString, satisifying NSTableDataSource protocol otherwise
-	id titleOfNote2(NotesTableView *tv, NoteObject *note, NSInteger row);
-	id tableTitleOfNote(NotesTableView *tv, NoteObject *note, NSInteger row);
-	id properlyHighlightingTableTitleOfNote(NotesTableView *tv, NoteObject *note, NSInteger row);
-	id unifiedCellSingleLineForNote(NotesTableView *tv, NoteObject *note, NSInteger row);
-	id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteger row);
-	id labelColumnCellForNote(NotesTableView *tv, NoteObject *note, NSInteger row);
-	id dateCreatedStringOfNote(NotesTableView *tv, NoteObject *note, NSInteger row);
-	id dateModifiedStringOfNote(NotesTableView *tv, NoteObject *note, NSInteger row);
-	id wordCountOfNote(NotesTableView *tv, NoteObject *note, NSInteger row);
+	id titleOfNote2(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+	id tableTitleOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+	id properlyHighlightingTableTitleOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+	id unifiedCellSingleLineForNote(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+	id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+	id labelColumnCellForNote(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+	id dateCreatedStringOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+	id dateModifiedStringOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+	id wordCountOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) DEPRECATED_ATTRIBUTE;
+
+extern NTVNoteAttributeGetter const NTVNoteUnifiedCellGetter;
+extern NTVNoteAttributeGetter const NTVNoteUnifiedCellSingleLineGetter;
+extern NTVNoteAttributeGetter const NTVNoteTableTitleGetter;
+extern NTVNoteAttributeGetter const NTVNoteHighlightedTableTitleGetter;
+extern NTVNoteAttributeGetter const NTVNoteTitleGetter;
+
+extern NTVNoteAttributeGetter const NTVNoteLabelCellGetter;
+extern NTVNoteAttributeGetter const NTVNoteDateModifiedStringGetter;
+extern NTVNoteAttributeGetter const NTVNoteDateCreatedStringGetter;
 
 	void resetFoundPtrsForNote(NoteObject *note);
 	BOOL noteContainsUTF8String(NoteObject *note, NoteFilterContext *context);

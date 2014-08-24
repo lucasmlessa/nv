@@ -37,4 +37,14 @@ NTV_ALWAYS_INLINE BOOL NTVFloatsEqual(CGFloat a, CGFloat b) {
 #endif
 }
 
+#if !defined(NTVCompare)
+#define __NTVCompare__(A,B,L) ({ \
+    __typeof__(A) __NSX_PASTE__(__a,L) = (A); \
+    __typeof__(B) __NSX_PASTE__(__b,L) = (B); \
+    ((__NSX_PASTE__(__a,L) < __NSX_PASTE__(__b,L)) ? NSOrderedAscending : \
+    ((__NSX_PASTE__(__a,L) > __NSX_PASTE__(__b,L)) ? NSOrderedDescending : \
+    NSOrderedSame)); })
+#define NTVCompare(A,B) __NTVCompare__(A,B,__COUNTER__)
+#endif
+
 #endif /* !NTV_MACROS */

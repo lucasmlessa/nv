@@ -170,75 +170,97 @@ giveID:
 	return note->nodeID;
 }
 
+NSComparisonResult(^const NTVNoteCompareDateModified)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
+	return NTVCompare(one->modifiedDate, two->modifiedDate);
+};
+
+NSComparisonResult(^const NTVNoteCompareDateCreated)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
+	return NTVCompare(one->createdDate, two->createdDate);
+};
+
+NSComparisonResult(^const NTVNoteCompareLabelString)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
+	return [labelsOfNote(one) compare:labelsOfNote(two) options:NSCaseInsensitiveSearch];
+};
+
+NSComparisonResult(^const NTVNoteCompareUniqueIDs)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
+	int cmp = memcmp((&one->uniqueNoteIDBytes), (&two->uniqueNoteIDBytes), sizeof(CFUUIDBytes));
+	if (cmp > 0) {
+		return NSOrderedDescending;
+	} else if (cmp < 0) {
+		return NSOrderedAscending;
+	}
+	return NSOrderedSame;
+};
+
+NSComparisonResult(^const NTVNoteCompareTitle)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
+	NSComparisonResult stringResult = [titleOfNote(one) compare:titleOfNote(two) options:NSCaseInsensitiveSearch];
+	if (stringResult != NSOrderedSame) { return stringResult; }
+
+	NSComparisonResult dateResult = NTVNoteCompareDateCreated(one, two);
+	if (stringResult != NSOrderedSame) { return dateResult; }
+
+	return NTVNoteCompareUniqueIDs(one, two);
+};
+
+NSComparisonResult(^const NTVNoteCompareFilename)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
+	return [one->filename compare:two->filename options:NSCaseInsensitiveSearch];
+};
+
+NSComparisonResult(^const NTVNoteCompareNodeID)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
+	return NTVCompare(fileNodeIDOfNote(one), fileNodeIDOfNote(two));
+};
+
+NSComparisonResult(^const NTVNoteCompareFileSize)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
+	return NTVCompare(one->logicalSize, two->logicalSize);
+};
+
+NSInteger compareDateModified(id *one, id *two) {
+	return NTVNoteCompareDateModified(*(NoteObject**)one, *(NoteObject**)two);
+}
+
+NSInteger compareDateCreated(id *one, id *two) {
+	return NTVNoteCompareDateCreated(*(NoteObject**)one, *(NoteObject**)two);
+}
+
+NSInteger compareLabelString(id *one, id *two) {
+	return NTVNoteCompareLabelString(*(NoteObject**)one, *(NoteObject**)two);
+}
+
+NSInteger compareUniqueNoteIDBytes(id *one, id *two) {
+	return NTVNoteCompareUniqueIDs(*(NoteObject**)one, *(NoteObject**)two);
+}
+
+NSInteger compareTitleString(id *one, id *two) {
+	return NTVNoteCompareTitle(*(NoteObject**)one, *(NoteObject**)two);
+}
+
+NSInteger compareDateModifiedReverse(id *one, id *two) {
+	return NTVNoteCompareDateModified(*(NoteObject**)two, *(NoteObject**)one);
+}
+
+NSInteger compareDateCreatedReverse(id *one, id *two) {
+	return NTVNoteCompareDateCreated(*(NoteObject**)two, *(NoteObject**)one);
+}
+
+NSInteger compareLabelStringReverse(id *one, id *two) {
+	return NTVNoteCompareLabelString(*(NoteObject**)two, *(NoteObject**)one);
+}
+
+NSInteger compareTitleStringReverse(id *one, id *two) {
+	return NTVNoteCompareTitle(*(NoteObject**)two, *(NoteObject**)one);
+}
+
 NSInteger compareFilename(id *one, id *two) {
-    
-    return (NSInteger)CFStringCompare((CFStringRef)((*(NoteObject**)one)->filename), 
-				(CFStringRef)((*(NoteObject**)two)->filename), kCFCompareCaseInsensitive);
+	return NTVNoteCompareFilename(*(NoteObject**)one, *(NoteObject**)two);
 }
 
-NSInteger compareDateModified(id *a, id *b) {
-    return (NSInteger)((*(NoteObject**)a)->modifiedDate - (*(NoteObject**)b)->modifiedDate);
-}
-NSInteger compareDateCreated(id *a, id *b) {
-    return (NSInteger)((*(NoteObject**)a)->createdDate - (*(NoteObject**)b)->createdDate);
-}
-NSInteger compareLabelString(id *a, id *b) {    
-    return (NSInteger)CFStringCompare((CFStringRef)(labelsOfNote(*(NoteObject **)a)), 
-								(CFStringRef)(labelsOfNote(*(NoteObject **)b)), kCFCompareCaseInsensitive);
-}
-NSInteger compareTitleString(id *a, id *b) {
-	//add kCFCompareNumerically to options for natural order sort
-    CFComparisonResult stringResult = CFStringCompare((CFStringRef)(titleOfNote(*(NoteObject**)a)), 
-													  (CFStringRef)(titleOfNote(*(NoteObject**)b)), 
-													  kCFCompareCaseInsensitive);
-	if (stringResult == kCFCompareEqualTo) {
-		
-		NSInteger dateResult = compareDateCreated(a, b);
-		if (!dateResult)
-			return compareUniqueNoteIDBytes(a, b);
-		
-		return dateResult;
-	}
-	
-	return (NSInteger)stringResult;
-}
-NSInteger compareUniqueNoteIDBytes(id *a, id *b) {
-	return memcmp((&(*(NoteObject**)a)->uniqueNoteIDBytes), (&(*(NoteObject**)b)->uniqueNoteIDBytes), sizeof(CFUUIDBytes));
+NSInteger compareNodeID(id *one, id *two) {
+	return NTVNoteCompareNodeID(*(NoteObject**)one, *(NoteObject**)two);
 }
 
-
-NSInteger compareDateModifiedReverse(id *a, id *b) {
-    return (NSInteger)((*(NoteObject**)b)->modifiedDate - (*(NoteObject**)a)->modifiedDate);
+NSInteger compareFileSize(id *one, id *two) {
+	return NTVNoteCompareFileSize(*(NoteObject**)one, *(NoteObject**)two);
 }
-NSInteger compareDateCreatedReverse(id *a, id *b) {
-    return (NSInteger)((*(NoteObject**)b)->createdDate - (*(NoteObject**)a)->createdDate);
-}
-NSInteger compareLabelStringReverse(id *a, id *b) {    
-    return (NSInteger)CFStringCompare((CFStringRef)(labelsOfNote(*(NoteObject **)b)), 
-								(CFStringRef)(labelsOfNote(*(NoteObject **)a)), kCFCompareCaseInsensitive);
-}
-NSInteger compareTitleStringReverse(id *a, id *b) {
-    CFComparisonResult stringResult = CFStringCompare((CFStringRef)(titleOfNote(*(NoteObject **)b)), 
-													  (CFStringRef)(titleOfNote(*(NoteObject **)a)), 
-													  kCFCompareCaseInsensitive);
-	
-	if (stringResult == kCFCompareEqualTo) {
-		NSInteger dateResult = compareDateCreatedReverse(a, b);
-		if (!dateResult)
-			return compareUniqueNoteIDBytes(b, a);
-		
-		return dateResult;
-	}
-	return (NSInteger)stringResult;	
-}
-
-NSInteger compareNodeID(id *a, id *b) {
-    return fileNodeIDOfNote(*(NoteObject**)a) - fileNodeIDOfNote(*(NoteObject**)b);
-}
-NSInteger compareFileSize(id *a, id *b) {
-    return (*(NoteObject**)a)->logicalSize - (*(NoteObject**)b)->logicalSize;
-}
-
 
 #include "SynchronizedNoteMixIns.h"
 
@@ -255,60 +277,108 @@ DefModelAttrAccessor(storageFormatOfNote, currentFormatID)
 DefModelAttrAccessor(fileEncodingOfNote, fileEncoding)
 DefModelAttrAccessor(prefixParentsOfNote, prefixParentNotes)
 
-//DefColAttrAccessor(wordCountOfNote, wordCountString)
 DefColAttrAccessor(titleOfNote2, titleString)
 DefColAttrAccessor(dateCreatedStringOfNote, dateCreatedString)
 DefColAttrAccessor(dateModifiedStringOfNote, dateModifiedString)
 
+
+
+- (NSAttributedString *)tableTitleString
+{
+	return tableTitleString;
+}
+
+- (id)tableTitle
+{
+	if (tableTitleString) return tableTitleString;
+	return titleString;
+}
+
+- (NSString *)title
+{
+	return titleString;
+}
+
+- (NSString *)dateCreatedString
+{
+	return dateCreatedString;
+}
+
+- (NSString *)dateModifiedString
+{
+	return dateModifiedString;
+}
+
 force_inline id tableTitleOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	if (note->tableTitleString) return note->tableTitleString;
-	return titleOfNote(note);
+	return NTVNoteTableTitleGetter(tv, note, row);
 }
 force_inline id properlyHighlightingTableTitleOfNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	if (note->tableTitleString) {
-		if ([tv isRowSelected:row]) {
-			return [note->tableTitleString string];
-		}
-		return note->tableTitleString;
-	}	
-	return titleOfNote(note);
+	return NTVNoteHighlightedTableTitleGetter(tv, note, row);
 }
 
 force_inline id labelColumnCellForNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	
-	LabelColumnCell *cell = [[tv tableColumnWithIdentifier:NoteLabelsColumnString] dataCellForRow:row];
-	[cell setNoteObject:note];
-	
-	return labelsOfNote(note);
+	return NTVNoteLabelCellGetter(tv, note, row);
 }
 
 force_inline id unifiedCellSingleLineForNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	
-	id obj = note->tableTitleString ? (id)note->tableTitleString : (id)titleOfNote(note);
-	
-	UnifiedCell *cell = [[tv tableColumns][0] dataCellForRow:row];
-	[cell setNoteObject:note];
-	[cell setPreviewIsHidden:YES];
-	
-	return obj;
+	return NTVNoteUnifiedCellSingleLineGetter(tv, note, row);
 }
 
 force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteger row) {
-	//snow leopard is stricter about applying the default highlight-attributes (e.g., no shadow unless no paragraph formatting)
-	//so add the shadow here for snow leopard on selected rows
-	
+	return NTVNoteUnifiedCellGetter(tv, note, row);
+}
+
+id(^const NTVNoteUnifiedCellGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
 	UnifiedCell *cell = [[tv tableColumns][0] dataCellForRow:row];
 	[cell setNoteObject:note];
 	[cell setPreviewIsHidden:NO];
 
 	BOOL rowSelected = [tv isRowSelected:row];
-	
-	id obj = note->tableTitleString ? (rowSelected ? (id)AttributedStringForSelection(note->tableTitleString) :
-									   (id)note->tableTitleString) : (id)titleOfNote(note);
-	
-	
+
+	id obj = note.tableTitleString ? (rowSelected ? AttributedStringForSelection(note.tableTitleString) : note.tableTitleString) : note.title;
 	return obj;
-}
+};
+id(^const NTVNoteUnifiedCellSingleLineGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+	id obj = note.tableTitleString ?: note.title;
+
+	UnifiedCell *cell = [[tv tableColumns][0] dataCellForRow:row];
+	[cell setNoteObject:note];
+	[cell setPreviewIsHidden:YES];
+
+	return obj;
+};
+id(^const NTVNoteTableTitleGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+	return note.tableTitle;
+};
+id(^const NTVNoteHighlightedTableTitleGetter)(NotesTableView *, NoteObject *, NSInteger) = ^id(NotesTableView *tv, NoteObject *note, NSInteger row){
+	if (note.tableTitleString) {
+		if ([tv isRowSelected:row]) {
+			return [note.tableTitleString string];
+		}
+		return note.tableTitleString;
+	}
+	return note.title;
+};
+id(^const NTVNoteTitleGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+	return note.title;
+};
+
+
+id(^const NTVNoteLabelCellGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+	LabelColumnCell *cell = [[tv tableColumnWithIdentifier:NoteLabelsColumnString] dataCellForRow:row];
+	[cell setNoteObject:note];
+
+	return labelsOfNote(note);
+};
+id(^const NTVNoteDateModifiedStringGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+	return note.dateModifiedString;
+};
+id(^const NTVNoteDateCreatedStringGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+	return note.dateCreatedString;
+};
+
+
+
 
 //make notationcontroller should send setDelegate: and setLabelString: (if necessary) to each note when unarchiving this way
 

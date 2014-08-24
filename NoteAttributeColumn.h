@@ -22,6 +22,10 @@
 
 @end
 */
+
+/// return type is @c NSString or @c NSAttributedString, satisifying @c NSTableDataSource otherwise
+typedef id(^NTVNoteAttributeGetter)(NotesTableView *tv, id object, NSInteger row);
+
 @interface NoteAttributeColumn : NSTableColumn {
 	
     NSInteger (*sortFunction) (id*, id*);
