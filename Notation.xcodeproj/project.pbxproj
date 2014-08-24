@@ -24,7 +24,6 @@
 		212C6EA3110E493C004DD82C /* Clear.tif in Resources */ = {isa = PBXBuildFile; fileRef = 212C6EA1110E493C004DD82C /* Clear.tif */; };
 		212DCA470A6AD28700F74E46 /* EncodingsManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 212DCA460A6AD28700F74E46 /* EncodingsManager.m */; };
 		212DCF610A6DEECB00F74E46 /* DeletionManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 212DCF600A6DEECB00F74E46 /* DeletionManager.m */; };
-		213621F20B92414F008C0830 /* MultiTextFinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 213621F00B92414F008C0830 /* MultiTextFinder.m */; };
 		213FAD530B3C6B52004C74BD /* FSExchangeObjectsCompat.c in Sources */ = {isa = PBXBuildFile; fileRef = 213FAD520B3C6B52004C74BD /* FSExchangeObjectsCompat.c */; };
 		2143D2F410E953F500127EA6 /* SnapBackPressed.tif in Resources */ = {isa = PBXBuildFile; fileRef = 2143D2F210E953F400127EA6 /* SnapBackPressed.tif */; };
 		2143D3D910E987B100127EA6 /* Pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2143D3D810E987B100127EA6 /* Pencil.png */; };
@@ -262,7 +261,6 @@
 		DBD70E1C19A642B60026F349 /* EncodingsManager.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E1A19A642B60026F349 /* EncodingsManager.xib */; };
 		DBD70E3619A645120026F349 /* BlorPasswordRetriever.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E2219A645120026F349 /* BlorPasswordRetriever.xib */; };
 		DBD70E3719A645120026F349 /* ExporterManager.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E2419A645120026F349 /* ExporterManager.xib */; };
-		DBD70E3819A645120026F349 /* FindPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E2619A645120026F349 /* FindPanel.xib */; };
 		DBD70E3919A645120026F349 /* ImporterAccessory.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E2819A645120026F349 /* ImporterAccessory.xib */; };
 		DBD70E3A19A645120026F349 /* KeyDerivationManager.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E2A19A645120026F349 /* KeyDerivationManager.xib */; };
 		DBD70E3B19A645120026F349 /* NotationPrefsView.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E2C19A645120026F349 /* NotationPrefsView.xib */; };
@@ -339,8 +337,6 @@
 		212DCA460A6AD28700F74E46 /* EncodingsManager.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = EncodingsManager.m; sourceTree = "<group>"; };
 		212DCF5F0A6DEECB00F74E46 /* DeletionManager.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = DeletionManager.h; sourceTree = "<group>"; };
 		212DCF600A6DEECB00F74E46 /* DeletionManager.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = DeletionManager.m; sourceTree = "<group>"; };
-		213621EF0B92414F008C0830 /* MultiTextFinder.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = MultiTextFinder.h; sourceTree = "<group>"; };
-		213621F00B92414F008C0830 /* MultiTextFinder.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = MultiTextFinder.m; sourceTree = "<group>"; };
 		213623E50B92AA4E008C0830 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = "<group>"; };
 		213FAD510B3C6B52004C74BD /* FSExchangeObjectsCompat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSExchangeObjectsCompat.h; sourceTree = "<group>"; };
 		213FAD520B3C6B52004C74BD /* FSExchangeObjectsCompat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FSExchangeObjectsCompat.c; sourceTree = "<group>"; };
@@ -696,8 +692,6 @@
 		DBD70E6819A645A30026F349 /* zh */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = zh; path = zh.lproj/KeyDerivationManager.xib; sourceTree = "<group>"; };
 		DBD70E6C19A645A80026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = it; path = it.lproj/ImporterAccessory.xib; sourceTree = "<group>"; };
 		DBD70E6D19A645A90026F349 /* zh */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = zh; path = zh.lproj/ImporterAccessory.xib; sourceTree = "<group>"; };
-		DBD70E7119A645B00026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = it; path = it.lproj/FindPanel.xib; sourceTree = "<group>"; };
-		DBD70E7219A645B10026F349 /* zh */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = zh; path = zh.lproj/FindPanel.xib; sourceTree = "<group>"; };
 		DBD70E9B19A64FF20026F349 /* en */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DBD70E9C19A650220026F349 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DBD70E9D19A650570026F349 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -762,10 +756,6 @@
 		DBD70ED919A6512C0026F349 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/ExporterManager.xib; sourceTree = "<group>"; };
 		DBD70EDA19A6512D0026F349 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ExporterManager.xib; sourceTree = "<group>"; };
 		DBD70EDB19A6512E0026F349 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/ExporterManager.xib; sourceTree = "<group>"; };
-		DBD70EDC19A651300026F349 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/FindPanel.xib; sourceTree = "<group>"; };
-		DBD70EDD19A651310026F349 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/FindPanel.xib; sourceTree = "<group>"; };
-		DBD70EDE19A651320026F349 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/FindPanel.xib; sourceTree = "<group>"; };
-		DBD70EDF19A651330026F349 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/FindPanel.xib; sourceTree = "<group>"; };
 		DBD70EE019A651360026F349 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ImporterAccessory.xib; sourceTree = "<group>"; };
 		DBD70EE119A651360026F349 /* fr */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = fr; path = fr.lproj/ImporterAccessory.xib; sourceTree = "<group>"; };
 		DBD70EE219A651370026F349 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ImporterAccessory.xib; sourceTree = "<group>"; };
@@ -842,8 +832,6 @@
 				217D4281096545A000E84749 /* LabelObject.m */,
 				21A6E6FB0974204F008436A9 /* LabelsListController.h */,
 				21A6E6FC0974204F008436A9 /* LabelsListController.m */,
-				213621EF0B92414F008C0830 /* MultiTextFinder.h */,
-				213621F00B92414F008C0830 /* MultiTextFinder.m */,
 				2114C13D0957732800614E74 /* NotationController.h */,
 				2114C13E0957732800614E74 /* NotationController.m */,
 				21B548F9112F307E00E163A1 /* NotationDirectoryManager.h */,
@@ -1240,7 +1228,6 @@
 				5CE5B00A1422795300FB554C /* PTKeyComboPanel.xib */,
 				DBD70E2219A645120026F349 /* BlorPasswordRetriever.xib */,
 				DBD70E2419A645120026F349 /* ExporterManager.xib */,
-				DBD70E2619A645120026F349 /* FindPanel.xib */,
 				DBD70E2819A645120026F349 /* ImporterAccessory.xib */,
 				DBD70E2A19A645120026F349 /* KeyDerivationManager.xib */,
 				DBD70E2C19A645120026F349 /* NotationPrefsView.xib */,
@@ -1540,7 +1527,6 @@
 				B69E26F416F0B523001C6E4B /* DFCapRight@2x.png in Resources */,
 				B69E26F516F0B523001C6E4B /* DFCapRightInactive@2x.png in Resources */,
 				B69E26F616F0B523001C6E4B /* Pencil@2x.png in Resources */,
-				DBD70E3819A645120026F349 /* FindPanel.xib in Resources */,
 				B69E26F716F0B523001C6E4B /* Search@2x.png in Resources */,
 				B683A0D316F1CDA600564A1D /* LinkBack@2x.tif in Resources */,
 				B683A0D416F1CDA600564A1D /* LinkBackPressed@2x.tif in Resources */,
@@ -1619,7 +1605,6 @@
 				210A10690B66720F005BE981 /* BookmarksTable.m in Sources */,
 				21E6B09F0B6E6D18001ABEDC /* URLGetter.m in Sources */,
 				21582DC50B73F59B00711663 /* BookmarksController.m in Sources */,
-				213621F20B92414F008C0830 /* MultiTextFinder.m in Sources */,
 				21469C8C0BEBA6A10094835F /* TemporaryFileCache.m in Sources */,
 				2182B39A106B2296008641E4 /* RBSplitSubview.m in Sources */,
 				2182B39B106B2296008641E4 /* RBSplitView.m in Sources */,
@@ -1900,19 +1885,6 @@
 				DBD70EDB19A6512E0026F349 /* de */,
 			);
 			name = ExporterManager.xib;
-			sourceTree = "<group>";
-		};
-		DBD70E2619A645120026F349 /* FindPanel.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				DBD70E7119A645B00026F349 /* it */,
-				DBD70E7219A645B10026F349 /* zh */,
-				DBD70EDC19A651300026F349 /* en */,
-				DBD70EDD19A651310026F349 /* fr */,
-				DBD70EDE19A651320026F349 /* pt */,
-				DBD70EDF19A651330026F349 /* de */,
-			);
-			name = FindPanel.xib;
 			sourceTree = "<group>";
 		};
 		DBD70E2819A645120026F349 /* ImporterAccessory.xib */ = {

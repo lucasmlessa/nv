@@ -1,14 +1,9 @@
 //
 // Prefix header for all source files of the 'Notation' target in the 'Notation' project
 //
-//NSLog(@"lion:%f", NSFoundationVersionNumber);//632.100000
 
 #include <Availability.h>
 #include <AvailabilityMacros.h>
-
-#ifndef MAC_OS_X_VERSION_10_7
-#define MAC_OS_X_VERSION_10_7 1070
-#endif
 
 #ifndef MAC_OS_X_VERSION_10_8
 #define MAC_OS_X_VERSION_10_8 1080
@@ -37,9 +32,6 @@
 #endif
 #ifndef NSFoundationVersionNumber10_8
 #define NSFoundationVersionNumber10_8 945.00
-#endif
-#ifndef NSFoundationVersionNumber10_7
-#define NSFoundationVersionNumber10_7 833.10
 #endif
 
 #ifndef NSINTEGER_DEFINED
@@ -95,7 +87,6 @@ typedef char _COMPILE_ASSERT_SYMBOL(__LINE__, msg) [ ((test) ? 1 : -1) ]
 #define LOG_SESSION_SALT "Salt for encrypting a write-ahead-log session"
 
 
-#define IsLionOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_7)
 #define IsMountainLionOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_8)
 #define IsMavericksOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_9)
 #define IsYosemiteOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_10)

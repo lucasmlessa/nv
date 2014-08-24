@@ -16,12 +16,9 @@
 
 @implementation BTTransparentScroller
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-
 + (BOOL)isCompatibleWithOverlayScrollers {
     return self == [BTTransparentScroller class];
 }
-#endif
 
 - (id)initWithFrame:(NSRect)frameRect{
 	self = [super initWithFrame:frameRect];
@@ -43,14 +40,6 @@
 	return self;
 }
 
-- (void)drawKnobSlotInRect:(NSRect)slotRect highlight:(BOOL)flag{
-    if (!IsLionOrLater) {
-        [[NSColor whiteColor]set];
-        NSRectFill([self bounds]);        
-    }
-    //else{
-//        [super drawKnobSlotInRect:slotRect highlight:flag];
-  //  }
-}
+- (void)drawKnobSlotInRect:(NSRect)slotRect highlight:(BOOL)flag{ }
 
 @end

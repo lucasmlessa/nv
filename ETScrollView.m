@@ -25,18 +25,14 @@
         
         if (NSPointInRect (aPoint,vsRect)) {
             return [self verticalScroller];
-        }else if (IsLionOrLater){
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-            if([[self subviews]containsObject:[self findBarView]]) {
-                NSView *tView=[super hitTest:aPoint];
-                if ((tView==[self findBarView])||([tView superview]==[self findBarView])||([[tView className]isEqualToString:@"NSFindPatternFieldEditor"])) {
-                    [[self window]invalidateCursorRectsForView:tView];
-                    [[self documentView]setMouseInside:NO];
-                    return tView;
-                }
-            }
-#endif
-        }
+		} else if([[self subviews]containsObject:[self findBarView]]) {
+			NSView *tView=[super hitTest:aPoint];
+			if ((tView==[self findBarView])||([tView superview]==[self findBarView])||([[tView className]isEqualToString:@"NSFindPatternFieldEditor"])) {
+				[[self window]invalidateCursorRectsForView:tView];
+				[[self documentView]setMouseInside:NO];
+				return tView;
+			}
+		}
         [[self documentView]setMouseInside:YES];
         return [self documentView];
     }
@@ -46,59 +42,43 @@
 
 - (void)awakeFromNib{ 
     needsOverlayTiling=NO;
-    if([[[self documentView]className] isEqualToString:@"NotesTableView"]){
-        scrollerClass=NSClassFromString(@"ETOverlayScroller");
-        if (!IsLionOrLater) {
-            [self setAutohidesScrollers:YES];
-            needsOverlayTiling=YES;
-        }
+    if([[[self documentView] className] isEqualToString:@"NotesTableView"]){
+		scrollerClass = ETOverlayScroller.class;
     }else{
-        scrollerClass=NSClassFromString(@"ETTransparentScroller");
+		scrollerClass = ETTransparentScroller.class;
     }
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-    if (IsLionOrLater) {
-        [[GlobalPrefs defaultPrefs] registerForSettingChange:@selector(setUseETScrollbarsOnLion:sender:) withTarget:self];
-        [self setHorizontalScrollElasticity:NSScrollElasticityNone];
-        [self setVerticalScrollElasticity:NSScrollElasticityAllowed];
-    }
-#endif
-        [self changeUseETScrollbarsOnLion];
+
+	[[GlobalPrefs defaultPrefs] registerForSettingChange:@selector(setUseETScrollbarsOnLion:sender:) withTarget:self];
+	[self setHorizontalScrollElasticity:NSScrollElasticityNone];
+	[self setVerticalScrollElasticity:NSScrollElasticityAllowed];
+	[self changeUseETScrollbarsOnLion];
 }
 
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-- (void)settingChangedForSelectorString:(NSString*)selectorString{  
-    if (IsLionOrLater&&([selectorString isEqualToString:SEL_STR(setUseETScrollbarsOnLion:sender:)])){
+- (void)settingChangedForSelectorString:(NSString*)selectorString{
+    if ([selectorString isEqualToString:SEL_STR(setUseETScrollbarsOnLion:sender:)]) {
         [self changeUseETScrollbarsOnLion];
     }
 }
 
 - (void)changeUseETScrollbarsOnLion{
     id theScroller;
-    if (!IsLionOrLater||[[GlobalPrefs defaultPrefs]useETScrollbarsOnLion]) {
-        theScroller=[[scrollerClass alloc]init];        
-        [theScroller setFillBackground:!IsLionOrLater&&(scrollerClass==NSClassFromString(@"ETTransparentScroller"))];
-    }else{
-        theScroller=[[NSScroller alloc]init];
+    if ([[GlobalPrefs defaultPrefs] useETScrollbarsOnLion]) {
+        theScroller = [[scrollerClass alloc]init];
+        [theScroller setFillBackground:NO];
+    } else{
+        theScroller = [[NSScroller alloc]init];
     }
-    NSScrollerStyle style=0;
-    if (IsLionOrLater) {
-        style=[[theScroller class] preferredScrollerStyle];
-    }
+
+    NSScrollerStyle style=[[theScroller class] preferredScrollerStyle];
     [self setVerticalScroller:theScroller];
     [theScroller release];
     
-    if (IsLionOrLater) {
-        [theScroller setScrollerStyle:style];
-        [self setScrollerStyle:style];
-    }
+	[theScroller setScrollerStyle:style];
+	[self setScrollerStyle:style];
     [self tile];
     [self reflectScrolledClipView:[self contentView]];
-//    if (IsLionOrLater) {
-//        [self flashScrollers];
-//    }
 }
-#endif
 
 - (void)tile {
 	[super tile];

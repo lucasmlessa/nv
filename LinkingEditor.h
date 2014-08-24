@@ -19,11 +19,7 @@
 @class NoteObject;
 @class GlobalPrefs;
 
-@interface LinkingEditor : NSTextView <NSLayoutManagerDelegate
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-	, NSTextFinderClient
-#endif
->
+@interface LinkingEditor : NSTextView <NSLayoutManagerDelegate, NSTextFinderClient>
 {	
     NSTextFinder *textFinder;
     IBOutlet NSTextField *controlField;
@@ -38,12 +34,9 @@
 	BOOL isAutocompleting, wasDeleting;
 	
 	BOOL backgroundIsDark, mouseInside;
-	
+
 	//ludicrous ivars used to hack NSTextFinder. just write your own, damnit!
-	NSRange selectedRangeDuringFind;
-	NSString *lastImportedFindString;
-	NSString *stringDuringFind;
-	NoteObject *noteDuringFind;
+    NSString *lastImportedFindString;
 	
 	NSCursor *(*defaultIBeamCursorIMP)(Class, SEL);
 	NSCursor *(*whiteIBeamCursorIMP)(Class, SEL);
@@ -113,19 +106,11 @@
 - (void)updateTextColors;
 - (IBAction)insertLink:(id)sender;
 - (void)prepareTextFinder;
-- (void)prepareTextFinderPreLion;
 - (BOOL)textFinderIsVisible;
 - (IBAction)pasteMarkdownLink:(id)sender;
 - (void)insertStringAtStartOfSelectedParagraphs:(NSString *)insertString;
 - (void)removeStringAtStartOfSelectedParagraphs:(NSString *)removeString;
 - (BOOL)clipboardHasLink;
 - (BOOL)updateNumberedListFromRange:(NSRange)currentRange startingNum:(NSInteger)listNum;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-- (void)textFinderShouldResetContext:(NSNotification *)aNotification;
-- (void)textFinderShouldUpdateContext:(NSNotification *)aNotification;
-- (void)textFinderShouldNoteChanges:(NSNotification *)aNotification;
-- (void)hideTextFinderIfNecessary:(NSNotification *)aNotification;
-- (IBAction)toggleLayoutOrientation:(id)sender;
-#endif
-//
+
 @end

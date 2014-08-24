@@ -167,13 +167,7 @@
 - (NSData *)derivedKeyOfLength:(NSUInteger)len salt:(NSData *)salt iterations:(NSUInteger)count {
 	NSMutableData *derivedKey = [NSMutableData dataWithLength:len];
 
-	if (IsLionOrLater) {
-		if (CCKeyDerivationPBKDF(kCCPBKDF2, self.bytes, self.length, salt.bytes, salt.length, kCCPRFHmacAlgSHA1, (unsigned int)count, derivedKey.mutableBytes, derivedKey.length) != kCCSuccess) {
-			return nil;
-		}
-	}
-
-	if (PKCS5_PBKDF2_HMAC_SHA1(self.bytes, (int)self.length, salt.bytes, (int)salt.length, (int)count, (int)len, derivedKey.mutableBytes) != 1) {
+	if (CCKeyDerivationPBKDF(kCCPBKDF2, self.bytes, self.length, salt.bytes, salt.length, kCCPRFHmacAlgSHA1, (unsigned int)count, derivedKey.mutableBytes, derivedKey.length) != kCCSuccess) {
 		return nil;
 	}
 

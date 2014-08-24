@@ -8,19 +8,21 @@
 
 #import "ETOverlayScroller.h"
 
+NTV_ALWAYS_INLINE CGFloat ETOverlayScrollerMinXPadding(NSScrollerStyle scrollerStyle) {
+	if (scrollerStyle == NSScrollerStyleOverlay) {
+		return 4.5;
+	}
+	return 4.0;
+}
+
 @implementation ETOverlayScroller
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
 + (BOOL)isCompatibleWithOverlayScrollers {
     return self == [ETOverlayScroller class];
 }
 
 - (void)setScrollerStyle:(NSScrollerStyle)newScrollerStyle{
-    if (IsLionOrLater&&(newScrollerStyle==NSScrollerStyleOverlay)) {
-        verticalPaddingLeft = 4.5f;
-    }else{
-        verticalPaddingLeft = 4.0f;
-    }
+	verticalPaddingLeft = ETOverlayScrollerMinXPadding(newScrollerStyle);
     [super setScrollerStyle:newScrollerStyle];
 }
 
@@ -29,22 +31,15 @@
     return [[NSScroller class]preferredScrollerStyle];
 }
 
-#endif
-
 - (id)initWithFrame:(NSRect)frameRect{
 	self = [super initWithFrame:frameRect];
 	if (!self) { return nil; }
 
 	verticalPaddingRight = 3.0f;
-	if (IsLionOrLater&&([self scrollerStyle]==NSScrollerStyleOverlay)) {
-		verticalPaddingLeft = 4.5f;
-	}else{
-		verticalPaddingLeft = 4.0f;
-	}
+	verticalPaddingLeft = ETOverlayScrollerMinXPadding(self.scrollerStyle);
 	knobAlpha=0.6f;
 	slotAlpha=0.55f;
 	fillBackground=NO;
-//	isOverlay=YES;
 
 	return self;
 }
