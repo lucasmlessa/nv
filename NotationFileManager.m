@@ -23,11 +23,11 @@
 #import "NoteObject.h"
 #import "GlobalPrefs.h"
 #import "NSData_transformations.h"
+#import "NSData+NTVCommonDigest.h"
 #include <sys/param.h>
 #include <sys/mount.h>
 
 #import <Foundation/Foundation.h>
-#include <openssl/md5.h>
 #import "FSExchangeObjectsCompat.h"
 
 NSString *NotesDatabaseFileName = @"Notes & Settings";
@@ -109,65 +109,62 @@ static BOOL GetVolumeUUIDAttr(const char *path, VolumeUUID *volumeUUIDPtr) {
 	return YES;
 }
 
-
 // Create a version 3 UUID; derived using "name" via MD5 checksum.
-static void uuid_create_md5_from_name(unsigned char result_uuid[16], const void *name, int namelen) {
-	
-	static unsigned char FSUUIDNamespaceSHA1[16] = { 
-		0xB3, 0xE2, 0x0F, 0x39, 0xF2, 0x92, 0x11, 0xD6, 
+static NSData *uuid_create_md5_from_name(const uint8_t *name, size_t namelen) {
+	static const unsigned char FSUUIDNamespaceSHA1[] = {
+		0xB3, 0xE2, 0x0F, 0x39, 0xF2, 0x92, 0x11, 0xD6,
 		0x97, 0xA4, 0x00, 0x30, 0x65, 0x43, 0xEC, 0xAC
 	};
-	
-    MD5_CTX c;
-	
-    MD5_Init(&c);
-    MD5_Update(&c, FSUUIDNamespaceSHA1, sizeof(FSUUIDNamespaceSHA1));
-    MD5_Update(&c, name, namelen);
-    MD5_Final(result_uuid, &c);
-	
-    result_uuid[6] = (result_uuid[6] & 0x0F) | 0x30;
-    result_uuid[8] = (result_uuid[8] & 0x3F) | 0x80;
-}
+	static const size_t FSUUIDNamespaceSHA1Len = sizeof(FSUUIDNamespaceSHA1) / sizeof(unsigned char);
 
+	dispatch_data_t namespace = dispatch_data_create(FSUUIDNamespaceSHA1, FSUUIDNamespaceSHA1Len, NULL, NULL);
+	dispatch_data_t nameData = dispatch_data_create(name, namelen, NULL, NULL);
+	dispatch_data_t combined = dispatch_data_create_concat(namespace, nameData);
+
+	NSData *ret = [(NSData *)combined ntv_MD5Digest];
+
+	dispatch_release(combined);
+	dispatch_release(nameData);
+	dispatch_release(namespace);
+
+	return ret;
+}
 
 CFUUIDRef CopyHFSVolumeUUIDForMount(const char *mntonname) {
 	VolumeUUID targetVolumeUUID;
-	
-	unsigned char rawUUID[8];
-	
 	if (!GetVolumeUUIDAttr(mntonname, &targetVolumeUUID))
 		return NULL;
 	
-	((uint32_t *)rawUUID)[0] = CFSwapInt32HostToBig(targetVolumeUUID.v.high);
-	((uint32_t *)rawUUID)[1] = CFSwapInt32HostToBig(targetVolumeUUID.v.low);
-	
-	CFUUIDBytes uuidBytes;
-	uuid_create_md5_from_name((void*)&uuidBytes, rawUUID, sizeof(rawUUID));
-	
-	return CFUUIDCreateFromUUIDBytes(NULL, uuidBytes);
+	const uint32_t rawUUID[] = {
+		CFSwapInt32HostToBig(targetVolumeUUID.v.high),
+		CFSwapInt32HostToBig(targetVolumeUUID.v.low)
+	};
+
+	NSData *uuidData = uuid_create_md5_from_name((uint8_t *)rawUUID, sizeof(rawUUID));
+
+	return CFUUIDCreateFromUUIDBytes(NULL, *(CFUUIDBytes *)uuidData.bytes);
 }
 
 CFUUIDRef CopySyntheticUUIDForVolumeCreationDate(FSRef *fsRef) {
-	
 	FSCatalogInfo fileInfo;
-	if (FSGetCatalogInfo(fsRef, kFSCatInfoVolume, &fileInfo, NULL, NULL, NULL) == noErr) {
-		
-		FSVolumeInfo volInfo;
-		OSStatus err = FSGetVolumeInfo(fileInfo.volume, 0, NULL, kFSVolInfoCreateDate, &volInfo, NULL, NULL);
-		if (err == noErr) {
-			volInfo.createDate.highSeconds = CFSwapInt16HostToBig(volInfo.createDate.highSeconds);
-			volInfo.createDate.lowSeconds = CFSwapInt32HostToBig(volInfo.createDate.lowSeconds);
-			volInfo.createDate.fraction = CFSwapInt16HostToBig(volInfo.createDate.fraction);
-
-			CFUUIDBytes uuidBytes;
-			uuid_create_md5_from_name((void*)&uuidBytes, (void*)&volInfo.createDate, sizeof(UTCDateTime));
-			
-			return CFUUIDCreateFromUUIDBytes(NULL, uuidBytes);
-		} else {
-			NSLog(@"can't even get the volume creation date -- what are you trying to do to me?");
-		}
+	if (FSGetCatalogInfo(fsRef, kFSCatInfoVolume, &fileInfo, NULL, NULL, NULL) != noErr) {
+		return NULL;
 	}
-	return NULL;
+
+	FSVolumeInfo volInfo;
+	OSStatus err = FSGetVolumeInfo(fileInfo.volume, 0, NULL, kFSVolInfoCreateDate, &volInfo, NULL, NULL);
+	if (err != noErr) {
+		NSLog(@"can't even get the volume creation date -- what are you trying to do to me?");
+		return NULL;
+	}
+
+	volInfo.createDate.highSeconds = CFSwapInt16HostToBig(volInfo.createDate.highSeconds);
+	volInfo.createDate.lowSeconds = CFSwapInt32HostToBig(volInfo.createDate.lowSeconds);
+	volInfo.createDate.fraction = CFSwapInt16HostToBig(volInfo.createDate.fraction);
+
+	NSData *uuidData = uuid_create_md5_from_name((const uint8_t *)&volInfo.createDate, sizeof(UTCDateTime));
+
+	return CFUUIDCreateFromUUIDBytes(NULL, *(CFUUIDBytes *)uuidData.bytes);
 }
 
 static BOOL VolumeSupportsExchangeObjects(NotationController *controller) {
