@@ -26,6 +26,7 @@
 #import "NotationController.h"
 #import "NotationPrefs.h"
 #import "NSBezierPath_NV.h"
+#import "AppController.h"
 
 static NSString *UserEEIdentifiersKey = @"UserEEIdentifiers";
 static NSString *DefaultEEIdentifierKey = @"DefaultEEIdentifier";
@@ -346,9 +347,12 @@ errorReturn:
 }
 
 - (void)menusChanged {
-
-	[editNotesMenus makeObjectsPerformSelector:@selector(_updateMenuForEEListController:) withObject:self];
-	[editorPrefsMenus makeObjectsPerformSelector:@selector(_updateMenuForEEListController:) withObject:self];	
+	for (NSMenu *item in editNotesMenus) {
+		[self _updateMenu:item];
+	}
+	for (NSMenu *item in editorPrefsMenus) {
+		[self _updateMenu:item];
+	}
 	[[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:ExternalEditorsChangedNotification object:self]];
 }
 
@@ -377,8 +381,8 @@ errorReturn:
 			[theMenuItem setKeyEquivalentModifierMask: NSCommandKeyMask | NSShiftKeyMask];
 		}
 		//PrefsWindowController maintains default-editor selection by updating on ExternalEditorsChangedNotification
-			
-		[theMenuItem setTarget: isPrefsMenu ? self : [NSApp delegate]];
+
+		[theMenuItem setTarget: isPrefsMenu ? self : NTVAppDelegate()];
 		
 		[theMenuItem setRepresentedObject:ed];
 //		
@@ -432,17 +436,4 @@ errorReturn:
 	}
 }
 
-@end
-
-
-//this category exists because I want to use -makeObjectsPerformSelector: in -menusChanged
-
-@interface NSMenu (ExternalEditorListMenu)
-- (void)_updateMenuForEEListController:(ExternalEditorListController*)controller;
-@end
-
-@implementation NSMenu (ExternalEditorListMenu)
-- (void)_updateMenuForEEListController:(ExternalEditorListController*)controller {
-	[controller _updateMenu:self];
-}
 @end

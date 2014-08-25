@@ -16,6 +16,7 @@
 #import "ETTransparentButton.h"
 #import "BTTransparentScroller.h"
 #import "NSFileManager_NV.h"
+#import "NSFileManager+DirectoryLocations.h"
 
 #define kDefaultMarkupPreviewVisible @"markupPreviewVisible"
 
@@ -163,7 +164,7 @@
 {
 	cssString = [[[self class] css] retain];
     htmlString = [[[self class] html] retain];
-	lastNote = [[NSApp delegate] selectedNoteObject];
+	lastNote = [NTVAppDelegate() selectedNoteObject];
     [sourceView setTextContainerInset:NSMakeSize(10.0,12.0)];
     NSScrollView *scrlView=[sourceView enclosingScrollView];
     if (!IsLionOrLater) {

@@ -16,7 +16,7 @@
 	if (!self) { return nil; }
 
 	if (!vColor) {
-		[self setBackgroundColor:[[NSApp delegate] backgrndColor]];
+		[self setBackgroundColor:[NTVAppDelegate() backgrndColor]];
 	}
 
 	return self;
@@ -29,7 +29,7 @@
 
 - (void)drawRect:(NSRect)rect {
     [super drawRect:rect];
-    if (!IsLionOrLater&&([[NSApp delegate]isInFullScreen])){        
+    if (!IsLionOrLater&&([NTVAppDelegate() isInFullScreen])){
         NSRect bounds = [self bounds];
         bounds.origin.x -=2.0f;
         bounds.size.width +=4.0f;

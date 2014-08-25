@@ -1761,7 +1761,7 @@ force_inline id unifiedCellForNote(NotesTableView *tv, NoteObject *note, NSInteg
 		[self makeNoteDirtyUpdateTime:YES updateFile:YES];
 		
 		[delegate note:self attributeChanged:NotePreviewString];
-		[[delegate delegate] contentsUpdatedForNote:self];
+		[[(NotationController *)delegate delegate] contentsUpdatedForNote:self];
 	} else {
 		NSBeep();
 		NSLog(@"odbEditor:didModifyFile: unable to get data from %@", path);

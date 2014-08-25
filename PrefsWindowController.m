@@ -326,7 +326,7 @@
 
 - (IBAction)changedRTL:(id)sender {
 	[prefsController setRTL:[rtlButton state] sender:self];
-	[[NSApp delegate] updateRTL];
+	[NTVAppDelegate() updateRTL];
 }
 
 - (BOOL)getNewNotesRefFromOpenPanel:(FSRef*)notesDirectoryRef returnedPath:(NSString**)path {
@@ -627,7 +627,7 @@ CGRect ScaleRectWithFactor(CGRect rect, CGFloat factor) {
 
 - (IBAction)changedAltRows:(id)sender {
 	[prefsController setAlternatingRows:[altRowsButton state] sender:self];
-    [[NSApp delegate] refreshNotesList];
+    [NTVAppDelegate() refreshNotesList];
 }
 
 - (IBAction)changedAutoPairing:(id)sender{
@@ -637,7 +637,7 @@ CGRect ScaleRectWithFactor(CGRect rect, CGFloat factor) {
 
 - (IBAction)changedShowGrid:(id)sender {
 	[prefsController setShowGrid:[showGridButton state] sender:self];
-    [[NSApp delegate] refreshNotesList];
+    [NTVAppDelegate() refreshNotesList];
 }
 
 @end

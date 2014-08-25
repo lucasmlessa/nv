@@ -15,7 +15,7 @@
 }
 
 - (void)mouseDown:(NSEvent *)theEvent{
-	[[NSApp delegate] toggleWordCount:self];
+	[NTVAppDelegate() toggleWordCount:self];
 }
 
 @end

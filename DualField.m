@@ -18,6 +18,7 @@
 #import "LinearDividerShader.h"
 #import "AppController.h"
 #import "BookmarksController.h"
+#import "AppController.h"
 
 #define BORDER_TOP_OFFSET 3.0
 #define BORDER_LEFT_OFFSET 3.0
@@ -308,8 +309,8 @@
 	NoteBookmark *aBookmark = [[followedLinks lastObject] retain];
 	[followedLinks removeLastObject];
 	 
-	[[NSApp delegate] searchForString:[aBookmark searchString]];
-	[[NSApp delegate] revealNote:[aBookmark noteObject] options:0];
+	[NTVAppDelegate() searchForString:[aBookmark searchString]];
+	[NTVAppDelegate() revealNote:[aBookmark noteObject] options:0];
 	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(clearFollowedLinks) object:nil];
 
 	return [aBookmark autorelease];
@@ -494,7 +495,7 @@
     
 //    NSLog(@"df mouse down");
 //    [[NSNotificationCenter defaultCenter] postNotificationName:@"ModTimersShouldReset" object:nil];
-    [[NSApp delegate] setIsEditing:NO];
+    [NTVAppDelegate() setIsEditing:NO];
 	
 	if ([[self cell] handleMouseDown:anEvent])
 		return;
@@ -504,7 +505,7 @@
 }
 
 - (void)flagsChanged:(NSEvent *)theEvent{
-	[[NSApp delegate] flagsChanged:theEvent];
+	[NTVAppDelegate() flagsChanged:theEvent];
 }
 
 @end

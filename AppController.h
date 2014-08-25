@@ -246,4 +246,6 @@ void outletObjectAwoke(id sender);
 - (void)postToggleToolbar:(NSNumber *)boolNum;
 #endif
 
+- (void)flagsChanged:(NSEvent *)theEvent;
+
 @end

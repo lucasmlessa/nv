@@ -25,7 +25,7 @@
 #import "SynchronizedNoteProtocol.h"
 #import "NoteObject.h"
 #import "DeletedNoteObject.h"
-
+#import "NotationController.h"
 
 @implementation SimplenoteEntryCollector
 
@@ -481,7 +481,7 @@
 
 			//NSLog(@"note update:\n %@", [aNote syncServicesMD]);
 			if (merged) {
-				[[[(NoteObject *)aNote delegate] delegate] contentsUpdatedForNote:aNote];
+				[[(NotationController *)[(NoteObject *)aNote delegate] delegate] contentsUpdatedForNote:aNote];
 			}
 		} else {
 			NSLog(@"%@ called with unknown opSEL: %@", NSStringFromSelector(_cmd),NSStringFromSelector(fetcherOpSEL));

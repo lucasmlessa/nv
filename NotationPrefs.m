@@ -75,7 +75,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	keyLengthInBits = DEFAULT_KEY_LENGTH;
 	baseBodyFont = [[[GlobalPrefs defaultPrefs] noteBodyFont] retain];
 	//foregroundColor = [[[GlobalPrefs defaultPrefs] foregroundTextColor] retain];
-	foregroundColor = [[[NSApp delegate] foregrndColor]retain];
+	foregroundColor = [[NTVAppDelegate() foregrndColor]retain];
 	epochIteration = 0;
 	
 	[self updateOSTypesArray];
@@ -127,7 +127,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	if (!foregroundColor || ![foregroundColor isKindOfClass:[NSColor class]]) {
 		//foregroundColor = [[[GlobalPrefs defaultPrefs] foregroundTextColor] retain];
 
-		foregroundColor = [[[NSApp delegate] foregrndColor]retain];
+		foregroundColor = [[NTVAppDelegate() foregrndColor]retain];
 		preferencesChanged = YES;
 	}
 	

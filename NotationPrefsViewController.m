@@ -28,6 +28,7 @@
 #import "PassphraseChanger.h"
 #import "NSFileManager_NV.h"
 //#import "AppController.h"
+#import "NSDictionary+BSJSONAdditions.h"
 
 @implementation FileKindListView 
 

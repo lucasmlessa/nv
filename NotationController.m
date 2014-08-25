@@ -1208,7 +1208,7 @@ bail:
 - (void)makeForegroundTextColorMatchGlobalPrefs {
 	NSColor *prefsFGColor = [notationPrefs foregroundColor];
 	if (prefsFGColor) {
-		NSColor *fgColor = [[NSApp delegate] foregrndColor];
+		NSColor *fgColor = [NTVAppDelegate() foregrndColor];
 		[self setForegroundTextColor:fgColor];
 		//NSColor *fgColor = [prefsController foregroundTextColor];
 		

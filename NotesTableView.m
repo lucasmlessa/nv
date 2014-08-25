@@ -31,7 +31,6 @@
 #import "NotesTableHeaderCell.h"
 #import "LinkingEditor.h"
 #import "AppController.h"
-//#import "NotesTableCornerView.h"
 
 #define STATUS_STRING_FONT_SIZE 16.0f
 #define SET_DUAL_HIGHLIGHTS 0
@@ -201,12 +200,12 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	
 	if ([sender draggingSource] == self)
 		return NO;
-	
-	return [[NSApp delegate] addNotesFromPasteboard:[sender draggingPasteboard]];
+
+	return [NTVAppDelegate() addNotesFromPasteboard:[sender draggingPasteboard]];
 }
 
 - (void)paste:(id)sender {
-	[[NSApp delegate] addNotesFromPasteboard:[NSPasteboard generalPasteboard]];
+	[NTVAppDelegate() addNotesFromPasteboard:[NSPasteboard generalPasteboard]];
 }
 
 - (CGFloat)tableFontHeight {
@@ -849,7 +848,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 			return;
 		}
     } else if (keyChar == NSDeleteCharacter || keyChar == NSDeleteFunctionKey || keyChar == NSDeleteCharFunctionKey) {
-		[[NSApp delegate] deleteNote:self];
+		[NTVAppDelegate() deleteNote:self];
 		return;
 	} else if (keyChar == NSTabCharacter) {
 		[[self window] selectNextKeyView:self];
@@ -1180,7 +1179,7 @@ enum { kNext_Tag = 'j', kPrev_Tag = 'k' };
 
 - (void)cancelOperation:(id)sender {
 	[self abortEditing];
-	[[NSApp delegate] cancelOperation:sender];
+	[NTVAppDelegate() cancelOperation:sender];
 }
 
 - (void)textDidChange:(NSNotification *)aNotification {
@@ -1288,7 +1287,7 @@ enum { kNext_Tag = 'j', kPrev_Tag = 'k' };
 }
 
 - (void)flagsChanged:(NSEvent *)theEvent{
-	[[NSApp delegate] flagsChanged:theEvent];
+	[NTVAppDelegate() flagsChanged:theEvent];
 }
 
 - (BOOL)needsGridLines{

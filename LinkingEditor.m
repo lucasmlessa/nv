@@ -21,8 +21,7 @@
 #import "NSString_NV.h"
 #import "NTVPasswordGenerator.h"
 #import "ETClipView.h"
-//#import "NVTextFinderAdditions.h"
-
+#import "AppController.h"
 
 #include <CoreServices/CoreServices.h>
 #include <Carbon/Carbon.h>
@@ -138,7 +137,7 @@ CGFloat _perceptualDarkness(NSColor*a);
 		if (![prefsController highlightSearchTerms]) {
 			[self removeHighlightedTerms];
 		} else {
-			NSString *typedString = [[NSApp delegate] typedString];
+			NSString *typedString = [NTVAppDelegate() typedString];
 			if (typedString)
 				[self highlightTermsTemporarilyReturningFirstRange:typedString avoidHighlight:NO];
 		}
@@ -188,10 +187,10 @@ CGFloat _perceptualDarkness(NSColor*a);
 }
 
 - (void)updateTextColors {
-	NSColor *fgColor = [[NSApp delegate] foregrndColor];
+	NSColor *fgColor = [NTVAppDelegate() foregrndColor];
 	NSColor *bgColor = [self backgroundColor];
-    if (bgColor!=[[NSApp delegate]backgrndColor]) {
-        bgColor=[[NSApp delegate]backgrndColor];
+    if (bgColor!=[NTVAppDelegate() backgrndColor]) {
+        bgColor=[NTVAppDelegate() backgrndColor];
         [self setBackgroundColor:bgColor];
     }
 	[[self enclosingScrollView] setBackgroundColor:bgColor];
@@ -313,7 +312,7 @@ CGFloat _perceptualColorDifference(NSColor*a, NSColor*b) {
 	return @{
 		NSCursorAttributeName: [NSCursor pointingHandCursor],
 		NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle),
-		NSForegroundColorAttributeName: [self _linkColorForForegroundColor:[[NSApp delegate] foregrndColor] backgroundColor:[[NSApp delegate] backgrndColor]]
+		NSForegroundColorAttributeName: [self _linkColorForForegroundColor:[NTVAppDelegate() foregrndColor] backgroundColor:[NTVAppDelegate() backgrndColor]]
 	};
 }
 
@@ -360,7 +359,7 @@ CGFloat _perceptualColorDifference(NSColor*a, NSColor*b) {
 	
 	if ([type isEqualToString:NSFilenamesPboardType]) {
 		//paste as a file:// URL, so that it can be linked
-		NSString *allURLsString = [[NSApp delegate] stringWithNoteURLsOnPasteboard:pboard];
+		NSString *allURLsString = [NTVAppDelegate() stringWithNoteURLsOnPasteboard:pboard];
 		
 		if ([allURLsString length]) {
 			NSRange selectedRange = [self rangeForUserTextChange];
@@ -797,7 +796,7 @@ copyRTFType:
 	NSEvent *event = [[self window] currentEvent];
 	if ([event type] == NSKeyDown && ![event isARepeat] && NSEqualRanges([self selectedRange], NSMakeRange(0, 0))) {
 		//command-left at the beginning of the note--jump to editing the title!
-		[[NSApp delegate] renameNote:nil];
+		[NTVAppDelegate() renameNote:nil];
 		NSText *editor = [notesTableView currentEditor];
 		NSRange endRange = NSMakeRange([[editor string] length], 0);
 		[editor setSelectedRange:endRange];
@@ -1241,7 +1240,7 @@ copyRTFType:
 //            NSLog(@"interpret from cmd-keydown OLD URL:||%@||  AND NEW URL:|%@|",[aLink absoluteString],[newURL absoluteString]);
             aLink=newURL;
         }
-		[[NSApp delegate] interpretNVURL:aLink];
+		[NTVAppDelegate() interpretNVURL:aLink];
 	} else {
 		[super clickedOnLink:aLink atIndex:charIndex];
 	}
@@ -1682,7 +1681,7 @@ cancelCompetion:
 }
 
 - (void)flagsChanged:(NSEvent *)theEvent{
-	[[NSApp delegate] flagsChanged:theEvent];
+	[NTVAppDelegate() flagsChanged:theEvent];
 }
 
 - (BOOL)mouseIsHere{
@@ -2033,7 +2032,7 @@ cancelCompetion:
 }
 
 - (void)updateInsetForFrame:(NSRect)frameRect andForceLayout:(BOOL)force{
-    if (managesTextWidth||([[NSApp delegate]isInFullScreen])) {
+    if (managesTextWidth||([NTVAppDelegate() isInFullScreen])) {
         [self setInsetForFrame:frameRect alwaysSet:force];
     }else{
         [self resetInset];

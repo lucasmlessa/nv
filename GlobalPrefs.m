@@ -659,7 +659,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		NSMutableDictionary *attrs = [[NSMutableDictionary dictionaryWithObjectsAndKeys:bodyFont, NSFontAttributeName, nil] retain];
 		
 		//not storing the foreground color in each note will make the database smaller, and black is assumed when drawing text
-		NSColor *fgColor = [[NSApp delegate] foregrndColor];
+		NSColor *fgColor = [NTVAppDelegate() foregrndColor];
 		
 		if (!ColorsEqualWith8BitChannels([NSColor blackColor], fgColor)) {
 			attrs[NSForegroundColorAttributeName] = fgColor;
@@ -675,7 +675,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		noteBodyAttributes = attrs;
 	}else {
 		NSMutableDictionary *attrs = [[NSMutableDictionary dictionaryWithObjectsAndKeys:bodyFont, NSFontAttributeName, nil] retain];
-		NSColor *fgColor = [[NSApp delegate] foregrndColor];
+		NSColor *fgColor = [NTVAppDelegate() foregrndColor];
 		
 		attrs[NSForegroundColorAttributeName] = fgColor;
 		noteBodyAttributes = attrs;
