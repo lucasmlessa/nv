@@ -25,12 +25,12 @@ static NSColor *disabledColor, *enabledColor;
 {
 	NSBundle *bundle = [NSBundle bundleForClass:[ETTransparentButtonCell class]];
 	
-	buttonLeftN = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentButtonLeftN.tiff"]];
-	buttonFillN = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentButtonFillN.tiff"]];
-	buttonRightN = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentButtonRightN.tiff"]];
-	buttonLeftP = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentButtonLeftP.tiff"]];
-	buttonFillP = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentButtonFillP.tiff"]];
-	buttonRightP = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentButtonRightP.tiff"]];
+	buttonLeftN		= [[bundle imageForResource:@"TransparentButtonLeftN"] retain];
+	buttonFillN		= [[bundle imageForResource:@"TransparentButtonFillN"] retain];
+	buttonRightN		= [[bundle imageForResource:@"TransparentButtonRightN"] retain];
+	buttonLeftP		= [[bundle imageForResource:@"TransparentButtonLeftP"] retain];
+	buttonFillP		= [[bundle imageForResource:@"TransparentButtonFillP"] retain];
+	buttonRightP		= [[bundle imageForResource:@"TransparentButtonRightP"] retain];
 
 	enabledColor = [[NSColor whiteColor] retain];
 	disabledColor = [[NSColor colorWithCalibratedWhite:0.6 alpha:1] retain];

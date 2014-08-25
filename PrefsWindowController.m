@@ -396,7 +396,7 @@
     [item setPaletteLabel:localizedTitle];
     [item setLabel:localizedTitle];
     //[item setToolTip:@"General settings: appearance and behavior"];
-    [item setImage:[[[NSImage alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:name ofType:@"tiff"]] autorelease]];
+    [item setImage:[[NSBundle mainBundle] imageForResource:name]];
     [item setTarget:self];
     [item setAction:@selector(switchViews:)];
     items[name] = item;

@@ -30,12 +30,12 @@
 	fillBackground=NO;
 	NSBundle *bundle = [NSBundle mainBundle];
 	
-	knobTop				= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentScrollerKnobTop.tif"]];
-	knobVerticalFill	= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentScrollerKnobVerticalFill.tif"]];
-	knobBottom			= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentScrollerKnobBottom.tif"]];
-	slotTop				= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentScrollerSlotTop.tif"]];
-	slotVerticalFill	= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentScrollerSlotVerticalFill.tif"]];
-	slotBottom			= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"TransparentScrollerSlotBottom.tif"]];
+	knobTop				= [[bundle imageForResource:@"TransparentScrollerKnobTop"] retain];
+	knobVerticalFill		= [[bundle imageForResource:@"TransparentScrollerKnobVerticalFill"] retain];
+	knobBottom			= [[bundle imageForResource:@"TransparentScrollerKnobBottom"] retain];
+	slotTop				= [[bundle imageForResource:@"TransparentScrollerSlotTop"] retain];
+	slotVerticalFill		= [[bundle imageForResource:@"TransparentScrollerSlotVerticalFill"] retain];
+	slotBottom			= [[bundle imageForResource:@"TransparentScrollerSlotBottom"] retain];
 	verticalPaddingLeft = 4.0f;
 	verticalPaddingRight = 3.0f;
 	verticalPaddingTop =3.75f;

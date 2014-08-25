@@ -25,9 +25,9 @@
 	if (!self) { return nil; }
 
 	NSBundle *bundle = [NSBundle mainBundle];        
-	knobTop				= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"greyscrollerverttop3.tif"]];
-	knobVerticalFill	= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"greyscrollervertfill3.tif"]];
-	knobBottom			= [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:@"greyscrollervertbottom3.tif"]];
+	knobTop				= [[bundle imageForResource:@"greyscrollerverttop3"] retain];
+	knobVerticalFill		= [[bundle imageForResource:@"greyscrollervertfill3"] retain];
+	knobBottom			= [[bundle imageForResource:@"greyscrollervertbottom3"] retain];
 	slotTop				= [NSImage imageNamed:nil];
 	slotVerticalFill	= [NSImage imageNamed:nil];
 	slotBottom			= [NSImage imageNamed:nil];
