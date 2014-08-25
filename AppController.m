@@ -225,7 +225,9 @@ BOOL splitViewAwoke;
     } else if (currentPreviewMode == TextilePreview) {
         [textilePreview setState:NSOnState];
     }
-	
+
+	[notesTableView registerForDraggedTypes:@[NSFilenamesPboardType, NSRTFPboardType, NSRTFDPboardType, NSStringPboardType]];
+
 	outletObjectAwoke(self);
 }
 

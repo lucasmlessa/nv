@@ -163,14 +163,11 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 			 inTableColumn:[self tableColumnWithIdentifier:[globalPrefs sortedTableColumnKey]]];
 }
 
-
 - (void)awakeFromNib {
     [globalPrefs registerWithTarget:self forChangesInSettings:
             @selector(setTableFontSize:sender:),
             @selector(setHorizontalLayout:sender:), @selector(setShowGrid:sender:), @selector(setAlternatingRows:sender:), nil];
-	
-	[self registerForDraggedTypes:@[NSFilenamesPboardType, NSRTFPboardType, NSRTFDPboardType, NSStringPboardType]];
-	
+
 	NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
 	
 	[center addObserver:self selector:@selector(windowDidBecomeMain:)
@@ -185,6 +182,9 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
    // [self setBackgroundColor:[NSColor clearColor]];
 	outletObjectAwoke(self);
 }
+
+#pragma mark - More legacy dragging
+
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender {
 	
@@ -209,6 +209,8 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 
 	return [NTVAppDelegate() addNotesFromPasteboard:[sender draggingPasteboard]];
 }
+
+#pragma mark - End legacy dragging
 
 - (void)paste:(id)sender {
 	[NTVAppDelegate() addNotesFromPasteboard:[NSPasteboard generalPasteboard]];
@@ -764,6 +766,13 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 }
 #endif
 
+
+
+
+
+
+#pragma mark - Legacy dragging
+
 - (NSDragOperation)draggingSession:(NSDraggingSession *)session sourceOperationMaskForDraggingContext:(NSDraggingContext)context
 {
 	switch (context) {
@@ -837,6 +846,8 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	
 	[super mouseDown:event];
 }
+
+#pragma mark - End legacy dragging
 
 #define DOWNCHAR(x) ((x) == NSDownArrowFunctionKey || (x) == NSDownTextMovement)
 #define UPCHAR(x) ((x) == NSUpArrowFunctionKey || (x) == NSUpTextMovement)
