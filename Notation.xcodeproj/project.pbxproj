@@ -61,7 +61,7 @@
 		21A30EA70971D11D0071E9AF /* FastListDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 21A30EA60971D11D0071E9AF /* FastListDataSource.m */; };
 		21A38EE412EA864400CEB5F0 /* MakeDefault_Pressed.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 21A38EE212EA864400CEB5F0 /* MakeDefault_Pressed.tiff */; };
 		21A3913A12EB4C2F00CEB5F0 /* Spaces.m in Sources */ = {isa = PBXBuildFile; fileRef = 21A3913912EB4C2F00CEB5F0 /* Spaces.m */; };
-		21A6E6FD0974204F008436A9 /* LabelsListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 21A6E6FC0974204F008436A9 /* LabelsListController.m */; };
+		21A6E6FD0974204F008436A9 /* NTVLabelsListDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 21A6E6FC0974204F008436A9 /* NTVLabelsListDataSource.m */; };
 		21A73DC8099712A8009F8A6C /* WALController.m in Sources */ = {isa = PBXBuildFile; fileRef = 21A73DC7099712A8009F8A6C /* WALController.m */; };
 		21AD2550110A8BA600B7A985 /* SimplenoteEntryCollector.m in Sources */ = {isa = PBXBuildFile; fileRef = 21AD254F110A8BA600B7A985 /* SimplenoteEntryCollector.m */; };
 		21AD2850110BE99B00B7A985 /* SyncSessionController.m in Sources */ = {isa = PBXBuildFile; fileRef = 21AD284F110BE99B00B7A985 /* SyncSessionController.m */; };
@@ -250,6 +250,7 @@
 		DB98BBA319A90B2500055B14 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB98BBA219A90B2500055B14 /* libcrypto.dylib */; };
 		DB98BBA919A9110700055B14 /* NSData+NTVCommonDigest.m in Sources */ = {isa = PBXBuildFile; fileRef = DB98BBA819A9110700055B14 /* NSData+NTVCommonDigest.m */; };
 		DB98BBDF19A927C600055B14 /* NTVBrokenMD5.m in Sources */ = {isa = PBXBuildFile; fileRef = DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */; };
+		DBC9DC7E19ABEC19009E8460 /* NTVNotesListDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DBC9DC7D19ABEC19009E8460 /* NTVNotesListDataSource.m */; };
 		DBD70D8A19A63C000026F349 /* HelpNotes in Resources */ = {isa = PBXBuildFile; fileRef = DBD70D8819A63C000026F349 /* HelpNotes */; };
 		DBD70E0B19A641F90026F349 /* SaveHTMLPreview.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E0919A641F90026F349 /* SaveHTMLPreview.xib */; };
 		DBD70E1419A6427D0026F349 /* DeletionManager.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E1219A6427D0026F349 /* DeletionManager.xib */; };
@@ -419,8 +420,8 @@
 		21A38EE312EA864400CEB5F0 /* MakeDefault.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = MakeDefault.tiff; path = Images/MakeDefault.tiff; sourceTree = "<group>"; };
 		21A3913812EB4C2F00CEB5F0 /* Spaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Spaces.h; sourceTree = "<group>"; };
 		21A3913912EB4C2F00CEB5F0 /* Spaces.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Spaces.m; sourceTree = "<group>"; };
-		21A6E6FB0974204F008436A9 /* LabelsListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LabelsListController.h; sourceTree = "<group>"; };
-		21A6E6FC0974204F008436A9 /* LabelsListController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LabelsListController.m; sourceTree = "<group>"; };
+		21A6E6FB0974204F008436A9 /* NTVLabelsListDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVLabelsListDataSource.h; sourceTree = "<group>"; };
+		21A6E6FC0974204F008436A9 /* NTVLabelsListDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVLabelsListDataSource.m; sourceTree = "<group>"; };
 		21A73DC6099712A8009F8A6C /* WALController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WALController.h; sourceTree = "<group>"; };
 		21A73DC7099712A8009F8A6C /* WALController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WALController.m; sourceTree = "<group>"; };
 		21AD254E110A8BA600B7A985 /* SimplenoteEntryCollector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimplenoteEntryCollector.h; sourceTree = "<group>"; };
@@ -634,6 +635,8 @@
 		DB98BBDC19A9276F00055B14 /* NTVMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NTVMacros.h; sourceTree = "<group>"; };
 		DB98BBDD19A927C600055B14 /* NTVBrokenMD5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVBrokenMD5.h; sourceTree = "<group>"; };
 		DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVBrokenMD5.m; sourceTree = "<group>"; };
+		DBC9DC7C19ABEC19009E8460 /* NTVNotesListDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVNotesListDataSource.h; sourceTree = "<group>"; };
+		DBC9DC7D19ABEC19009E8460 /* NTVNotesListDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVNotesListDataSource.m; sourceTree = "<group>"; };
 		DBD70CE119A638B50026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/ServicesMenu.strings; sourceTree = "<group>"; };
 		DBD70CF219A639200026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DBD70D2319A6395A0026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -808,6 +811,8 @@
 				93B90E781386018200BEC5FB /* ExternalEditorListController.m */,
 				21A30EA50971D11D0071E9AF /* FastListDataSource.h */,
 				21A30EA60971D11D0071E9AF /* FastListDataSource.m */,
+				DBC9DC7C19ABEC19009E8460 /* NTVNotesListDataSource.h */,
+				DBC9DC7D19ABEC19009E8460 /* NTVNotesListDataSource.m */,
 				2168EC5109E33B0300778D02 /* FrozenNotation.h */,
 				2168EC5209E33B0300778D02 /* FrozenNotation.m */,
 				21D60126098FDB46007440DF /* GlobalPrefs.h */,
@@ -816,8 +821,8 @@
 				21B1BC351104D20E0004A7D0 /* InvocationRecorder.m */,
 				217D4280096545A000E84749 /* LabelObject.h */,
 				217D4281096545A000E84749 /* LabelObject.m */,
-				21A6E6FB0974204F008436A9 /* LabelsListController.h */,
-				21A6E6FC0974204F008436A9 /* LabelsListController.m */,
+				21A6E6FB0974204F008436A9 /* NTVLabelsListDataSource.h */,
+				21A6E6FC0974204F008436A9 /* NTVLabelsListDataSource.m */,
 				2114C13D0957732800614E74 /* NotationController.h */,
 				2114C13E0957732800614E74 /* NotationController.m */,
 				21B548F9112F307E00E163A1 /* NotationDirectoryManager.h */,
@@ -1533,7 +1538,7 @@
 				219588D20961D7F200972B8C /* LinkingEditor.m in Sources */,
 				217D4282096545A000E84749 /* LabelObject.m in Sources */,
 				21A30EA70971D11D0071E9AF /* FastListDataSource.m in Sources */,
-				21A6E6FD0974204F008436A9 /* LabelsListController.m in Sources */,
+				21A6E6FD0974204F008436A9 /* NTVLabelsListDataSource.m in Sources */,
 				DB30022219A8FCA800FAE64D /* NSArray+NTVFunctional.m in Sources */,
 				212B84620978422300F3597F /* NSString_NV.m in Sources */,
 				21DC788F097894B600E59B09 /* NSCollection_utils.m in Sources */,
@@ -1579,6 +1584,7 @@
 				21582DC50B73F59B00711663 /* BookmarksController.m in Sources */,
 				21469C8C0BEBA6A10094835F /* TemporaryFileCache.m in Sources */,
 				2182B39A106B2296008641E4 /* RBSplitSubview.m in Sources */,
+				DBC9DC7E19ABEC19009E8460 /* NTVNotesListDataSource.m in Sources */,
 				2182B39B106B2296008641E4 /* RBSplitView.m in Sources */,
 				D3EECA00106F66C70023D7F8 /* NTVPasswordGenerator.m in Sources */,
 				21BD2ED110DAF31500BA3DF6 /* LinearDividerShader.m in Sources */,

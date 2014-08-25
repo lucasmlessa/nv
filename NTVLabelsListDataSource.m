@@ -1,5 +1,5 @@
 //
-//  LabelsListController.m
+//  NTVLabelsListDataSource.m
 //  Notation
 //
 //  Created by Zachary Schneirov on 1/10/06.
@@ -21,7 +21,7 @@
     along with Notational Velocity.  If not, see <http://www.gnu.org/licenses/>. */
 
 
-#import "LabelsListController.h"
+#import "NTVLabelsListDataSource.h"
 #import "LabelObject.h"
 #import "NoteObject.h"
 #import "GlobalPrefs.h"
@@ -29,7 +29,7 @@
 #import "NSCollection_utils.h"
 #import "NotesTableView.h"
 
-@implementation LabelsListController
+@implementation NTVLabelsListDataSource
 
 - (id)init {
 	self = [super init];

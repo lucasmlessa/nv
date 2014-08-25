@@ -17,7 +17,7 @@
 
 #import "NotesTableView.h"
 #import "AppController_Importing.h"
-#import "FastListDataSource.h"
+#import "NTVNotesListDataSource.h"
 #import "NoteAttributeColumn.h"
 #import "ExternalEditorListController.h"
 #import "GlobalPrefs.h"

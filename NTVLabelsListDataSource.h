@@ -1,5 +1,5 @@
 //
-//  LabelsListController.h
+//  NTVLabelsListDataSource.h
 //  Notation
 //
 //  Created by Zachary Schneirov on 1/10/06.
@@ -27,7 +27,7 @@
 @class NoteObject;
 @class LabelObject;
 
-@interface LabelsListController : FastListDataSource {
+@interface NTVLabelsListDataSource : FastListDataSource {
 	NSCountedSet *allLabels, *filteredLabels;
 	NSMutableDictionary *labelImages;
 	unsigned *removeIndicies;

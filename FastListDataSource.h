@@ -20,7 +20,7 @@
 
 @class NoteAttributeColumn;
 
-@interface FastListDataSource : NSObject {
+@interface FastListDataSource : NSObject <NSTableViewDataSource> {
 	id *objects;
     NSUInteger count;
 }
@@ -36,11 +36,6 @@
 
 - (void)sortStableUsingComparator:(NSComparator)compare;
 - (void)sortStableUsingFunction:(NSInteger (*)(id *, id *))compare;
-
-- (void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject 
-   forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex;
-- (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex;
-- (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView;
 
 @end
 

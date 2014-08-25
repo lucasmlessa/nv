@@ -53,9 +53,9 @@
 	
 	allNotes = [[NSMutableArray alloc] init]; //<--the authoritative list of all memory-accessible notes
 	deletedNotes = [[NSMutableSet alloc] init];
-	labelsListController = [[LabelsListController alloc] init];
+	labelsListController = [[NTVLabelsListDataSource alloc] init];
 	prefsController = [GlobalPrefs defaultPrefs];
-	notesListDataSource = [[FastListDataSource alloc] init];
+	notesListDataSource = [[NTVNotesListDataSource alloc] init];
 	deletionManager = [[DeletionManager alloc] initWithNotationController:self];
 	
 	manglingString = currentFilterStr = NULL;

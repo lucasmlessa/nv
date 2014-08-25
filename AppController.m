@@ -202,9 +202,7 @@ BOOL splitViewAwoke;
 	[notesTableView setDelegate:self];
 	[field setDelegate:self];
 	[textView setDelegate:self];
-    
-	//set up temporary FastListDataSource containing false visible notes
-    
+        
 	//this will not make a difference
 	[window useOptimizedDrawing:YES];
 	

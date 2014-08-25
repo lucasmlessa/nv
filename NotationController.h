@@ -17,8 +17,8 @@
 
 
 #import <Cocoa/Cocoa.h>
-#import "FastListDataSource.h"
-#import "LabelsListController.h"
+#import "NTVNotesListDataSource.h"
+#import "NTVLabelsListDataSource.h"
 #import "WALController.h"
 
 #import <CoreServices/CoreServices.h>
@@ -47,8 +47,8 @@ typedef struct _NoteCatalogEntry {
 
 @interface NotationController : NSObject {
     NSMutableArray *allNotes;
-    FastListDataSource *notesListDataSource;
-    LabelsListController *labelsListController;
+    NTVNotesListDataSource *notesListDataSource;
+    NTVLabelsListDataSource *labelsListController;
 	GlobalPrefs *prefsController;
 	SyncSessionController *syncSessionController;
 	DeletionManager *deletionManager;

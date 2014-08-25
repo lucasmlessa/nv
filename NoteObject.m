@@ -955,7 +955,7 @@ id(^const NTVNoteDateCreatedStringGetter)(NotesTableView *, NoteObject *, NSInte
 }
 
 - (void)disconnectLabels {
-	//when removing this note from NotationController, other LabelObjects as well as LabelsListController should know not to list it
+	//when removing this note from NotationController, other LabelObjects as well as NTVLabelsListDataSource should know not to list it
 	if (delegate) {
 		[delegate note:self didRemoveLabelSet:labelSet];
 		[labelSet autorelease];
@@ -1032,7 +1032,7 @@ id(^const NTVNoteDateCreatedStringGetter)(NotesTableView *, NoteObject *, NSInte
 
 - (void)_drawLabelBlocksInRect:(NSRect)aRect rightAlign:(BOOL)onRight highlighted:(BOOL)isHighlighted getSizeOnly:(NSSize*)reqSize {
 	//used primarily by UnifiedCell, but also by LabelColumnCell, as well as to determine the width of all label-block-images for this note
-	//iterate over words in orderedLabelTitles, retrieving images via -[LabelsListController cachedLabelImageForWord:highlighted:]
+	//iterate over words in orderedLabelTitles, retrieving images via -[NTVLabelsListDataSource cachedLabelImageForWord:highlighted:]
 	//if right-align is enabled, then the label-images are queued on the first pass and drawn in reverse on the second
 	
 	CGFloat totalWidth = 0.0, height = 0.0;
