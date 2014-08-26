@@ -20,6 +20,19 @@
 
 @class NoteAttributeColumn;
 
+/// return type is @c NSString or @c NSAttributedString, satisifying @c NSTableDataSource otherwise
+typedef id(^NTVColumnAttributeGetter)(NSTableView *tv, id object, NSInteger row);
+typedef void(^NTVColumnAttributeSetter)(NSTableView *tv, id attribute, id object, NSInteger row);
+
+@protocol NTVAttributeColumn <NSObject>
+
+@property (nonatomic, copy) NTVColumnAttributeGetter attributeGetter;
+@property (nonatomic, copy) NTVColumnAttributeSetter attributeSetter;
+@property (nonatomic, copy) NSComparator comparator;
+@property (nonatomic, copy) NSComparator secondaryComparator;
+
+@end
+
 @interface FastListDataSource : NSObject <NSTableViewDataSource> {
 	id *objects;
     NSUInteger count;
@@ -38,10 +51,3 @@
 - (void)sortStableUsingFunction:(NSInteger (*)(id *, id *))compare;
 
 @end
-
-@interface NSObject (FastListDataSourceColumnEditing)
-
-- (SEL)attributeSetterForColumn:(NoteAttributeColumn*)col;
-
-@end
-

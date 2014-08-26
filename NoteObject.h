@@ -123,15 +123,18 @@ extern NSComparator const NTVNoteCompareFileSize;
 #define DefColAttrAccessor(__FName, __IVar) force_inline id __FName(NotesTableView *tv, NoteObject *note, NSInteger row) { return note->__IVar; }
 #define DefModelAttrAccessor(__FName, __IVar) force_inline typeof (((NoteObject *)0)->__IVar) __FName(NoteObject *note) { return note->__IVar; }
 
-extern NTVNoteAttributeGetter const NTVNoteUnifiedCellGetter;
-extern NTVNoteAttributeGetter const NTVNoteUnifiedCellSingleLineGetter;
-extern NTVNoteAttributeGetter const NTVNoteTableTitleGetter;
-extern NTVNoteAttributeGetter const NTVNoteHighlightedTableTitleGetter;
-extern NTVNoteAttributeGetter const NTVNoteTitleGetter;
+extern NTVColumnAttributeGetter const NTVNoteUnifiedCellGetter;
+extern NTVColumnAttributeGetter const NTVNoteUnifiedCellSingleLineGetter;
+extern NTVColumnAttributeGetter const NTVNoteTableTitleGetter;
+extern NTVColumnAttributeGetter const NTVNoteHighlightedTableTitleGetter;
+extern NTVColumnAttributeGetter const NTVNoteTitleGetter;
 
-extern NTVNoteAttributeGetter const NTVNoteLabelCellGetter;
-extern NTVNoteAttributeGetter const NTVNoteDateModifiedStringGetter;
-extern NTVNoteAttributeGetter const NTVNoteDateCreatedStringGetter;
+extern NTVColumnAttributeGetter const NTVNoteLabelCellGetter;
+extern NTVColumnAttributeGetter const NTVNoteDateModifiedStringGetter;
+extern NTVColumnAttributeGetter const NTVNoteDateCreatedStringGetter;
+
+extern NTVColumnAttributeSetter const NTVNoteTitleSetter;
+extern NTVColumnAttributeSetter const NTVNoteLabelCellSetter;
 
 	void resetFoundPtrsForNote(NoteObject *note);
 	BOOL noteContainsUTF8String(NoteObject *note, NoteFilterContext *context);

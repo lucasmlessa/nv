@@ -152,7 +152,7 @@ NSAttributedString *AttributedStringForSelection(NSAttributedString *str) {
 			showDateCreated = YES;
 		}
 
-		NTVNoteAttributeGetter dateGetter = showDateCreated ? NTVNoteDateCreatedStringGetter : NTVNoteDateModifiedStringGetter;
+		NTVColumnAttributeGetter dateGetter = showDateCreated ? NTVNoteDateCreatedStringGetter : NTVNoteDateModifiedStringGetter;
 		NSString *dateStr = dateGetter(tv, noteObject, NSNotFound);
         CGFloat dateLength=70.0;
         if (dateStr.length>8) {

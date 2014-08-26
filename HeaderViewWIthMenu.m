@@ -92,7 +92,9 @@
 		NoteAttributeColumn *col = [[self tableView] tableColumns][i];
 		if ((originalResizingMask = [col resizingMask]) == NSTableColumnUserResizingMask) {
 			[col setResizingMask: NSTableColumnAutoresizingMask | NSTableColumnUserResizingMask];
-			[col performSelector:@selector(setResizingMaskNumber:) withObject:@(originalResizingMask) afterDelay:0];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				col.resizingMask = originalResizingMask;
+			});
 		}
 	}
     

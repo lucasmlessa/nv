@@ -13,28 +13,12 @@
 
 
 #import <Cocoa/Cocoa.h>
+#import "FastListDataSource.h"
 
-@class NotesTableView;
-
-
-/// return type is @c NSString or @c NSAttributedString, satisifying @c NSTableDataSource otherwise
-typedef id(^NTVNoteAttributeGetter)(NotesTableView *tv, id object, NSInteger row);
-
-@interface NoteAttributeColumn : NSTableColumn {
-	SEL mutateObjectSelector;
-	CGFloat absoluteMinimumWidth;
-}
+@interface NoteAttributeColumn : NSTableColumn <NTVAttributeColumn>
 
 + (NSDictionary*)standardDictionary;
-SEL columnAttributeMutator(NoteAttributeColumn *col);
-- (void)setMutatingSelector:(SEL)selector;
-id columnAttributeForObject(NotesTableView *tv, NoteAttributeColumn *col, id object, NSInteger row);
+
 - (void)updateWidthForHighlight;
-
-@property (nonatomic, copy) NSComparator comparator;
-@property (nonatomic, copy) NSComparator secondaryComparator;
-@property (nonatomic, copy) NTVNoteAttributeGetter attributeGetter;
-
-- (void)setResizingMaskNumber:(NSNumber*)resizingMaskNumber;
 
 @end

@@ -11,66 +11,38 @@
 
 
 #import "NoteAttributeColumn.h"
-#import "NotesTableView.h"
 
-/*
-@implementation NoteTableHeaderCell
+@interface NoteAttributeColumn ()
 
-- (NSRect)drawingRectForBounds:(NSRect)theRect {
-	return NSInsetRect(theRect, 6.0f, 0.0);
-}
+@property (nonatomic, readonly) CGFloat absoluteMinimumWidth;
 
 @end
-*/
+
 @implementation NoteAttributeColumn
+
+@synthesize attributeGetter = _attributeGetter;
+@synthesize attributeSetter = _attributeSetter;
+@synthesize comparator = _comparator;
+@synthesize secondaryComparator = _secondaryComparator;
 
 - (id)initWithIdentifier:(id)anObject {
 	self = [super initWithIdentifier:anObject];
 	if (!self) { return nil; }
 
-	absoluteMinimumWidth = [anObject sizeWithAttributes:[NoteAttributeColumn standardDictionary]].width + 5;
-	[self setMinWidth:absoluteMinimumWidth];
+	_absoluteMinimumWidth = [anObject sizeWithAttributes:[NoteAttributeColumn standardDictionary]].width + 5;
+	[self setMinWidth:_absoluteMinimumWidth];
 
 	return self;
 }
 
-+ (NSDictionary*)standardDictionary {
-	static NSDictionary *standardDictionary = nil;
-	if (!standardDictionary) {
-		standardDictionary = [@{
-			NSFontAttributeName: [NSFont systemFontOfSize:[NSFont smallSystemFontSize]]
-		} retain];
-	}
-
-	return standardDictionary;
-}
-
-- (void)sizeToFit{
-    NSLog(@"tablecolumn size to fit");
-    [super sizeToFit];
++ (NSDictionary *)standardDictionary {
+	return @{
+		NSFontAttributeName: [NSFont systemFontOfSize:NSFont.smallSystemFontSize]
+	};
 }
 
 - (void)updateWidthForHighlight {
-	[self setMinWidth:absoluteMinimumWidth + ([[self tableView] highlightedTableColumn] == self ? 10 : 0)];
-  
-}
-
-SEL columnAttributeMutator(NoteAttributeColumn *col) {
-	return col->mutateObjectSelector;
-}
-
-- (void)setMutatingSelector:(SEL)selector {
-	mutateObjectSelector = selector;
-}
-
-id columnAttributeForObject(NotesTableView *tv, NoteAttributeColumn *col, id object, NSInteger row) {
-	NTVNoteAttributeGetter getter = col.attributeGetter;
-	if (!getter) { return NULL; }
-	return getter(tv, object, row);
-}
-
-- (void)setResizingMaskNumber:(NSNumber*)resizingMaskNumber {
-	[self setResizingMask:[resizingMaskNumber unsignedIntValue]];
+	[self setMinWidth:_absoluteMinimumWidth + ([[self tableView] highlightedTableColumn] == self ? 10 : 0)];
 }
 
 @end

@@ -70,34 +70,52 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	NSArray *columnsToDisplay = [globalPrefs visibleTableColumns];
 	allColumns = [[NSMutableArray alloc] initWithCapacity:4];
 	allColsDict = [[NSMutableDictionary alloc] initWithCapacity:4];
-	
-	NTVNoteAttributeGetter titleGetter = [globalPrefs horizontalLayout] ?
-	([globalPrefs tableColumnsShowPreview] ? NTVNoteUnifiedCellGetter : NTVNoteUnifiedCellSingleLineGetter):
-	([globalPrefs tableColumnsShowPreview] ? NTVNoteTableTitleGetter : NTVNoteTitleGetter );
 
-	NSArray *colIdentifiers = @[ NoteTitleColumnString, NoteLabelsColumnString, NoteDateModifiedColumnString, NoteDateCreatedColumnString ];
-	NSArray *colMutators = @[ NSStringFromSelector(@selector(setTitleString:)), NSStringFromSelector(@selector(setLabelString:)), NSNull.null, NSNull.null ];
-	NSArray *attributeGetters = @[ [[titleGetter copy] autorelease], NTVNoteLabelCellGetter, NTVNoteDateModifiedStringGetter, NTVNoteDateCreatedStringGetter ];
-	NSArray *colComparators = @[ NTVNoteCompareTitle, NTVNoteCompareLabelString, NTVNoteCompareDateModified, NTVNoteCompareDateCreated ];
-	NSArray *colComparatorsAlt = @[ NSNull.null, NTVNoteCompareTitle, NTVNoteCompareTitle, NTVNoteCompareTitle ];
+	NTVColumnAttributeGetter titleGetter = [[^(NSTableView *tv, id object, NSInteger row){
+		if ([globalPrefs horizontalLayout]) {
+			if ([globalPrefs tableColumnsShowPreview]) {
+				return NTVNoteUnifiedCellGetter(tv, object, row);
+			}
+			return NTVNoteUnifiedCellSingleLineGetter(tv, object, row);
+		}
+
+		if ([globalPrefs tableColumnsShowPreview]) {
+			return NTVNoteTableTitleGetter(tv, object, row);
+		}
+		return NTVNoteTitleGetter(tv, object, row);
+	} copy] autorelease];
+
+	NTVColumnAttributeSetter titleSetter = [[^(NSTableView *tv, id attribute, NoteObject *object, NSInteger row){
+		BOOL isLabel = ([globalPrefs horizontalLayout] && ([tv isKindOfClass:NotesTableView.class] ? [(NotesTableView *)tv lastEventActivatedTagEdit] : NO));
+		if (isLabel) {
+			NTVNoteLabelCellSetter(tv, attribute, object, row);
+		} else {
+			NTVNoteTitleSetter(tv, attribute, object, row);
+		}
+	} copy] autorelease];
+
+	NSArray *colIdentifiers		= @[ NoteTitleColumnString, NoteLabelsColumnString, NoteDateModifiedColumnString, NoteDateCreatedColumnString ];
+	NSArray *attributeSetters	= @[ titleSetter, NTVNoteLabelCellSetter, NSNull.null, NSNull.null ];
+	NSArray *attributeGetters	= @[ titleGetter, NTVNoteLabelCellGetter, NTVNoteDateModifiedStringGetter, NTVNoteDateCreatedStringGetter ];
+	NSArray *colComparators		= @[ NTVNoteCompareTitle, NTVNoteCompareLabelString, NTVNoteCompareDateModified, NTVNoteCompareDateCreated ];
+	NSArray *colComparatorsAlt	= @[ NSNull.null, NTVNoteCompareTitle, NTVNoteCompareTitle, NTVNoteCompareTitle ];
+
+	static id(^const notNull)(id) = ^(id value){
+		return [value isEqual:NSNull.null] ? nil : value;
+	};
 
 	[colIdentifiers enumerateObjectsUsingBlock:^(NSString *identifier, NSUInteger i, BOOL *stop) {
+		NTVColumnAttributeSetter setter = notNull(attributeSetters[i]);
+
 		NoteAttributeColumn *column = [[NoteAttributeColumn alloc] initWithIdentifier:identifier];
-		[column setEditable:![colMutators[i] isEqual:NSNull.null]];
+		[column setEditable:!!setter];
 		[column setHeaderCell:[[[NotesTableHeaderCell alloc] initTextCell:[[NSBundle mainBundle] localizedStringForKey:identifier value:@"" table:nil]] autorelease]];
-
-		NSString *selectorString = colMutators[i];
-		if (![selectorString isEqual:NSNull.null]) {
-			[column setMutatingSelector:NSSelectorFromString(selectorString)];
-		}
-		column.attributeGetter = attributeGetters[i];
-		column.comparator = colComparators[i];
-		NSComparator alt = colComparatorsAlt[i];
-		if (![alt isEqual:NSNull.null]) {
-			column.secondaryComparator = alt;
-		}
-
 		[column setResizingMask:NSTableColumnUserResizingMask];
+
+		column.attributeSetter = setter;
+		column.attributeGetter = notNull(attributeGetters[i]);
+		column.comparator = notNull(colComparators[i]);
+		column.secondaryComparator = notNull(colComparatorsAlt[i]);
 
 		allColsDict[identifier] = column;
 		[allColumns addObject:column];
@@ -1138,13 +1156,6 @@ enum { kNext_Tag = 'j', kPrev_Tag = 'k' };
 	return NO;
 }
 
-- (SEL)attributeSetterForColumn:(NoteAttributeColumn*)col {
-	if ([globalPrefs horizontalLayout] && [self columnWithIdentifier:[col identifier]] == 0) {
-		return lastEventActivatedTagEdit ? @selector(setLabelString:) : @selector(setTitleString:);
-	}
-	return columnAttributeMutator(col);
-}
-
 - (BOOL)lastEventActivatedTagEdit {
 	return lastEventActivatedTagEdit;
 }
@@ -1206,11 +1217,22 @@ enum { kNext_Tag = 'j', kPrev_Tag = 'k' };
 
 - (void)textDidChange:(NSNotification *)aNotification {
 	NSInteger col = [self editedColumn];
-	if (col > -1 && [self attributeSetterForColumn:[self tableColumns][col]] == @selector(setLabelString:)) {
+
+	/*if ([globalPrefs horizontalLayout] && [self columnWithIdentifier:[col identifier]] == 0) {
+		return lastEventActivatedTagEdit ? @selector(setLabelString:) : @selector(setTitleString:);
+	}
+	return columnAttributeMutator(col);*/
+
+	if (col <= -1) {
+		return;
+	}
+
+	// TODO this is a presumptuous hack
+	if (([globalPrefs horizontalLayout] && col == 0 && lastEventActivatedTagEdit) || col == 1) {
 		//text changed while editing tags; autocomplete!
-		
+
 		NSTextView *editor = [aNotification object];
-		
+
 		if (!isAutocompleting && !wasDeleting) {
 			isAutocompleting = YES;
 			[editor complete:self];

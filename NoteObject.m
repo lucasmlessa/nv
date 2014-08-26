@@ -255,7 +255,7 @@ DefModelAttrAccessor(prefixParentsOfNote, prefixParentNotes)
 	return dateModifiedString;
 }
 
-id(^const NTVNoteUnifiedCellGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+id(^const NTVNoteUnifiedCellGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	UnifiedCell *cell = [[tv tableColumns][0] dataCellForRow:row];
 	[cell setNoteObject:note];
 	[cell setPreviewIsHidden:NO];
@@ -265,7 +265,7 @@ id(^const NTVNoteUnifiedCellGetter)(NotesTableView *, NoteObject *, NSInteger) =
 	id obj = note.tableTitleString ? (rowSelected ? AttributedStringForSelection(note.tableTitleString) : note.tableTitleString) : note.title;
 	return obj;
 };
-id(^const NTVNoteUnifiedCellSingleLineGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+id(^const NTVNoteUnifiedCellSingleLineGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	id obj = note.tableTitleString ?: note.title;
 
 	UnifiedCell *cell = [[tv tableColumns][0] dataCellForRow:row];
@@ -274,10 +274,10 @@ id(^const NTVNoteUnifiedCellSingleLineGetter)(NotesTableView *, NoteObject *, NS
 
 	return obj;
 };
-id(^const NTVNoteTableTitleGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+id(^const NTVNoteTableTitleGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	return note.tableTitle;
 };
-id(^const NTVNoteHighlightedTableTitleGetter)(NotesTableView *, NoteObject *, NSInteger) = ^id(NotesTableView *tv, NoteObject *note, NSInteger row){
+id(^const NTVNoteHighlightedTableTitleGetter)(NSTableView *, NoteObject *, NSInteger) = ^id(NSTableView *tv, NoteObject *note, NSInteger row){
 	if (note.tableTitleString) {
 		if ([tv isRowSelected:row]) {
 			return [note.tableTitleString string];
@@ -286,26 +286,31 @@ id(^const NTVNoteHighlightedTableTitleGetter)(NotesTableView *, NoteObject *, NS
 	}
 	return note.title;
 };
-id(^const NTVNoteTitleGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+id(^const NTVNoteTitleGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	return note.title;
 };
 
 
-id(^const NTVNoteLabelCellGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+id(^const NTVNoteLabelCellGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	LabelColumnCell *cell = [[tv tableColumnWithIdentifier:NoteLabelsColumnString] dataCellForRow:row];
 	[cell setNoteObject:note];
 
 	return labelsOfNote(note);
 };
-id(^const NTVNoteDateModifiedStringGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+id(^const NTVNoteDateModifiedStringGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	return note.dateModifiedString;
 };
-id(^const NTVNoteDateCreatedStringGetter)(NotesTableView *, NoteObject *, NSInteger) = ^(NotesTableView *tv, NoteObject *note, NSInteger row){
+id(^const NTVNoteDateCreatedStringGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	return note.dateCreatedString;
 };
 
+void(^const NTVNoteTitleSetter)(NSTableView *, NSString *, NoteObject *, NSInteger) = ^(NSTableView *tv, NSString *title, NoteObject *note, NSInteger row){
+	[note setTitleString:title];
+};
 
-
+void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSInteger) = ^(NSTableView *tv, NSString *string, NoteObject *note, NSInteger row){
+	[note setLabelString:string];
+};
 
 //make notationcontroller should send setDelegate: and setLabelString: (if necessary) to each note when unarchiving this way
 

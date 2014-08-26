@@ -128,19 +128,29 @@
 	mergesort((void *)objects, (size_t)count, sizeof(id), (int (*)(const void *, const void *))compare);
 }
 
-- (void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject 
-   forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex {
-	
-	//allow the tableview to override the selector destination for this object value
-	SEL colAttributeMutator = [(NotesTableView*)aTableView attributeSetterForColumn:(NoteAttributeColumn*)aTableColumn];
-	
-	[objects[rowIndex] performSelector:colAttributeMutator ? colAttributeMutator : columnAttributeMutator((NoteAttributeColumn*)aTableColumn) withObject:anObject];
+- (void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject forTableColumn:(NSTableColumn *)regularColumn row:(NSInteger)rowIndex {
+
+	NSAssert([regularColumn conformsToProtocol:@protocol(NTVAttributeColumn)], @"Wrong column type");
+	id <NTVAttributeColumn> aTableColumn = (id <NTVAttributeColumn>)regularColumn;
+
+	NTVColumnAttributeSetter setter = aTableColumn.attributeSetter;
+	if (!setter) { return; }
+
+	id object = objects[rowIndex];
+
+	return setter(aTableView, anObject, object, rowIndex);
 }
 
-
-- (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex {
+- (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)regularColumn row:(NSInteger)rowIndex {
+	NSAssert([regularColumn conformsToProtocol:@protocol(NTVAttributeColumn)], @"Wrong column type");
+	id <NTVAttributeColumn> aTableColumn = (id <NTVAttributeColumn>)regularColumn;
 	
-	return columnAttributeForObject((NotesTableView*)aTableView, (NoteAttributeColumn*)aTableColumn, objects[rowIndex], rowIndex);
+	NTVColumnAttributeGetter getter = aTableColumn.attributeGetter;
+	if (!getter) { return NULL; }
+
+	id object = objects[rowIndex];
+
+	return getter(aTableView, object, rowIndex);
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {
