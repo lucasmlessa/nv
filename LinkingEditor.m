@@ -67,7 +67,7 @@ CGFloat _perceptualDarkness(NSColor*a);
     [self setContinuousSpellCheckingEnabled:[prefsController checkSpellingAsYouType]];
 	[self setAutomaticTextReplacementEnabled:[prefsController useTextReplacement]];
     
-    [prefsController registerWithTarget:self forChangesInSettings:
+	[prefsController registerTarget:self forChangesInSettings:
 	 @selector(setCheckSpellingAsYouType:sender:),
 	 @selector(setUseTextReplacement:sender:),
 	 @selector(setNoteBodyFont:sender:),
@@ -94,19 +94,17 @@ CGFloat _perceptualDarkness(NSColor*a);
 	outletObjectAwoke(self);
 }
 
-- (void)settingChangedForSelectorString:(NSString*)selectorString {
-    
-    if ([selectorString isEqualToString:SEL_STR(setCheckSpellingAsYouType:sender:)]) {
+- (void)settingChangedForSelector:(SEL)selector {
+	if (sel_isEqual(selector, @selector(setCheckSpellingAsYouType:sender:))) {
 		[self setContinuousSpellCheckingEnabled:[prefsController checkSpellingAsYouType]];
-	} else if ([selectorString isEqualToString:SEL_STR(setUseTextReplacement:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setUseTextReplacement:sender:))) {
 		[self setAutomaticTextReplacementEnabled:[prefsController useTextReplacement]];
-	} else if ([selectorString isEqualToString:SEL_STR(setNoteBodyFont:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setNoteBodyFont:sender:))) {
 		[self setTypingAttributes:[prefsController noteBodyAttributes]];
-	} else if ([selectorString isEqualToString:SEL_STR(setMakeURLsClickable:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setMakeURLsClickable:sender:))) {
 		[self setLinkTextAttributes:[self preferredLinkAttributes]];
-	} else if ([selectorString isEqualToString:SEL_STR(setSearchTermHighlightColor:sender:)] || 
-			   [selectorString isEqualToString:SEL_STR(setShouldHighlightSearchTerms:sender:)]) {
-		
+	} else if (sel_isEqual(selector, @selector(setSearchTermHighlightColor:sender:)) ||
+			   sel_isEqual(selector, @selector(setShouldHighlightSearchTerms:sender:))) {
 		if (![prefsController highlightSearchTerms]) {
 			[self removeHighlightedTerms];
 		} else {

@@ -19,6 +19,7 @@
 
 #if defined(__OBJC__) && __OBJC__
 #import <Cocoa/Cocoa.h>
+#import <objc/runtime.h>
 #import "NTVMacros.h"
 #import "NTVMath.h"
 #endif

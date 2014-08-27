@@ -17,6 +17,7 @@
 #import "NotationController.h"
 #import "NotesTableView.h"
 #import "Spaces.h"
+#import "GlobalPrefs.h"
 
 @class LinkingEditor;
 @class EmptyView;
@@ -52,7 +53,7 @@
 // what a hack
 extern void outletObjectAwoke(id sender);
 
-@interface AppController : NSObject <NSApplicationDelegate, NSToolbarDelegate, NSTableViewDelegate, NSWindowDelegate, NSTextFieldDelegate, NSTextViewDelegate>
+@interface AppController : NSObject <NSApplicationDelegate, NSToolbarDelegate, NSTableViewDelegate, NSWindowDelegate, NSTextFieldDelegate, NSTextViewDelegate, GlobalPrefsObserver>
 {
 	IBOutlet NSMenuItem *fsMenuItem;
 	BOOL wasVert;

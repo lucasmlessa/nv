@@ -18,8 +18,10 @@
 	if (!self) { return nil; }
 
 	managesTextWidth=[[GlobalPrefs defaultPrefs] managesTextWidthInWindow];
-	[[GlobalPrefs defaultPrefs] registerForSettingChange:@selector(setMaxNoteBodyWidth:sender:) withTarget:self];
-	[[GlobalPrefs defaultPrefs] registerForSettingChange:@selector(setManagesTextWidthInWindow:sender:) withTarget:self];
+	[[GlobalPrefs defaultPrefs] registerTarget:self forChangesInSettings:
+        @selector(setMaxNoteBodyWidth:sender:),
+        @selector(setManagesTextWidthInWindow:sender:),
+        NULL];
 
 	return self;
 }
@@ -83,12 +85,13 @@
     return NO;
 }
 
-- (void)settingChangedForSelectorString:(NSString*)selectorString{
-    if (([selectorString isEqualToString:SEL_STR(setMaxNoteBodyWidth:sender:)])||([selectorString isEqualToString:SEL_STR(setManagesTextWidthInWindow:sender:)])){
-        if ([selectorString isEqualToString:SEL_STR(setManagesTextWidthInWindow:sender:)]) {
+- (void)settingChangedForSelector:(SEL)selector {
+    if (sel_isEqual(selector, @selector(setMaxNoteBodyWidth:sender:)) || sel_isEqual(selector, @selector(setManagesTextWidthInWindow:sender:))) {
+        if (sel_isEqual(selector, @selector(setManagesTextWidthInWindow:sender:))) {
             managesTextWidth=[[GlobalPrefs defaultPrefs] managesTextWidthInWindow];
             [[self documentView] setManagesTextWidth:managesTextWidth];
         }
+		
         if (!managesTextWidth){
             [[self documentView]resetInset];
         }else if(![self clipWidthSettingChanged:[self frame]]) {

@@ -65,7 +65,7 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 	disableEncryptionString = NSLocalizedString(@"Turn Off Note Encryption...",nil);
 	enableEncryptionString = NSLocalizedString(@"Turn On Note Encryption...",nil);
 
-	[[GlobalPrefs defaultPrefs] registerForSettingChange:@selector(setNotationPrefs:sender:) withTarget:self];
+	[[GlobalPrefs defaultPrefs] registerTarget:self forChangesInSettings:@selector(setNotationPrefs:sender:), NULL];
 
 	return self;
 }
@@ -118,10 +118,8 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 	}
 }
 
-- (void)settingChangedForSelectorString:(NSString*)selectorString {
-	
-	
-	if ([selectorString isEqualToString:SEL_STR(setNotationPrefs:sender:)]) {
+- (void)settingChangedForSelector:(SEL)selector {
+	if (sel_isEqual(selector, @selector(setNotationPrefs:sender:))) {
 		
 		//force these objects to re-init with the new notationprefs
 		[changer release]; changer = nil;

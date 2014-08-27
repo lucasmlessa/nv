@@ -9,8 +9,6 @@
 #ifndef NTV_MACROS
 #define NTV_MACROS
 
-#import <Foundation/Foundation.h>
-
 @class AppController;
 
 #if !defined(NTV_ALWAYS_INLINE)

@@ -16,11 +16,10 @@
     along with Notational Velocity.  If not, see <http://www.gnu.org/licenses/>. */
 
 
-#import <Cocoa/Cocoa.h>
+#import "GlobalPrefs.h"
 
 @class HeaderViewWithMenu;
 @class NoteAttributeColumn;
-@class GlobalPrefs;
 
 typedef struct _ViewLocationContext {
 	BOOL pivotRowWasEdge;
@@ -29,7 +28,7 @@ typedef struct _ViewLocationContext {
 } ViewLocationContext;
 
 
-@interface NotesTableView : NSTableView {
+@interface NotesTableView : NSTableView <GlobalPrefsObserver> {
 	NSTimer *modifierTimer;
 	IBOutlet NSTextField *controlField;
 	NSMutableArray *allColumns;

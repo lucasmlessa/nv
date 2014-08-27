@@ -5,11 +5,11 @@
 //  Created by elasticthreads on 8/15/11.
 //
 
-#import <AppKit/AppKit.h>
+#import "GlobalPrefs.h"
 
 #define kTextMargins 50.0
 
-@interface ETClipView : NSClipView{
+@interface ETClipView : NSClipView <GlobalPrefsObserver> {
     BOOL managesTextWidth;
 }
 

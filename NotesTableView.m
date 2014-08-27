@@ -182,9 +182,12 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 }
 
 - (void)awakeFromNib {
-    [globalPrefs registerWithTarget:self forChangesInSettings:
-            @selector(setTableFontSize:sender:),
-            @selector(setHorizontalLayout:sender:), @selector(setShowGrid:sender:), @selector(setAlternatingRows:sender:), nil];
+	[globalPrefs registerTarget:self forChangesInSettings:
+		@selector(setTableFontSize:sender:),
+		@selector(setHorizontalLayout:sender:),
+		@selector(setShowGrid:sender:),
+		@selector(setAlternatingRows:sender:),
+		NULL];
 
 	NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
 	
@@ -320,13 +323,12 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	//[self setGridStyleMask:horiz ? NSTableViewSolidHorizontalGridLineMask : NSTableViewGridNone];
 }
 
-- (void)settingChangedForSelectorString:(NSString*)selectorString {
-	
-	if ([selectorString isEqualToString:SEL_STR(setTableFontSize:sender:)]) {
+- (void)settingChangedForSelector:(SEL)selector {
+	if (sel_isEqual(selector, @selector(setTableFontSize:sender:))) {
 		
 		[self _configureAttributesForCurrentLayout];
 		
-	} else if ([selectorString isEqualToString:SEL_STR(setHorizontalLayout:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setHorizontalLayout:sender:))) {
 		
 		[self abortEditing];
 		
@@ -340,8 +342,8 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 		[self updateTitleDereferencorState];
 		
 		viewMenusValid = NO;
-	}else if (([selectorString isEqualToString:SEL_STR(setShowGrid:sender:)])||([selectorString isEqualToString:SEL_STR(setAlternatingRows:sender:)]) ) {
-        if (([selectorString isEqualToString:SEL_STR(setAlternatingRows:sender:)])) {
+	} else if (sel_isEqual(selector, @selector(setShowGrid:sender:)) || sel_isEqual(selector, @selector(setAlternatingRows:sender:))) {
+		if (sel_isEqual(selector, @selector(setAlternatingRows:sender:))) {
             [self setUsesAlternatingRowBackgroundColors:[globalPrefs alternatingRows]];
         }
         [self updateGrid];

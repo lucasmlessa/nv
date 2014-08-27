@@ -12,14 +12,12 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#import <Cocoa/Cocoa.h>
-#import <objc/runtime.h>
+#import "GlobalPrefs.h"
 
 @class NotesTableView;
 @class NoteObject;
-@class GlobalPrefs;
 
-@interface LinkingEditor : NSTextView <NSLayoutManagerDelegate, NSTextFinderClient>
+@interface LinkingEditor : NSTextView <NSLayoutManagerDelegate, NSTextFinderClient, GlobalPrefsObserver>
 {	
     NSTextFinder *textFinder;
     IBOutlet NSTextField *controlField;

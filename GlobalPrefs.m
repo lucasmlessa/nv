@@ -35,8 +35,6 @@
 #import "AppController.h"
 #import "BufferUtils.h"
 
-#define SEND_CALLBACKS() sendCallbacksForGlobalPrefs(self, _cmd, sender)
-
 static NSString *TriedToImportBlorKey = @"TriedToImportBlor";
 static NSString *DirectoryAliasKey = @"DirectoryAlias";
 static NSString *AutoCompleteSearchesKey = @"AutoCompleteSearches";
@@ -106,20 +104,10 @@ NSString *HotKeyAppToFrontName = @"bring Notational Velocity to the foreground";
 
 @implementation GlobalPrefs
 
-static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id originalSender) {
-	
-	if (originalSender != self) {
-		self->runCallbacksIMP(self,
-							  @selector(notifyCallbacksForSelector:excludingSender:),
-							  selector, originalSender);
-	}
-}
-
 - (id)init {
 	self = [super init];
 	if (!self) { return nil; }
 
-	runCallbacksIMP = (void(*)(id, SEL, SEL, id))[self methodForSelector:@selector(notifyCallbacksForSelector:excludingSender:)];
 	selectorObservers = [[NSMutableDictionary alloc] init];
 
 	defaults = [NSUserDefaults standardUserDefaults];
@@ -193,37 +181,32 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 	[super dealloc];
 }
 
-- (void)registerWithTarget:(id)sender forChangesInSettings:(SEL)firstSEL, ... {
+- (void)registerTarget:(id <GlobalPrefsObserver>)sender forChangesInSettings:(SEL)firstSEL, ... {
 	NSAssert(firstSEL != NULL, @"need at least one selector");
 
-	if ([sender respondsToSelector:(@selector(settingChangedForSelectorString:))]) {
-	
-		va_list argList;
-		va_start(argList, firstSEL);
-		SEL aSEL = firstSEL;
-		do {
-			NSString *selectorKey = NSStringFromSelector(aSEL);
-			
-			NSMutableArray *senders = selectorObservers[selectorKey];
-			if (!senders) {
-				senders = [[[NSMutableArray alloc] initWithCapacity:1] autorelease];
-				selectorObservers[selectorKey] = senders;
-			}
-			[senders addObject:sender];
-//            [senders release];
-		} while (( aSEL = va_arg( argList, SEL) ) != nil);
-		va_end(argList);
-		
-	} else {
+	if (![sender conformsToProtocol:@protocol(GlobalPrefsObserver)]) {
 		NSLog(@"%@: target %@ does not respond to callback selector!", NSStringFromSelector(_cmd), [sender description]);
+		return;
 	}
+
+	va_list argList;
+	va_start(argList, firstSEL);
+	SEL aSEL = firstSEL;
+	do {
+		NSString *selectorKey = NSStringFromSelector(aSEL);
+
+		NSHashTable *senders = selectorObservers[selectorKey];
+		if (!senders) {
+			senders = [NSHashTable weakObjectsHashTable];
+			selectorObservers[selectorKey] = senders;
+		}
+
+		[senders addObject:sender];
+	} while ((aSEL = va_arg(argList, SEL)) != NULL);
+	va_end(argList);
 }
 
-- (void)registerForSettingChange:(SEL)selector withTarget:(id)sender {
-	[self registerWithTarget:sender forChangesInSettings:selector, nil];
-}
-
-- (void)unregisterForNotificationsFromSelector:(SEL)selector sender:(id)sender {
+- (void)unregisterForNotificationsFromSelector:(SEL)selector sender:(id <GlobalPrefsObserver>)sender {
 	NSString *selectorKey = NSStringFromSelector(selector);
 	
 	NSMutableArray *senders = selectorObservers[selectorKey];
@@ -238,19 +221,11 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 }
 
 - (void)notifyCallbacksForSelector:(SEL)selector excludingSender:(id)sender {
-	NSArray *observers = nil;
-	id observer = nil;
-	
-	NSString *selectorKey = NSStringFromSelector(selector);
-	
-	if ((observers = selectorObservers[selectorKey])) {
-		unsigned int i;
-		
-		for (i=0; i<[observers count]; i++) {
-			
-			if ((observer = observers[i]) != sender && observer)
-				[observer performSelector:@selector(settingChangedForSelectorString:) withObject:selectorKey];
-		}
+	if ([sender isEqual:self]) { return; }
+
+	for (id <GlobalPrefsObserver> observer in selectorObservers[NSStringFromSelector(selector)]) {
+		if ([observer isEqual:sender]) { continue; }
+		[observer settingChangedForSelector:selector];
 	}
 }
 
@@ -259,8 +234,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 	notationPrefs = [newNotationPrefs retain];
 	
 	[self resolveNoteBodyFontFromNotationPrefsFromSender:sender];
-	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (NotationPrefs*)notationPrefs {
@@ -274,14 +248,14 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setAutoCompleteSearches:(BOOL)value sender:(id)sender {
 	autoCompleteSearches = value;
 	[defaults setBool:value forKey:AutoCompleteSearchesKey];
-	
-	SEND_CALLBACKS();
+
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (void)setTabIndenting:(BOOL)value sender:(id)sender {
     [defaults setBool:value forKey:TabKeyIndentsKey];
-    
-    SEND_CALLBACKS();
+
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)tabKeyIndents {
     return [defaults boolForKey:TabKeyIndentsKey];
@@ -290,7 +264,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setUseTextReplacement:(BOOL)value sender:(id)sender {
     [defaults setBool:value forKey:TextReplacementInNoteBodyKey];
     
-    SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (BOOL)useTextReplacement {
@@ -300,7 +274,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setCheckSpellingAsYouType:(BOOL)value sender:(id)sender {
     [defaults setBool:value forKey:CheckSpellingInNoteBodyKey];
     
-    SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (BOOL)checkSpellingAsYouType {
@@ -310,7 +284,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setConfirmNoteDeletion:(BOOL)value sender:(id)sender {
     [defaults setBool:value forKey:ConfirmNoteDeletionKey];
     
-    SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)confirmNoteDeletion {
     return [defaults boolForKey:ConfirmNoteDeletionKey];
@@ -319,7 +293,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setQuitWhenClosingWindow:(BOOL)value sender:(id)sender {
     [defaults setBool:value forKey:QuitWhenClosingMainWindowKey];
     
-    SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)quitWhenClosingWindow {
     return [defaults boolForKey:QuitWhenClosingMainWindowKey];
@@ -335,7 +309,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 		[defaults setInteger:[aCombo keyCode] forKey:AppActivationKeyCodeKey];
 		[defaults setInteger:[aCombo modifiers] forKey:AppActivationModifiersKey];
 		
-		SEND_CALLBACKS();
+		[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 	}
 }
 
@@ -371,7 +345,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setPastePreservesStyle:(BOOL)value sender:(id)sender {
     [defaults setBool:value forKey:PastePreservesStyleKey];
     
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (BOOL)pastePreservesStyle {
@@ -382,7 +356,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setAutoFormatsDoneTag:(BOOL)value sender:(id)sender {
     [defaults setBool:value forKey:AutoFormatsDoneTagKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)autoFormatsDoneTag {
 	return [defaults boolForKey:AutoFormatsDoneTagKey];
@@ -393,7 +367,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setAutoFormatsListBullets:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:AutoFormatsListBulletsKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (BOOL)autoIndentsNewLines {
@@ -402,13 +376,13 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setAutoIndentsNewLines:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:AutoIndentsNewLinesKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (void)setLinksAutoSuggested:(BOOL)value sender:(id)sender {
     [defaults setBool:value forKey:AutoSuggestLinksKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)linksAutoSuggested {
     return [defaults boolForKey:AutoSuggestLinksKey];
@@ -417,7 +391,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setMakeURLsClickable:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:MakeURLsClickableKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)URLsAreClickable {
 	return [defaults boolForKey:MakeURLsClickableKey];
@@ -426,7 +400,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setRTL:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:RTLKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)rtl {
 	return [defaults boolForKey:RTLKey];
@@ -442,7 +416,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 
 - (void)setUseETScrollbarsOnLion:(BOOL)value sender:(id)sender{
 	[defaults setBool:value forKey:UseETScrollbarsOnLion];
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (BOOL)useETScrollbarsOnLion{
@@ -453,7 +427,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setUseMarkdownImport:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:UseMarkdownImportKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)useMarkdownImport {
 	return [defaults boolForKey:UseMarkdownImportKey];
@@ -461,7 +435,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setUseReadability:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:UseReadabilityKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)useReadability {
 	return [defaults boolForKey:UseReadabilityKey];
@@ -470,7 +444,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setShowGrid:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:ShowGridKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)showGrid {
 	return [defaults boolForKey:ShowGridKey];
@@ -478,7 +452,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setAlternatingRows:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:AlternatingRowsKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)alternatingRows {
 	return [defaults boolForKey:AlternatingRowsKey];
@@ -495,7 +469,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setShouldHighlightSearchTerms:(BOOL)shouldHighlight sender:(id)sender {
 	[defaults setBool:shouldHighlight forKey:HighlightSearchTermsKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (BOOL)highlightSearchTerms {
 	return [defaults boolForKey:HighlightSearchTermsKey];
@@ -509,7 +483,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 		
 		[defaults setObject:[NSArchiver archivedDataWithRootObject:color] forKey:SearchTermHighlightColorKey];
 		
-		SEND_CALLBACKS();
+		[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 	}
 }
 
@@ -557,7 +531,7 @@ static void sendCallbacksForGlobalPrefs(GlobalPrefs* self, SEL selector, id orig
 - (void)setSoftTabs:(BOOL)value sender:(id)sender {
 	[defaults setBool:value forKey:UseSoftTabsKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (BOOL)softTabs {
@@ -592,7 +566,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 			NSLog(@"archived notationPrefs base font does not match current global default font!");
 			[self _setNoteBodyFont:prefsFont];
 			
-			SEND_CALLBACKS();
+			[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 		}
 	}
 }
@@ -626,7 +600,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	if (aFont) {
 		[self _setNoteBodyFont:aFont];
 		
-		SEND_CALLBACKS();
+		[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 	}
 }
 
@@ -727,7 +701,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		
 		[defaults setObject:[NSArchiver archivedDataWithRootObject:aColor] forKey:ForegroundTextColorKey];
 		
-		SEND_CALLBACKS();
+		[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 	}	
 }
 
@@ -748,7 +722,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 
 		[defaults setObject:[NSArchiver archivedDataWithRootObject:aColor] forKey:BackgroundTextColorKey];
 	
-		SEND_CALLBACKS();
+		[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 	}
 }
 
@@ -768,7 +742,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 - (void)setTableColumnsShowPreview:(BOOL)showPreview sender:(id)sender {
 	[defaults setBool:showPreview forKey:TableColumnsHaveBodyPreviewKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (CGFloat)tableFontSize {
@@ -783,7 +757,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 - (void)setTableFontSize:(CGFloat)fontSize sender:(id)sender {
 	[defaults setObject:@(fontSize) forKey:TableFontSizeKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (void)removeTableColumn:(NSString*)columnKey sender:(id)sender {
@@ -792,7 +766,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	
 	[defaults setObject:tableColumns forKey:NoteAttributesVisibleKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 - (void)addTableColumn:(NSString*)columnKey sender:(id)sender {
 	if (![tableColumns containsObject:columnKey]) {
@@ -801,7 +775,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		
 		[defaults setObject:tableColumns forKey:NoteAttributesVisibleKey];
 		
-		SEND_CALLBACKS();
+		[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 	}
 }
 
@@ -836,7 +810,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	[defaults setBool:reversed forKey:TableIsReverseSortedKey];
     [defaults setObject:sortedKey forKey:TableSortColumnKey];
     
-    SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (NSString*)sortedTableColumnKey {
@@ -851,7 +825,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	if ([self horizontalLayout] != value) {
 		[defaults setBool:value forKey:HorizontalLayoutKey];
 		
-		SEND_CALLBACKS();
+		[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 	}
 }
 - (BOOL)horizontalLayout {
@@ -864,7 +838,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 - (void)setLastSelectedPreferencesPane:(NSString*)pane sender:(id)sender {
 	[defaults setObject:pane forKey:LastSelectedPreferencesPaneKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (void)setLastSearchString:(NSString*)string selectedNote:(id<SynchronizedNote>)aNote scrollOffsetForTableView:(NotesTableView*)tv sender:(id)sender {
@@ -883,7 +857,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	double offset = [tv distanceFromRow:[(FastListDataSource*)[tv dataSource] indexOfObjectIdenticalTo:aNote] forVisibleArea:[tv visibleRect]];
 	[defaults setDouble:offset forKey:LastScrollOffsetKey];
 	
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (NSString*)lastSearchString {
@@ -912,7 +886,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 		[defaults setBool:[bookmarksController isVisible] forKey:@"BookmarksVisible"];
 	}
 		
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (BookmarksController*)bookmarksController {
@@ -925,7 +899,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 - (void)setAliasDataForDefaultDirectory:(NSData*)alias sender:(id)sender {
     [defaults setObject:alias forKey:DirectoryAliasKey];
 	
-    SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (NSData*)aliasDataForDefaultDirectory {
@@ -1001,7 +975,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 
 - (void)setManagesTextWidthInWindow:(BOOL)manageIt sender:(id)sender{
     [defaults setBool:manageIt forKey:KeepsMaxTextWidth];
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 - (BOOL)managesTextWidthInWindow{
@@ -1020,7 +994,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 - (void)setMaxNoteBodyWidth:(CGFloat)maxWidth sender:(id)sender{
 	[defaults setObject:@(maxWidth) forKey:NoteBodyMaxWidth];
 //	[defaults synchronize];
-	SEND_CALLBACKS();
+	[self notifyCallbacksForSelector:_cmd excludingSender:sender];
 }
 
 

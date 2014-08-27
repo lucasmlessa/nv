@@ -48,17 +48,17 @@
 		scrollerClass = ETTransparentScroller.class;
     }
 
-	[[GlobalPrefs defaultPrefs] registerForSettingChange:@selector(setUseETScrollbarsOnLion:sender:) withTarget:self];
+	[[GlobalPrefs defaultPrefs] registerTarget:self forChangesInSettings:@selector(setUseETScrollbarsOnLion:sender:), NULL];
 	[self setHorizontalScrollElasticity:NSScrollElasticityNone];
 	[self setVerticalScrollElasticity:NSScrollElasticityAllowed];
 	[self changeUseETScrollbarsOnLion];
 }
 
 
-- (void)settingChangedForSelectorString:(NSString*)selectorString{
-    if ([selectorString isEqualToString:SEL_STR(setUseETScrollbarsOnLion:sender:)]) {
-        [self changeUseETScrollbarsOnLion];
-    }
+- (void)settingChangedForSelector:(SEL)selector {
+	if (sel_isEqual(selector, @selector(setUseETScrollbarsOnLion:sender:))) {
+		[self changeUseETScrollbarsOnLion];
+	}
 }
 
 - (void)changeUseETScrollbarsOnLion{

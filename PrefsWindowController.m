@@ -37,7 +37,7 @@
 	fontPanelWasOpen = NO;
       // remove opacity slider from color pickers -bt
     [[NSColorPanel sharedColorPanel] setShowsAlpha:NO];
-	[prefsController registerWithTarget:self forChangesInSettings:
+	[prefsController registerTarget:self forChangesInSettings:
 		 @selector(resolveNoteBodyFontFromNotationPrefsFromSender:), 
 		 @selector(setCheckSpellingAsYouType:sender:), 
 		 @selector(setConfirmNoteDeletion:sender:), nil];
@@ -252,12 +252,13 @@
 	[prefsController setSoftTabs:!![softTabsButton state] sender:self];
 }
 
-- (void)settingChangedForSelectorString:(NSString*)selectorString {
-    if ([selectorString isEqualToString:SEL_STR(resolveNoteBodyFontFromNotationPrefsFromSender:)]) {
+
+- (void)settingChangedForSelector:(SEL)selector {
+    if (sel_isEqual(selector, @selector(resolveNoteBodyFontFromNotationPrefsFromSender:))) {
 		[self previewNoteBodyFont];
-	} else if ([selectorString isEqualToString:SEL_STR(setCheckSpellingAsYouType:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setCheckSpellingAsYouType:sender:))) {
 		[checkSpellingButton setState:[prefsController checkSpellingAsYouType]];
-	} else if ([selectorString isEqualToString:SEL_STR(setConfirmNoteDeletion:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setConfirmNoteDeletion:sender:))) {
 		[confirmDeletionButton setState:[prefsController confirmNoteDeletion]];
 	}
 }

@@ -16,7 +16,7 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#import <Cocoa/Cocoa.h>
+#import "GlobalPrefs.h"
 
 @class NotationPrefs;
 @class PassphrasePicker;
@@ -28,7 +28,7 @@
 }
 @end
 
-@interface NotationPrefsViewController : NSObject <NSTableViewDelegate, NSTableViewDataSource>
+@interface NotationPrefsViewController : NSObject <NSTableViewDelegate, NSTableViewDataSource, GlobalPrefsObserver>
 {
     IBOutlet NSTableView *allowedExtensionsTable;
     IBOutlet NSTableView *allowedTypesTable;

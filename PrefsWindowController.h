@@ -13,11 +13,11 @@
 
 
 #import <Cocoa/Cocoa.h>
+#import "GlobalPrefs.h"
 
 @class NotationPrefsViewController;
-@class GlobalPrefs;
 
-@interface PrefsWindowController : NSObject  <NSWindowDelegate, NSToolbarDelegate>
+@interface PrefsWindowController : NSObject  <NSWindowDelegate, NSToolbarDelegate, GlobalPrefsObserver>
 {
     IBOutlet NSButton *useETScrollbarsOnLionButton;
     IBOutlet NSPopUpButton *folderLocationsMenuButton;

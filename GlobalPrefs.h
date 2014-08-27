@@ -45,10 +45,17 @@ enum { NoteTitleColumn, NoteLabelsColumn, NoteDateModifiedColumn, NoteDateCreate
 
 BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2);
 
+
+@protocol GlobalPrefsObserver <NSObject>
+
+- (void)settingChangedForSelector:(SEL)selector;
+
+@end
+
+
 @interface GlobalPrefs : NSObject {
 	NSUserDefaults *defaults;
 
-	void(*runCallbacksIMP)(id, SEL, SEL, id);
 	NSMutableDictionary *selectorObservers;
 	
 	PTKeyCombo *appActivationKeyCombo;
@@ -67,9 +74,8 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2);
 
 + (GlobalPrefs *)defaultPrefs;
 
-- (void)registerWithTarget:(id)sender forChangesInSettings:(SEL)firstSEL, ...;
-- (void)registerForSettingChange:(SEL)selector withTarget:(id)sender;
-- (void)unregisterForNotificationsFromSelector:(SEL)selector sender:(id)sender;
+- (void)registerTarget:(id <GlobalPrefsObserver>)sender forChangesInSettings:(SEL)firstSEL, ... NS_REQUIRES_NIL_TERMINATION;
+- (void)unregisterForNotificationsFromSelector:(SEL)selector sender:(id <GlobalPrefsObserver>)sender;
 - (void)notifyCallbacksForSelector:(SEL)selector excludingSender:(id)sender;
 
 - (void)setNotationPrefs:(NotationPrefs*)newNotationPrefs sender:(id)sender;
@@ -204,9 +210,4 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2);
 - (BOOL)managesTextWidthInWindow;
 - (CGFloat)maxNoteBodyWidth;
 @end
-
-@interface NSObject (GlobalPrefsDelegate)
-	- (void)settingChangedForSelectorString:(NSString*)selectorString;
-@end
-
 

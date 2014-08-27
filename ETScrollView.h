@@ -6,15 +6,13 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "GlobalPrefs.h"
 
-
-
-@interface ETScrollView : NSScrollView {
+@interface ETScrollView : NSScrollView <GlobalPrefsObserver> {
     Class scrollerClass;
     BOOL needsOverlayTiling;
 }
 
 - (void)changeUseETScrollbarsOnLion;
-- (void)settingChangedForSelectorString:(NSString*)selectorString;
 
 @end

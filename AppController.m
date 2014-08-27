@@ -491,18 +491,20 @@ void outletObjectAwoke(id sender) {
 	}
 	
 	//tell us..
-    [prefsController registerWithTarget:self forChangesInSettings:
-            @selector(setAliasDataForDefaultDirectory:sender:),  //when someone wants to load a new database
-            @selector(setSortedTableColumnKey:reversed:sender:),  //when sorting prefs changed
-            @selector(setNoteBodyFont:sender:),  //when to tell notationcontroller to restyle its notes
-            @selector(setForegroundTextColor:sender:),  //ditto
-            @selector(setBackgroundTextColor:sender:),  //ditto
-            @selector(setTableFontSize:sender:),  //when to tell notationcontroller to regenerate the (now potentially too-short) note-body previews
-            @selector(addTableColumn:sender:),  //ditto
-            @selector(removeTableColumn:sender:),  //ditto
-            @selector(setTableColumnsShowPreview:sender:),  //when to tell notationcontroller to generate or disable note-body previews
-            @selector(setConfirmNoteDeletion:sender:),  //whether "delete note" should have an ellipsis
-            @selector(setAutoCompleteSearches:sender:), @selector(setUseETScrollbarsOnLion:sender:), nil];   //when to tell notationcontroller to build its title-prefix connections
+	[prefsController registerTarget:self forChangesInSettings:
+		@selector(setAliasDataForDefaultDirectory:sender:),  //when someone wants to load a new database
+		@selector(setSortedTableColumnKey:reversed:sender:),  //when sorting prefs changed
+		@selector(setNoteBodyFont:sender:),  //when to tell notationcontroller to restyle its notes
+		@selector(setForegroundTextColor:sender:),  //ditto
+		@selector(setBackgroundTextColor:sender:),  //ditto
+		@selector(setTableFontSize:sender:),  //when to tell notationcontroller to regenerate the (now potentially too-short) note-body previews
+		@selector(addTableColumn:sender:),  //ditto
+		@selector(removeTableColumn:sender:),  //ditto
+		@selector(setTableColumnsShowPreview:sender:),  //when to tell notationcontroller to generate or disable note-body previews
+		@selector(setConfirmNoteDeletion:sender:),  //whether "delete note" should have an ellipsis
+		@selector(setAutoCompleteSearches:sender:),
+		@selector(setUseETScrollbarsOnLion:sender:),
+		NULL];   //when to tell notationcontroller to build its title-prefix connections
 	
 	[self performSelector:@selector(runDelayedUIActionsAfterLaunch) withObject:nil afterDelay:0.0];
 }
@@ -968,8 +970,8 @@ void outletObjectAwoke(id sender) {
 	[importer autorelease];
 }
 
-- (void)settingChangedForSelectorString:(NSString*)selectorString {
-    if ([selectorString isEqualToString:SEL_STR(setAliasDataForDefaultDirectory:sender:)]) {
+- (void)settingChangedForSelector:(SEL)selector {
+	if (sel_isEqual(selector, @selector(setAliasDataForDefaultDirectory:sender:))) {
 		//defaults changed for the database location -- load the new one!
 		
 		OSStatus err = noErr;
@@ -1001,7 +1003,7 @@ void outletObjectAwoke(id sender) {
 								oldLocation);
 			}
 		}
-    } else if ([selectorString isEqualToString:SEL_STR(setSortedTableColumnKey:reversed:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setSortedTableColumnKey:reversed:sender:))) {
 		NoteAttributeColumn *oldSortCol = [notationController sortColumn];
 		NoteAttributeColumn *newSortCol = [notesTableView noteAttributeColumnForIdentifier:[prefsController sortedTableColumnKey]];
 		BOOL changedColumns = oldSortCol != newSortCol;
@@ -1016,20 +1018,20 @@ void outletObjectAwoke(id sender) {
 		
 		if (changedColumns) [notesTableView setViewingLocation:ctx];
 		
-	} else if ([selectorString isEqualToString:SEL_STR(setNoteBodyFont:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setNoteBodyFont:sender:))) {
 		
 		[notationController restyleAllNotes];
 		if (currentNote) {
 			[self contentsUpdatedForNote:currentNote];
 		}
-	} else if ([selectorString isEqualToString:SEL_STR(setForegroundTextColor:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setForegroundTextColor:sender:))) {
 		if (userScheme!=2) {
 			[self setUserColorScheme:self];
 		}else {
 			[self setForegrndColor:[prefsController foregroundTextColor]];
 			[self updateColorScheme];
 		}
-	} else if ([selectorString isEqualToString:SEL_STR(setBackgroundTextColor:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setBackgroundTextColor:sender:))) {
 		if (userScheme!=2) {
 			[self setUserColorScheme:self];
 		}else {
@@ -1037,25 +1039,27 @@ void outletObjectAwoke(id sender) {
 			[self updateColorScheme];
 		}
 		
-	} else if ([selectorString isEqualToString:SEL_STR(setTableFontSize:sender:)] || [selectorString isEqualToString:SEL_STR(setTableColumnsShowPreview:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setTableFontSize:sender:)) || sel_isEqual(selector, @selector(setTableColumnsShowPreview:sender:))) {
 		
 		ResetFontRelatedTableAttributes();
 		[notesTableView updateTitleDereferencorState];
 		[[notationController labelsListDataSource] invalidateCachedLabelImages];
 		[self _forceRegeneratePreviewsForTitleColumn];
         
-		if ([selectorString isEqualToString:SEL_STR(setTableColumnsShowPreview:sender:)]) [self updateNoteMenus];
+		if (sel_isEqual(selector, @selector(setTableColumnsShowPreview:sender:))) {
+			[self updateNoteMenus];
+		}
 		
 		[notesTableView performSelector:@selector(reloadData) withObject:nil afterDelay:0];
-	} else if ([selectorString isEqualToString:SEL_STR(addTableColumn:sender:)] || [selectorString isEqualToString:SEL_STR(removeTableColumn:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(addTableColumn:sender:)) || sel_isEqual(selector, @selector(removeTableColumn:sender:))) {
 		
 		ResetFontRelatedTableAttributes();
 		[self _forceRegeneratePreviewsForTitleColumn];
 		[notesTableView performSelector:@selector(reloadDataIfNotEditing) withObject:nil afterDelay:0];
 		
-	} else if ([selectorString isEqualToString:SEL_STR(setConfirmNoteDeletion:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setConfirmNoteDeletion:sender:))) {
 		[self updateNoteMenus];
-	} else if ([selectorString isEqualToString:SEL_STR(setAutoCompleteSearches:sender:)]) {
+	} else if (sel_isEqual(selector, @selector(setAutoCompleteSearches:sender:))) {
 		if ([prefsController autoCompleteSearches])
 			[notationController updateTitlePrefixConnections];
 		
