@@ -108,10 +108,6 @@
 - (NSRect)rectForPart:(NSScrollerPart)aPart{    
 	switch (aPart)
 	{
-		case NSScrollerNoPart:
-        {
-			return [self bounds];
-		}
         case NSScrollerKnob:
 		{
 			NSRect knobRect=[super rectForPart:NSScrollerKnob];
@@ -176,6 +172,10 @@
 			decrementPageRect = NSMakeRect(roundf(verticalPaddingLeft), roundf(verticalPaddingTop), knobRect.size.width, roundf(knobRect.origin.y - verticalPaddingTop));
             
 			return decrementPageRect;
+		}
+		default:
+        {
+			return [self bounds];
 		}
 	}
 }
