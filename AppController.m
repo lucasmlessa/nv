@@ -2542,8 +2542,8 @@ void outletObjectAwoke(id sender) {
     if (![self isInFullScreen]) {
         dsvFrame.origin.y +=4.0;
     }
-	dsvFrame.size.width = roundf(wSize.width * 0.99);
-	dsvFrame.origin.x =roundf(wSize.width *0.005);
+	dsvFrame.size.width = round(wSize.width * 0.99);
+	dsvFrame.origin.x =round(wSize.width *0.005);
 	[dualSV setFrame:dsvFrame];
 	[dualFieldView addSubview:dualSV];
     [field setNextKeyView:textView];

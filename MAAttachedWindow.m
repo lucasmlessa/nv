@@ -841,7 +841,7 @@
 
 - (void)setViewMargin:(CGFloat)value {
     if (!NTVFloatsEqual(viewMargin, value)) {
-        viewMargin = fmaxf(value, 0.0);
+        viewMargin = fmax(value, 0.0);
         
         // Adjust cornerRadius appropriately (which will also adjust arrowBaseWidth).
         [self setCornerRadius:cornerRadius];
@@ -850,7 +850,7 @@
 
 
 - (void)setArrowBaseWidth:(CGFloat)value {
-    CGFloat maxWidth = (fminf(_viewFrame.size.width, _viewFrame.size.height) +
+    CGFloat maxWidth = (fmin(_viewFrame.size.width, _viewFrame.size.height) +
                       (viewMargin * 2.0)) - cornerRadius;
     if (drawsRoundCornerBesideArrow) {
         maxWidth -= cornerRadius;
@@ -884,14 +884,14 @@
 
 
 - (void)setCornerRadius:(CGFloat)value {
-    CGFloat maxRadius = ((fminf(_viewFrame.size.width, _viewFrame.size.height) +
+    CGFloat maxRadius = ((fmin(_viewFrame.size.width, _viewFrame.size.height) +
                         (viewMargin * 2.0)) - arrowBaseWidth) / 2.0;
     if (value <= maxRadius) {
         cornerRadius = value;
     } else {
         cornerRadius = maxRadius;
     }
-    cornerRadius = fmaxf(cornerRadius, 0.0);
+    cornerRadius = fmax(cornerRadius, 0.0);
     
     // Adjust arrowBaseWidth appropriately.
     [self setArrowBaseWidth:arrowBaseWidth];

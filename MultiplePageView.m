@@ -153,8 +153,8 @@ static CGFloat defaultTextPadding(void) {
 - (void)drawRect:(CGRect)rect {
     if ([[NSGraphicsContext currentContext] isDrawingToScreen]) {
 		CGSize paperSize = [printInfo paperSize];
-		NSUInteger firstPage = (NSUInteger)floorf(CGRectGetMinY(rect) / (paperSize.height + [self pageSeparatorHeight]));
-		NSUInteger lastPage = (NSUInteger)floorf(CGRectGetMaxY(rect) / (paperSize.height + [self pageSeparatorHeight]));
+		NSUInteger firstPage = (NSUInteger)floor(CGRectGetMinY(rect) / (paperSize.height + [self pageSeparatorHeight]));
+		NSUInteger lastPage = (NSUInteger)floor(CGRectGetMaxY(rect) / (paperSize.height + [self pageSeparatorHeight]));
 
 		NSAssert(NO, @"MultiplePageView should not be drawing to screen");
 
@@ -198,7 +198,7 @@ static CGFloat defaultTextPadding(void) {
 	//NSLog(@"text height: %g, page height: %g", containerHeight, pageHeight);
 	[textView release];
 	
-	return (int)ceilf(containerHeight/pageHeight);
+	return (int)ceil(containerHeight/pageHeight);
 }
 
 + (NSView *)printableViewWithNotes:(NSArray*)notes {

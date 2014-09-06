@@ -6,9 +6,6 @@
 //  Copyright (c) 2014 ElasticThreads. All rights reserved.
 //
 
-#import <math.h>
-#import <tgmath.h>
-#import <CoreGraphics/CGBase.h>
 #import "NTVMacros.h"
 
 #ifndef __cplusplus
@@ -16,19 +13,61 @@
 #ifndef NTV_TG_MATH
 #define NTV_TG_MATH
 
-#define roundf(__x)     __tg_round(__tg_promote1((__x))(__x))
-#define floorf(__x)     __tg_floor(__tg_promote1((__x))(__x))
-#define ceilf(__x)      __tg_ceil(__tg_promote1((__x))(__x))
-#define fmaxf(__x, __y) __tg_fmax(__tg_promote2((__x), (__y))(__x), __tg_promote2((__x), (__y))(__y))
-#define fminf(__x, __y) __tg_fmin(__tg_promote2((__x), (__y))(__x), __tg_promote2((__x), (__y))(__y))
-#define expf(__x)       __tg_exp(__tg_promote1((__x))(__x))
-#define sqrtf(__x)      __tg_sqrt(__tg_promote1((__x))(__x))
-#define logf(__x)       __tg_log(__tg_promote1((__x))(__x))
-#define fabsf(__x)      __tg_fabs(__tg_promote1((__x))(__x))
-#define powf(__x, __y)  __tg_pow(__tg_promote2((__x), (__y))(__x), __tg_promote2((__x), (__y))(__y))
-#define cosf(__x)       __tg_cos(__tg_promote1((__x))(__x))
-#define sinf(__x)       __tg_sin(__tg_promote1((__x))(__x))
-#define tanf(__x)       __tg_tan(__tg_promote1((__x))(__x))
+@import Darwin.C.complex;
+@import Darwin.C.math;
+
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L) || __has_extension(c_generic_selections)
+# define __tg_generic(x, cfnl, cfn, cfnf, fnl, fn, fnf) \
+	_Generic(x,                     \
+		long double _Complex: cfnl, \
+		double _Complex: cfn,       \
+		float _Complex: cfnf,       \
+		long double: fnl,           \
+		default: fn,                \
+		float: fnf                  \
+	)
+# define __tg_type(x) \
+	__tg_generic(x, 0, 0, 0, 0, 0, 0)
+# define __tg_impl_simple(x, y, z, fnl, fn, fnf, ...) \
+	__tg_generic(__tg_type(x) + __tg_type(y) + __tg_type(z), fnl, fn, fnf, fnl, fn, fnf)(__VA_ARGS__)
+# define __tg_impl_full(x, y, cfnl, cfn, cfnf, fnl, fn, fnf, ...) \
+	__tg_generic(__tg_type(x) + __tg_type(y), cfnl, cfn, cfnf, fnl, fn, fnf)(__VA_ARGS__)
+#else
+# error "Not implemented for this compiler"
+#endif
+
+#define	__tg_full(x, fn) \
+	__tg_impl_full(x, x, c##fn##l, c##fn, c##fn##f, fn##l, fn, fn##f, x)
+
+#define	acos(x)     __tg_full(x, acos)
+#define	asin(x)     __tg_full(x, asin)
+#define	atan(x)     __tg_full(x, atan)
+#define	acosh(x)    __tg_full(x, acosh)
+#define	asinh(x)    __tg_full(x, asinh)
+#define	atanh(x)    __tg_full(x, atanh)
+#define	cos(x)      __tg_full(x, cos)
+#define	sin(x)      __tg_full(x, sin)
+#define	tan(x)      __tg_full(x, tan)
+#define	cosh(x)     __tg_full(x, cosh)
+#define	sinh(x)     __tg_full(x, sinh)
+#define	tanh(x)     __tg_full(x, tanh)
+
+#define	exp(x)      __tg_full(x, exp)
+#define	log(x)      __tg_full(x, log)
+#define	sqrt(x)     __tg_full(x, sqrt)
+#define	pow(x, y)   __tg_impl_full(x, y, cpowl, cpow, cpowf, powl, pow, powf, x, y)
+#define	fabs(x)     __tg_impl_full(x, x, cabsl, cabs, cabsf, fabsl, fabs, fabsf, x)
+
+#define	__tg_simple(x, fn) \
+	__tg_impl_simple(x, x, x, fn##l, fn, fn##f, x)
+
+#define	round(x)    __tg_simple(x, round)
+#define	lround(x)   __tg_simple(x, lround)
+#define	rint(x)		__tg_simple(x, rint)
+#define	floor(x)    __tg_simple(x, floor)
+#define	ceil(x)     __tg_simple(x, ceil)
+#define	fmax(x, y)  __tg_impl_simple(x, x, y, fmaxl, fmax, fmaxf, x, y)
+#define	fmin(x, y)  __tg_impl_simple(x, x, y, fminl, fmin, fminf, x, y)
 
 #endif /* NTV_TG_MATH */
 
@@ -37,14 +76,16 @@
 #ifndef NTV_MATH
 #define NTV_MATH
 
+@import CoreGraphics.CGBase;
+
 NTV_ALWAYS_INLINE CGFloat rroundf(CGFloat pt, CGFloat scale){
-	return (scale > 0) ? (__tg_round(pt * scale) / scale) : __tg_round(pt);
+	return (scale > 0) ? (round(pt * scale) / scale) : round(pt);
 }
 NTV_ALWAYS_INLINE CGFloat rceilf(CGFloat pt, CGFloat scale){
-	return (scale > 0) ? (__tg_ceil(pt * scale) / scale) : __tg_ceil(pt);
+	return (scale > 0) ? (ceil(pt * scale) / scale) : ceil(pt);
 }
 NTV_ALWAYS_INLINE CGFloat rfloorf(CGFloat pt, CGFloat scale){
-	return (scale > 0) ? (__tg_floor(pt * scale) / scale) : __tg_floor(pt);
+	return (scale > 0) ? (floor(pt * scale) / scale) : floor(pt);
 }
 
 #endif /* NTV_MATH */

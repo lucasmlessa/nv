@@ -395,8 +395,8 @@
 	if ([string length] > 15) string = [[string substringToIndex:15] stringByAppendingString:NSLocalizedString(@"...", @"ellipsis character")];
 	NSSize stringSize = [string sizeWithAttributes:smallTextAttrs];
 	
-	NSPoint textOffset = NSMakePoint(5.0f, 2.0f);
-	NSRect wordRect = NSMakeRect(0, 0, ceilf(stringSize.width + textOffset.x * 2.0f), stringSize.height + textOffset.y * 2.0f);
+	CGPoint textOffset = CGPointMake(5, 2);
+	CGRect wordRect = CGRectMake(0, 0, ceil(stringSize.width + textOffset.x * 2), stringSize.height + textOffset.y * 2);
 	
 	NSImage *image = [[NSImage alloc] initWithSize:wordRect.size];
 	[image lockFocus];

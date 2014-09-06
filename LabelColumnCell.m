@@ -62,9 +62,9 @@
 
 		[[NSGraphicsContext currentContext] saveGraphicsState];
 		NSRectClip(cellFrame);
-		NSRect blocksRect = cellFrame;
-		blocksRect.origin = NSMakePoint(NSMinX(cellFrame), NSMaxY(cellFrame) - ceilf(((cellFrame.size.height + 1.0) - 
-																					  ([[GlobalPrefs defaultPrefs] tableFontSize] * 1.3 + 1.5))/2.0));
+		CGRect blocksRect = cellFrame;
+		blocksRect.origin = CGPointMake(CGRectGetMinX(cellFrame), CGRectGetMaxY(cellFrame) - ceil(((CGRectGetHeight(cellFrame) + 1) -
+																					  ([[GlobalPrefs defaultPrefs] tableFontSize] * 1 + 1.5)) / 2));
 		[noteObject drawLabelBlocksInRect:blocksRect rightAlign:NO highlighted:([self isHighlighted] && [tv isActiveStyle])];
 		
 		[[NSGraphicsContext currentContext] restoreGraphicsState];

@@ -22,8 +22,8 @@
 
 + (NSBezierPath *)bezierPathWithRoundRectInRect:(CGRect)aRect radius:(CGFloat)radius  {
 	NSBezierPath* path = [NSBezierPath bezierPath];
-	CGFloat smallestEdge = fminf(CGRectGetWidth(aRect), CGRectGetHeight(aRect));
-	radius = fminf(radius, 0.5 * smallestEdge);
+	CGFloat smallestEdge = fmin(CGRectGetWidth(aRect), CGRectGetHeight(aRect));
+	radius = fmin(radius, 0.5 * smallestEdge);
 	NSRect rect = NSInsetRect(aRect, radius, radius);
 	[path appendBezierPathWithArcWithCenter:NSMakePoint(CGRectGetMinX(rect), CGRectGetMinY(rect)) radius:radius startAngle:180.0 endAngle:270.0];
 	[path appendBezierPathWithArcWithCenter:NSMakePoint(CGRectGetMaxX(rect), CGRectGetMinY(rect)) radius:radius startAngle:270.0 endAngle:360.0];

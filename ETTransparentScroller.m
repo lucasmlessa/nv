@@ -120,9 +120,9 @@
 //                    knobHeight = minKnobHeight;
 //                }
 //            }
-            CGFloat slotY=roundf(verticalPaddingTop);
+            CGFloat slotY=round(verticalPaddingTop);
             CGFloat knobY=knobRect.origin.y;
-            CGFloat slotHt=roundf([self bounds].size.height-(verticalPaddingTop+verticalPaddingBottom));
+            CGFloat slotHt=round([self bounds].size.height-(verticalPaddingTop+verticalPaddingBottom));
             if (knobY<slotY) {
                 knobY=slotY;
             }
@@ -131,19 +131,19 @@
 
             }
 //			knobRect = NSMakeRect(verticalPaddingLeft, knobY, slotRect.size.width, knobHeight);
-            knobRect.origin.x=roundf(verticalPaddingLeft);
-            knobRect.origin.y=roundf(knobY);
-            knobRect.size.width=roundf([self bounds].size.width - verticalPaddingLeft - verticalPaddingRight);
+            knobRect.origin.x=round(verticalPaddingLeft);
+            knobRect.origin.y=round(knobY);
+            knobRect.size.width=round([self bounds].size.width - verticalPaddingLeft - verticalPaddingRight);
 			
 			return knobRect;
 		}
 		case NSScrollerKnobSlot:
 		{
 			NSRect slotRect=[self bounds];
-			slotRect.origin.x=roundf(verticalPaddingLeft);
-            slotRect.size.width=roundf(slotRect.size.width - verticalPaddingLeft - verticalPaddingRight);
-            slotRect.origin.y=roundf(verticalPaddingTop);
-            slotRect.size.height=roundf(slotRect.size.height-(verticalPaddingTop+verticalPaddingBottom));
+			slotRect.origin.x=round(verticalPaddingLeft);
+            slotRect.size.width=round(slotRect.size.width - verticalPaddingLeft - verticalPaddingRight);
+            slotRect.origin.y=round(verticalPaddingTop);
+            slotRect.size.height=round(slotRect.size.height-(verticalPaddingTop+verticalPaddingBottom));
 			return slotRect;
 		}
 		case NSScrollerIncrementLine:
@@ -156,10 +156,10 @@
 			NSRect knobRect = [self rectForPart:NSScrollerKnob];
 //			NSRect slotRect = [self rectForPart:NSScrollerKnobSlot];
 //			NSRect decPageRect = [self rectForPart:NSScrollerDecrementPage];
-            CGFloat slotHt=roundf([self bounds].size.height-(verticalPaddingTop+verticalPaddingBottom));
-			CGFloat knobY = roundf(knobRect.origin.y + knobRect.size.height);
-            CGFloat knobHt=roundf(slotHt - knobRect.size.height - knobRect.origin.y - verticalPaddingTop);
-			incrementPageRect = NSMakeRect(roundf(verticalPaddingLeft), knobY, knobRect.size.width, knobHt);
+            CGFloat slotHt=round([self bounds].size.height-(verticalPaddingTop+verticalPaddingBottom));
+			CGFloat knobY = round(knobRect.origin.y + knobRect.size.height);
+            CGFloat knobHt=round(slotHt - knobRect.size.height - knobRect.origin.y - verticalPaddingTop);
+			incrementPageRect = NSMakeRect(round(verticalPaddingLeft), knobY, knobRect.size.width, knobHt);
             
 			return incrementPageRect;
 		}
@@ -169,7 +169,7 @@
 			NSRect knobRect = [self rectForPart:NSScrollerKnob];
 			
             
-			decrementPageRect = NSMakeRect(roundf(verticalPaddingLeft), roundf(verticalPaddingTop), knobRect.size.width, roundf(knobRect.origin.y - verticalPaddingTop));
+			decrementPageRect = NSMakeRect(round(verticalPaddingLeft), round(verticalPaddingTop), knobRect.size.width, round(knobRect.origin.y - verticalPaddingTop));
             
 			return decrementPageRect;
 		}

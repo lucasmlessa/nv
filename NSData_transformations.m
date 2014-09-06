@@ -46,7 +46,7 @@
 	 * zlib says to make sure the destination has 0.1% more + 12 bytes; last
 	 * additional bytes to store the original size (needed for uncompress)
 	 */
-	bufferLength = (size_t)ceilf([self length] * 1.001 ) + 12 + sizeof(unsigned);
+	bufferLength = (size_t)ceil([self length] * 1.001 ) + 12 + sizeof(unsigned);
 	newData = [NSMutableData dataWithLength:bufferLength];
 	if( newData != nil ) {
 		zlibError = compress2([newData mutableBytes], &bufferLength,

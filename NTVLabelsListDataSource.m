@@ -119,7 +119,7 @@
 			NSFontAttributeName: [NSFont systemFontOfSize:tableFontSize]
 		};
 		NSSize wordSize = [aWord sizeWithAttributes:attrs];
-		NSRect wordRect = NSMakeRect(0, 0, roundf(wordSize.width + 4.0), roundf(tableFontSize * 1.3));
+		CGRect wordRect = CGRectMake(0, 0, round(wordSize.width + 4.0), round(tableFontSize * 1.3));
 		
 		//peter hosey's suggestion, rather than doing setWindingRule: and appendBezierPath: as before:
 		//http://stackoverflow.com/questions/4742773/why-wont-helvetica-neue-bold-glyphs-draw-as-a-normal-subpath-in-nsbezierpath

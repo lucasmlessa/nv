@@ -150,15 +150,15 @@ static void ColorBlendFunction(void *info, const CGFloat *in, CGFloat *out);
             strokeWt=0.5f;
             pt.x+=0.5f;
             endPt=pt;
-            endPt.y=ceilf(aRect.size.height);
+            endPt.y=ceil(aRect.size.height);
         }else if (aRect.size.width < aRect.size.height) {
-            pt.x=floorf(aRect.size.width)-0.5f;
+            pt.x=floor(aRect.size.width)-0.5f;
             endPt=pt;
-            endPt.y=ceilf(aRect.size.height);
+            endPt.y=ceil(aRect.size.height);
 		}else {
-            pt.y=(floorf(aRect.size.height)-0.5f);
+            pt.y=(floor(aRect.size.height)-0.5f);
             endPt=pt;
-            endPt.x=ceilf(aRect.size.width);
+            endPt.x=ceil(aRect.size.width);
 		}
         
         NSBezierPath *path=[NSBezierPath bezierPath];
@@ -179,7 +179,7 @@ static void ColorBlendFunction(void *info, const CGFloat *in, CGFloat *out);
         NSPoint pt=aRect.origin;
         pt.y+=0.5f;
         NSPoint endPt=pt;
-        endPt.x=ceilf(aRect.size.width);
+        endPt.x=ceil(aRect.size.width);
         NSBezierPath *path=[NSBezierPath bezierPath];
 		[path moveToPoint:pt];
         [path lineToPoint:endPt];

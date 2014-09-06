@@ -136,7 +136,7 @@
 	NSFont *font = [prefsController noteBodyFont];
     CGFloat lh=[font pointSize];
     if (lh<27.0) {
-        lh=floorf(27.0-((27.0-lh)/2));
+        lh=floor(27.0-((27.0-lh)/2));
     }
     [centerStyle setMaximumLineHeight:lh];
 	NSDictionary *attributes = @{

@@ -548,10 +548,16 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	CGFloat pRed, pGreen, pBlue, gRed, gGreen, gBlue, pAlpha, gAlpha;
 	[[c1 colorUsingColorSpaceName:NSCalibratedRGBColorSpace] getRed:&pRed green:&pGreen blue:&pBlue alpha:&pAlpha];
 	[[c2 colorUsingColorSpaceName:NSCalibratedRGBColorSpace] getRed:&gRed green:&gGreen blue:&gBlue alpha:&gAlpha];
-	
-#define SCR(__ch) ((int)roundf(((__ch) * 255.0)))
-	
-	return (SCR(pRed) == SCR(gRed) && SCR(pBlue) == SCR(gBlue) && SCR(pGreen) == SCR(gGreen) && SCR(pAlpha) == SCR(gAlpha));
+    
+    BOOL(^equalComponents)(CGFloat, CGFloat) = ^BOOL(CGFloat a, CGFloat b){
+        return lround(a * 255.) == lround(b * 255.);
+    };
+    
+    if (!equalComponents(pRed, gRed)) { return NO; }
+    if (!equalComponents(pBlue, gBlue)) { return NO; }
+    if (!equalComponents(pGreen, gGreen)) { return NO; }
+    if (!equalComponents(pAlpha, gAlpha)) { return NO; }
+    return YES;
 }
 
 - (void)resolveNoteBodyFontFromNotationPrefsFromSender:(id)sender {

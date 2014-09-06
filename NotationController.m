@@ -1550,7 +1550,7 @@ bail:
 	
 	CGFloat width = [col width] - [NSScroller scrollerWidthForControlSize:NSRegularControlSize scrollerStyle:col.tableView.enclosingScrollView.scrollerStyle];
 	
-	if (force || !NTVFloatsEqual(roundf(width), roundf(titleColumnWidth))) {
+	if (force || !NTVFloatsEqual(round(width), round(titleColumnWidth))) {
 		titleColumnWidth = width;
 		
 		//regenerate previews for visible rows immediately and post a delayed message to regenerate previews for all rows
