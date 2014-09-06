@@ -197,9 +197,8 @@
 
 - (void)writeNoteObjects:(NSArray*)notes {
 	//assume that the LSNs have been incremented already if they needed to be
-	NSUInteger i;
-    for (i=0; i<[notes count]; i++) {
-		[self writeNoteObject:notes[i]];
+	for (id <SynchronizedNote> note in notes) {
+		[self writeNoteObject:note];
 	}
 }
 

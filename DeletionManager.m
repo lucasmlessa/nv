@@ -84,17 +84,16 @@
 		}
 		
 		BOOL didAddDeletedNote = NO;
-		unsigned int i;
-		for (i=0; i<[array count]; i++) {
-			NoteObject *aNote = array[i];
+
+		for (NoteObject *aNote in array) {
 			if (![self noteFileIsAlreadyDeleted:aNote]) {
 				[deletedNotes addObject:aNote];
 				didAddDeletedNote = YES;
 			}
+
+			[aNote invalidateFSRef];
 		}
-		
-		[array makeObjectsPerformSelector:@selector(invalidateFSRef)];
-		
+
 		if (didAddDeletedNote) {
 			[self _updatePanelForNotes];
 		}
@@ -241,9 +240,8 @@ void updateForVerifiedExistingNote(DeletionManager *self, NoteObject *goodNote) 
 - (IBAction)restoreAction:(id)sender {
 
 	//force-write the files
-	unsigned int i;
-	for (i=0; i<[deletedNotes count]; i++) {
-		[deletedNotes[i] makeNoteDirtyUpdateTime:NO updateFile:YES];
+	for (NoteObject *aNote in deletedNotes) {
+		[aNote makeNoteDirtyUpdateTime:NO updateFile:YES];
 	}
 	[notationController synchronizeNoteChanges:nil];
 	

@@ -25,11 +25,8 @@
 
 
 - (NSDictionary*)invertedDictionaryOfEntries:(NSArray*)entries keyedBy:(NSString*)keyName {
-	NSUInteger i = 0;
 	NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:[entries count]];
-	
-	for (i=0; i<[entries count]; i++) {
-		NSDictionary *entry = entries[i];
+	for (NSDictionary *entry in entries) {
 		NSString *keyForService = entry[keyName];
 		if (keyForService) {
 			dict[keyForService] = entry;
@@ -41,31 +38,24 @@
 }
 
 - (NSDictionary*)invertedDictionaryOfNotes:(NSArray*)someNotes forSession:(id<SyncServiceSession>)aSession {
-	NSUInteger i = 0;
 	NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:[someNotes count]];
 	NSString *keyElement = [[aSession class] nameOfKeyElement];
 	NSString *serviceName = [[aSession class] serviceName];
 	
-	for (i=0; i<[someNotes count]; i++) {
-		NoteObject *note = someNotes[i];
+	for (NoteObject *note in someNotes) {
 		NSDictionary *serviceDict = [note syncServicesMD][serviceName];
 		if (serviceDict) {
 			dict[serviceDict[keyElement]] = note;
-		} else {
-			//NSLog(@"service key for %@ does not exist", note);
 		}
 	}
 	return dict;
 }
 
 - (NoteObject*)noteForKey:(NSString*)key ofServiceClass:(Class<SyncServiceSession>)serviceClass {
-	NSUInteger i = 0;
-	for (i=0; i<[allNotes count]; i++) {
-		NoteObject *note = allNotes[i];
-		if ([[note syncServicesMD][[serviceClass serviceName]][[serviceClass nameOfKeyElement]] isEqualToString:key])
-			return note;
-	}
-	return nil;
+	NSUInteger index = [allNotes indexOfObjectPassingTest:^BOOL(NoteObject *note, NSUInteger idx, BOOL *stop) {
+		return [[note syncServicesMD][[serviceClass serviceName]][[serviceClass nameOfKeyElement]] isEqualToString:key];
+	}];
+	return index == NSNotFound ? nil : allNotes[index];
 }
 
 - (void)startSyncServices {
@@ -108,9 +98,8 @@
 - (void)syncSession:(id <SyncServiceSession>)syncSession didModifyNotes:(NSArray*)changedNotes {
 	//update the list of notes and the views as necessary
 	notesChanged = YES;
-	NSUInteger i = 0;
-	for (i = 0; i<[changedNotes count]; i++) {
-		[delegate contentsUpdatedForNote:changedNotes[i]];
+	for (NoteObject *note in changedNotes) {
+		[delegate contentsUpdatedForNote:note];
 	}
 	[self resortAllNotes];
 	[self refilterNotes];
@@ -128,7 +117,6 @@
 - (void)processPartialNotesList:(NSArray*)entries withRemovedList:(NSArray*)removedEntries fromSyncSession:(id <SyncServiceSession>)syncSession {
 	NSString *keyName = [[syncSession class] nameOfKeyElement];
 	NSString *serviceName = [[syncSession class] serviceName];
-	NSUInteger i = 0;
 	NSMutableArray *notesToDelete = [NSMutableArray array];
 	NSMutableArray *changedNotes = [NSMutableArray array];
 	NSMutableArray *checkEntries = [NSMutableArray array];
@@ -138,8 +126,7 @@
 	//since we only have some remotes, we can't perform full sync operations like comparing
 	//full sets of notes to find out what local ones need to be removed. we rely on the partial
 	//list updates to keep us up to date.
-	for (i=0; i<[entries count]; i++) {
-		NSDictionary *remoteEntry = entries[i];
+	for (NSDictionary *remoteEntry in entries) {
 		NSString *remoteKey = remoteEntry[keyName];
 		id <SynchronizedNote>note = localNotesDict[remoteKey];
 		NSDictionary *thisServiceInfo = [note syncServicesMD][serviceName];
@@ -162,19 +149,22 @@
 			}
 		}
 	}
-	for (i=0; i<[removedEntries count]; i++) {
-		NSDictionary *remoteEntry = removedEntries[i];
+
+	for (NSDictionary *remoteEntry in removedEntries) {
 		NSString *remoteKey = remoteEntry[keyName];
 		if (localNotesDict[remoteKey]) {
 			[notesToDelete addObject:localNotesDict[remoteKey]];
 		}
 	}
+
 	if ([checkEntries count]) {
 		[syncSession startCollectingAddedNotesWithEntries:checkEntries mergingWithNotes:nil];
 	}
+
 	if ([changedNotes count]) {
 		[syncSession startCollectingChangedNotesWithEntries:changedNotes];
 	}
+
 	if ([notesToDelete count]) {
 		NSLog(@"removing %lu notes", (unsigned long)[notesToDelete count]);
 		[syncSession suppressPushingForNotes:notesToDelete];
@@ -186,7 +176,6 @@
 - (void)makeNotesMatchList:(NSArray*)MDEntries fromSyncSession:(id <SyncServiceSession>)syncSession {
 	NSString *keyName = [[syncSession class] nameOfKeyElement];
 	NSString *serviceName = [[syncSession class] serviceName];
-	NSUInteger i = 0;
 
 	NSDictionary *remoteDict = [self invertedDictionaryOfEntries:MDEntries keyedBy:keyName];
 	//NSLog(@"%s: got inverted dict of entries: %@", _cmd, remoteDict);
@@ -201,9 +190,8 @@
 	NSMutableArray *remotelyChangedNotes = [NSMutableArray array];
 	NSMutableArray *remotelyDeletedNotes = [NSMutableArray array];
 	NSMutableArray *remotelyMissingNotes = [NSMutableArray array];
-	
-	for (i=0; i<[allNotes count]; i++) {
-		id <SynchronizedNote>note = allNotes[i];
+
+	for (id <SynchronizedNote> note in allNotes) {
 		NSDictionary *thisServiceInfo = [note syncServicesMD][serviceName];
 		if (thisServiceInfo) {
 			//get corresponding note on server
@@ -250,9 +238,7 @@
 	
 	//*** get the notes that need to be deleted from the server (deletedNotes set) (removed-locally/already-synced)
 	NSMutableArray *locallyDeletedNotes = [NSMutableArray arrayWithCapacity:[deletedNotes count]];
-	NSArray *deletedNotesArray = [deletedNotes allObjects];
-	for (i=0; i<[deletedNotesArray count]; i++) {
-		id <SynchronizedNote>note = deletedNotesArray[i];
+	for (id <SynchronizedNote> note in deletedNotes) {
 		NSDictionary *thisServiceInfo = [note syncServicesMD][serviceName];
 		if (thisServiceInfo) {
 			//find deleted notes of which this service hasn't yet been notified (e.g., deleted notes that still have an entry for this service)
@@ -266,9 +252,8 @@
 	NSMutableArray *remotelyAddedEntries = [NSMutableArray array];
 	NSDictionary *localNotesDict = [self invertedDictionaryOfNotes:allNotes forSession:syncSession];
 	NSDictionary *localDeletedNotesDict = [self invertedDictionaryOfNotes:locallyDeletedNotes forSession:syncSession];
-	
-	for (i=0; i<[MDEntries count]; i++) {
-		NSDictionary *remoteEntry = MDEntries[i];
+
+	for (NSDictionary *remoteEntry in MDEntries) {
 		//a note with this sync-key for this service does not exist
 		NSString *remoteKey = remoteEntry[keyName];
 		if ([remoteKey length]) {

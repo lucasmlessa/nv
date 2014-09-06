@@ -59,7 +59,7 @@ static void SleepCallBack(void *refcon, io_service_t y, natural_t messageType, v
 + (NSArray*)allServiceClasses {
 	static NSArray *allClasses = nil;
 	if (!allClasses) allClasses = [[NSArray alloc] initWithObjects:NSClassFromString(@"SimplenoteSession"), nil];
-	
+
 	return allClasses;
 }
 
@@ -217,15 +217,17 @@ static void SleepCallBack(void *refcon, io_service_t y, natural_t messageType, v
 }
 
 - (void)invalidateAllServices {
-	NSArray *svcs = [[[syncServiceSessions allKeys] copy] autorelease];
-	NSUInteger i = 0;
-	for (i=0; i<[svcs count]; i++) [self invalidateSyncService:svcs[i]];
+	NSArray *svcs = [[syncServiceSessions allKeys] copy];
+	for (NSString *svc in svcs) {
+		[self invalidateSyncService:svc];
+	}
+	[svcs release];
 }
 
 - (void)initializeAllServices {
-	NSArray *svcs = [[self class] allServiceNames];
-	NSUInteger i = 0;
-	for (i=0; i<[svcs count]; i++) [self initializeService:svcs[i]];
+	for (NSString *serviceName in self.class.allServiceNames) {
+		[self initializeService:serviceName];
+	}
 }
 
 
@@ -247,11 +249,12 @@ static void SleepCallBack(void *refcon, io_service_t y, natural_t messageType, v
 	[aMenu addItem:[NSMenuItem separatorItem]];
 	
 	//for each service that NV can handle, add a section to the menu with information about its current session, if one exists
-	NSArray *svcs = [[self class] allServiceNames];
-	NSUInteger i = 0;
-	for (i=0; i<[svcs count]; i++) {
-		Class class = [[self class] allServiceClasses][i];
-		NSString *serviceName = svcs[i];
+	NSArray *names = self.class.allServiceNames;
+	NSArray *classes = self.class.allServiceClasses;
+	NSUInteger count = names.count;
+	[self.class.allServiceNames enumerateObjectsUsingBlock:^(NSString *serviceName, NSUInteger i, BOOL *stop) {
+		Class class = classes[i];
+
 		BOOL isEnabled = [notationPrefs syncServiceIsEnabled:serviceName];
 		
 		//"<Name>" (if disabled, "<Name>: Disabled")
@@ -263,20 +266,19 @@ static void SleepCallBack(void *refcon, io_service_t y, natural_t messageType, v
 		
 		id <SyncServiceSession> session = syncServiceSessions[serviceName];
 		if (session) {
-			NSArray *tasks = [[session activeTasks] allObjects];
-			if ([tasks count]) {
-				//one item per task
-				NSUInteger j = 0;
-				for (j=0; j<[tasks count]; j++) {
-					NSMenuItem *taskItem = [[[NSMenuItem alloc] initWithTitle:[tasks[j] statusText] action:NULL keyEquivalent:@""] autorelease];
-					[taskItem setEnabled:NO];
-					[aMenu addItem:taskItem];
-				}
-			} else {
+
+			NSSet *tasks = session.activeTasks;
+			if (!tasks.count) {
 				//use the session-level status
 				NSMenuItem *sessionStatusItem = [[[NSMenuItem alloc] initWithTitle:[session statusText] action:NULL keyEquivalent:@""] autorelease];
 				[sessionStatusItem setEnabled:NO];
 				[aMenu addItem:sessionStatusItem];
+			}
+
+			for (id <SyncServiceTask> task in tasks) {
+				NSMenuItem *taskItem = [[[NSMenuItem alloc] initWithTitle:[task statusText] action:NULL keyEquivalent:@""] autorelease];
+				[taskItem setEnabled:NO];
+				[aMenu addItem:taskItem];
 			}
 			
 			//now for the ACTION items:
@@ -312,11 +314,11 @@ static void SleepCallBack(void *refcon, io_service_t y, natural_t messageType, v
 			[badItem setEnabled:NO];
 			if (badItem) [aMenu addItem:badItem];
 		}
-		if (i < [svcs count] - 1) {
+
+		if (i < count - 1) {
 			[aMenu addItem:[NSMenuItem separatorItem]];
 		}
-		
-	}
+	}];
 }
 
 - (NSMenu*)syncStatusMenu {
@@ -329,30 +331,23 @@ static void SleepCallBack(void *refcon, io_service_t y, natural_t messageType, v
 }
 
 - (BOOL)hasRunningSessions {
-	NSArray *sessions = [syncServiceSessions allValues];
-	NSUInteger i = 0;
-	for (i=0; i<[sessions count]; i++) {
-		if ([sessions[i] isRunning]) return YES;
-	}
-	return NO;
+	return ([[syncServiceSessions allValues] indexOfObjectPassingTest:^(id <SyncServiceSession> session, NSUInteger idx, BOOL *stop) {
+		return [session isRunning];
+	}] != NSNotFound);
 }
 
 - (BOOL)hasErrors {
-	NSArray *svcs = [[self class] allServiceNames];
-	NSUInteger i = 0;
-	for (i=0; i<[svcs count]; i++) {
-		NSString *serviceName = svcs[i];
-		if ([notationPrefs syncServiceIsEnabled:serviceName]) {
-			//only report errors for those services with which the user is expecting (or hoping) to sync
-			id <SyncServiceSession> session = syncServiceSessions[serviceName];
-			if (!session) return YES;
-			if (![session isRunning]) {
-				//report errors for only stopped sessions
-				if ([session lastError]) return YES;
-			}
-		}
-	}
-	return NO;
+	return ([self.class.allServiceNames indexOfObjectPassingTest:^BOOL(NSString *serviceName, NSUInteger idx, BOOL *stop) {
+		if (![notationPrefs syncServiceIsEnabled:serviceName]) { return NO; }
+
+		//only report errors for those services with which the user is expecting (or hoping) to sync
+		id <SyncServiceSession> session = syncServiceSessions[serviceName];
+		if (!session) { return YES; }
+		if ([session isRunning]) { return NO; }
+
+		//report errors for only stopped sessions
+		return !![session lastError];
+	}] != NSNotFound);
 }
 
 - (void)queueStatusNotification {
@@ -396,26 +391,26 @@ static void SleepCallBack(void *refcon, io_service_t y, natural_t messageType, v
 	lastUncomittedChangeResultMessage = nil;
 	
 	BOOL willNeedToWait = NO;
-	NSArray *sessions = [syncServiceSessions allValues];
-	NSUInteger i = 0;
-	for (i=0; i<[sessions count]; i++) {
-		id <SyncServiceSession> session = sessions[i];
-		if ([session hasUnsyncedChanges]) {
-			
-			//if the session has an error, the last reachability status is bad, and nothing is currently in progress, then skip pushing for it
-			if ([session reachabilityFailed] && [session lastError] && ![session isRunning]) {
-				NSLog(@"%@: skipped %@ due to assumed reachability status", NSStringFromSelector(_cmd), session);
-				continue;
-			}
-			
-			if (!(![session pushSyncServiceChanges] && ![session isRunning])) {
-				willNeedToWait = YES;
-				if (!uncommittedWaitInvocations) uncommittedWaitInvocations = [[NSMutableSet alloc] initWithCapacity:1];
-				[uncommittedWaitInvocations addObject:cInvocation];
-			}
+	NSArray *sessions = [[syncServiceSessions allValues] copy];
+	for (id <SyncServiceSession> session in sessions) {
+		if (![session hasUnsyncedChanges]) {
+			continue;
+		}
+
+		//if the session has an error, the last reachability status is bad, and nothing is currently in progress, then skip pushing for it
+		if ([session reachabilityFailed] && [session lastError] && ![session isRunning]) {
+			NSLog(@"%@: skipped %@ due to assumed reachability status", NSStringFromSelector(_cmd), session);
+			continue;
+		}
+		
+		if (!(![session pushSyncServiceChanges] && ![session isRunning])) {
+			willNeedToWait = YES;
+			if (!uncommittedWaitInvocations) uncommittedWaitInvocations = [[NSMutableSet alloc] initWithCapacity:1];
+			[uncommittedWaitInvocations addObject:cInvocation];
 		}
 	}
-	
+
+	[sessions release];
 	return willNeedToWait;
 }
 

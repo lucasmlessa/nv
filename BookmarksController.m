@@ -181,25 +181,22 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 	self = [self init];
 	if (!self) { return nil; }
 
-	for (NSUInteger i = 0; i < [array count]; i++) {
-		NSDictionary *dict = array[i];
+	for (NSDictionary *dict in array) {
 		NoteBookmark *bookmark = [[NoteBookmark alloc] initWithDictionary:dict];
 		[bookmark setDelegate:self];
 		[bookmarks addObject:bookmark];
 		[bookmark release];
 	}
+
 	return self;
 }
 
-- (NSArray*)dictionaryReps {
-	
+- (NSArray *)dictionaryReps {
 	NSMutableArray *array = [NSMutableArray arrayWithCapacity:[bookmarks count]];
-	unsigned int i;
-	for (i=0; i<[bookmarks count]; i++) {
-		NSDictionary *dict = [bookmarks[i] dictionaryRep];
+	for (NoteBookmark *bookmark in bookmarks) {
+		NSDictionary *dict = [bookmark dictionaryRep];
 		if (dict) [array addObject:dict];
 	}
-	
 	return array;
 }
 
@@ -218,16 +215,15 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 }
 
 - (void)removeBookmarkForNote:(NoteObject*)aNote {
-	unsigned int i;
+	NSUInteger index = [bookmarks indexOfObjectPassingTest:^BOOL(NoteBookmark *bookmark, NSUInteger idx, BOOL *stop) {
+		return [[bookmark noteObject] isEqual:aNote];
+	}];
 
-	for (i=0; i<[bookmarks count]; i++) {
-		if ([bookmarks[i] noteObject] == aNote) {
-			[bookmarks removeObjectAtIndex:i];
-			
-			[self updateBookmarksUI];
-			break;
-		}
-	}
+	if (index == NSNotFound) { return; }
+
+	[bookmarks removeObjectAtIndex:index];
+
+	[self updateBookmarksUI];
 }
 
 
@@ -246,7 +242,7 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 		[bkSubMenu removeItemAtIndex:0];
 	}
 		
-	NSMenuItem *theMenuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Show Bookmarks",@"menu item title for showing bookmarks") 
+	NSMenuItem *theMenuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Show Bookmarks",@"menu item title for showing bookmarks")
 														  action:@selector(showBookmarks:) keyEquivalent:@"0"] autorelease];
 	[theMenuItem setTarget:self];
 	[bookmarksMenu addItem:theMenuItem];
@@ -268,25 +264,21 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 		[bookmarksMenu addItem:[NSMenuItem separatorItem]];
 		[bkSubMenu addItem:[NSMenuItem separatorItem]];
 	}
-	
-	unsigned int i;
-	for (i=0; i<[bookmarks count]; i++) {
 
-		NoteBookmark *bookmark = bookmarks[i];
+	[bookmarks enumerateObjectsUsingBlock:^(NoteBookmark *bookmark, NSUInteger i, BOOL *stop) {
 		NSString *description = [bookmark description];
-		if (description) {
-			theMenuItem = [[[NSMenuItem alloc] initWithTitle:description action:@selector(restoreBookmark:) 
-											   keyEquivalent:[NSString stringWithFormat:@"%d", (i % 9) + 1]] autorelease];
-			if (i > 8) [theMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
-			if (i > 17) [theMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask | NSControlKeyMask];
-			[theMenuItem setRepresentedObject:bookmark];
-			[theMenuItem setTarget:self];
-			[bookmarksMenu addItem:theMenuItem];
-			theMenuItem = [theMenuItem copy];
-			[bkSubMenu addItem:theMenuItem];
-			[theMenuItem release];
-		}
-	}
+		if (!description.length) { return; }
+
+		NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:description action:@selector(restoreBookmark:)
+													keyEquivalent:[NSString stringWithFormat:@"%lu", (unsigned long)((i % 9) + 1)]] autorelease];
+		if (i > 8) [menuItem setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
+		if (i > 17) [menuItem setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask | NSControlKeyMask];
+		[menuItem setRepresentedObject:bookmark];
+		[menuItem setTarget:self];
+		[bookmarksMenu addItem:menuItem];
+		[bkSubMenu addItem:[[menuItem copy] autorelease]];
+		[menuItem release];
+	}];
 }
 
 - (void)updateBookmarksUI {

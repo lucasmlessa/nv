@@ -95,12 +95,9 @@ NSString *ExternalEditorsChangedNotification = @"ExternalEditorsChanged";
 }
 
 - (BOOL)canEditAllNotes:(NSArray*)notes {
-	NSUInteger i = 0;
-	for (i=0; i<[notes count]; i++) {
-		if (![self isODBEditor] && ![self canEditNoteDirectly:notes[i]])
-			return NO;
-	}
-	return YES;
+	return ([notes indexOfObjectPassingTest:^BOOL(NoteObject *note, NSUInteger idx, BOOL *stop) {
+		return ([self isODBEditor] || [self canEditNoteDirectly:note]);
+	}] == NSNotFound);
 }
 
 - (NSImage*)iconImage {
@@ -215,14 +212,13 @@ static ExternalEditorListController* sharedInstance = nil;
 
 - (void)_initDefaults {
 	NSArray *userIdentifiers = [[NSUserDefaults standardUserDefaults] arrayForKey:UserEEIdentifiersKey];
-	
-	NSUInteger i = 0;
-	for (i=0; i<[userIdentifiers count]; i++) {
-		ExternalEditor *ed = [[ExternalEditor alloc] initWithBundleID:userIdentifiers[i] resolvedURL:nil];
+
+	for (NSString *bundleIdentifier in userIdentifiers) {
+		ExternalEditor *ed = [[ExternalEditor alloc] initWithBundleID:bundleIdentifier resolvedURL:nil];
 		[userEditorList addObject:ed];
 		[ed release];
 	}
-	
+
 	//initialize the default editor if one has not already been set or if the identifier was somehow lost from the list
 	if (![self editorIsMember:[self defaultExternalEditor]] || ![[self defaultExternalEditor] isInstalled]) {
 		if ([[self _installedODBEditors] count]) {
@@ -234,16 +230,15 @@ static ExternalEditorListController* sharedInstance = nil;
 - (NSArray*)_installedODBEditors {
 	if (!_installedODBEditors) {
 		_installedODBEditors = [[NSMutableArray alloc] initWithCapacity:5];
-		
-		NSArray *ODBApps = [[[self class] ODBAppIdentifiers] allObjects];
-		NSUInteger i = 0;
-		for (i=0; i<[ODBApps count]; i++) {
-			ExternalEditor *ed = [[ExternalEditor alloc] initWithBundleID:ODBApps[i] resolvedURL:nil];
+
+		for (NSString *bundleIdentifier in self.class.ODBAppIdentifiers) {
+			ExternalEditor *ed = [[ExternalEditor alloc] initWithBundleID:bundleIdentifier resolvedURL:nil];
 			if ([ed isInstalled]) {
 				[_installedODBEditors addObject:ed];
 			}
 			[ed release];
 		}
+
 		[_installedODBEditors sortUsingSelector:@selector(compareDisplayName:)];
 	}
 	return _installedODBEditors;
@@ -312,11 +307,9 @@ errorReturn:
 	//extract bundle identifiers
 	
 	NSMutableArray *array = [NSMutableArray arrayWithCapacity:[userEditorList count]];
-	NSUInteger i = 0;
-	for (i=0; i<[userEditorList count]; i++) {
-		[array addObject:[userEditorList[i] bundleIdentifier]];
+	for (ExternalEditor *editor in userEditorList) {
+		[array addObject:[editor bundleIdentifier]];
 	}
-
 	return array;
 }
 
@@ -366,11 +359,8 @@ errorReturn:
 	NSMutableArray *editors = [NSMutableArray arrayWithArray:[self _installedODBEditors]];
 	[editors addObjectsFromArray:[userEditorList filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"isInstalled == YES"]]];
 	[editors sortUsingSelector:@selector(compareDisplayName:)];
-	
-	NSUInteger i = 0;
-	for (i=0; i<[editors count]; i++) {
-		ExternalEditor *ed = editors[i];
-		
+
+	for (ExternalEditor *ed in editors) {
 		//change action SEL based on whether this is coming from Notes menu or preferences window
 		NSMenuItem *theMenuItem = isPrefsMenu ? 
 			[[[NSMenuItem alloc] initWithTitle:[ed displayName] action:@selector(setDefaultEditor:) keyEquivalent:@""] autorelease] : 

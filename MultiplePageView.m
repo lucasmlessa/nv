@@ -228,42 +228,45 @@ static CGFloat defaultTextPadding(void) {
 	
 	NSAttributedString *formfeed = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%c", NSFormFeedCharacter] attributes:nil];
 	NSFont *bodyFont = [[GlobalPrefs defaultPrefs] noteBodyFont];
-	
-	unsigned i, totalPageCount = 0; //[tableView numberOfSelectedRows];
-	for (i=0; i<[notes count]; i++) {
-		NSAttributedString *contentString = [notes[i] printableStringRelativeToBodyFont:bodyFont];
-		
+
+	NSUInteger count = notes.count;
+	__block NSUInteger totalPageCount = 0;
+
+	[notes enumerateObjectsUsingBlock:^(NoteObject *aNote, NSUInteger i, BOOL *stop) {
+		NSAttributedString *contentString = [aNote printableStringRelativeToBodyFont:bodyFont];
+
 		[pageStorage appendAttributedString:contentString];
-		
-		if (i < [notes count] - 1) [pageStorage appendAttributedString:formfeed];
-		
-		unsigned int j, pageCount = [pagesView printedPageCountForAttributedString:contentString];
-		[pagesView setNumberOfPages:pageCount + totalPageCount];
-		
-		for (j=0; j<pageCount; j++) {
+
+		if (i < count - 1) {
+			[pageStorage appendAttributedString:formfeed];
+		}
+
+		NSUInteger start = totalPageCount;
+		NSUInteger pageCount = [pagesView printedPageCountForAttributedString:contentString];
+		totalPageCount += pageCount;
+
+		for (NSUInteger j = start; j < start + pageCount; j++) {
 			NSTextContainer *textContainer = [[NSTextContainer alloc] initWithContainerSize:[pagesView documentSizeInPage]];
-			
-			NSTextView *textView = [[NSTextView alloc] initWithFrame:[pagesView documentRectForPageNumber: j + totalPageCount] textContainer:textContainer];
+
+			NSTextView *textView = [[NSTextView alloc] initWithFrame:[pagesView documentRectForPageNumber:j] textContainer:textContainer];
 			[textView setHorizontallyResizable:NO];
 			[textView setVerticallyResizable:NO];
-			
+
 			[pagesView addSubview:textView];
-			
+
 			[[pageStorage layoutManagers][0] addTextContainer:textContainer];
-			
+
 			[textView release];
-			[textContainer release];	
-			
+			[textContainer release];
+
 			//add per-page header/footers here
 		}
-		
-		totalPageCount += pageCount;
-	}
+	}];
 	[formfeed release];
 	
 	// force layout before printing
 	NSUInteger len;
-	NSUInteger loc = NSIntegerMax;
+	NSUInteger loc = NSNotFound;
 	if (loc > 0 && (len = [pageStorage length]) > 0) {
 		NSRange glyphRange;
 		if (loc >= len) loc = len - 1;

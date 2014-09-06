@@ -1004,17 +1004,16 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	NSArray *words = [self orderedLabelTitles];
 	NSMutableSet *newLabelSet = [NSMutableSet setWithCapacity:[words count]];
 	
-	unsigned int i;
-	for (i=0; i<[words count]; i++) {
-		NSString *aWord = words[i];
-		
-		if ([aWord length] > 0) {
-			LabelObject *aLabel = [[LabelObject alloc] initWithTitle:aWord];
-			[aLabel addNote:self];
-			
-			[newLabelSet addObject:aLabel];
-			[aLabel autorelease];
+	for (NSString *aWord in words) {
+		if (!aWord.length) {
+			continue;
 		}
+
+		LabelObject *aLabel = [[LabelObject alloc] initWithTitle:aWord];
+		[aLabel addNote:self];
+			
+		[newLabelSet addObject:aLabel];
+		[aLabel autorelease];
 	}
 	
 	return newLabelSet; 
@@ -1097,16 +1096,18 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 
 
 - (NSURL*)uniqueNoteLink {
-		
-	NSArray *svcs = [[SyncSessionController class] allServiceNames];
-	NSMutableDictionary *idsDict = [NSMutableDictionary dictionaryWithCapacity:[svcs count] + 1];
+	NSArray *names = SyncSessionController.allServiceNames;
+	NSArray *classes = SyncSessionController.allServiceClasses;
+	NSMutableDictionary *idsDict = [NSMutableDictionary dictionaryWithCapacity:names.count + 1];
 
 	//include all identifying keys in case the title changes later
-	NSUInteger i = 0;
-	for (i=0; i<[svcs count]; i++) {
-		NSString *syncID = syncServicesMD[svcs[i]][[[SyncSessionController allServiceClasses][i] nameOfKeyElement]];
-		if (syncID) idsDict[svcs[i]] = syncID;
-	}
+	[names enumerateObjectsUsingBlock:^(NSString *svc, NSUInteger i, BOOL *stop) {
+		Class cls = classes[i];
+		NSString *syncID = syncServicesMD[svc][[cls nameOfKeyElement]];
+		if (!syncID) { return; }
+			idsDict[svc] = syncID;
+	}];
+
 	idsDict[@"NV"] = [[NSData dataWithBytes:&uniqueNoteIDBytes length:16] base64Encoding];
 	
 	return [NSURL URLWithString:[@"nvalt://find/" stringByAppendingFormat:@"%@/?%@", [titleString stringWithPercentEscapes], 
@@ -1772,16 +1773,16 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	//return location of NSNotFound and length 0 if none of the words could be found inRange
 	
 	//an optimization would be to fall back on cached cString if contentsWere7Bit is true, but then we have to handle opts ourselves
-	unsigned int i;
 	NSString *haystack = [contentString string];
 	NSRange nextRange = NSMakeRange(NSNotFound, 0);
-	for (i=0; i<[words count]; i++) {
-		NSString *word = words[i];
-		if ([word length] > 0) {
-			nextRange = [haystack rangeOfString:word options:opts range:inRange];
-			if (nextRange.location != NSNotFound && nextRange.length)
-				break;
+	for (NSString *word in words) {
+		if (!word.length) {
+			continue;
 		}
+
+		nextRange = [haystack rangeOfString:word options:opts range:inRange];
+		if (nextRange.location != NSNotFound && nextRange.length)
+			break;
 	}
 
 	return nextRange;

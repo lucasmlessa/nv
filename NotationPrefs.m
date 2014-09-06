@@ -949,9 +949,10 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
     
     size_t newSize = sizeof(OSType) * [typeStrings[notesStorageFormat] count];
     allowedTypes = (OSType*)realloc(allowedTypes, newSize);
-	
-    for (NSUInteger i=0; i<[typeStrings[notesStorageFormat] count]; i++)
-		allowedTypes[i] = UTGetOSTypeFromString((CFStringRef)typeStrings[notesStorageFormat][i]);
+
+	[typeStrings[notesStorageFormat] enumerateObjectsUsingBlock:^(NSString *typeString, NSUInteger i, BOOL *stop) {
+		allowedTypes[i] = UTGetOSTypeFromString((CFStringRef)typeString);
+	}];
 }
 
 - (void)addAllowedPathExtension:(NSString*)extension {
@@ -1042,14 +1043,9 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 }
 
 - (BOOL)pathExtensionAllowed:(NSString*)anExtension forFormat:(NSInteger)formatID {
-	NSUInteger i;
-    for (i=0; i<[pathExtensions[formatID] count]; i++) {
-		if ([anExtension compare:pathExtensions[formatID][i] 
-						 options:NSCaseInsensitiveSearch] == NSOrderedSame) {
-			return YES;
-		}
-    }
-	return NO;
+	return [pathExtensions[formatID] indexOfObjectPassingTest:^BOOL(NSString *extension, NSUInteger idx, BOOL *stop) {
+		return [anExtension compare:extension options:NSCaseInsensitiveSearch] == NSOrderedSame;
+	}] != NSNotFound;
 }
 
 - (BOOL)catalogEntryAllowed:(NoteCatalogEntry*)catEntry {
@@ -1071,9 +1067,8 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	
 	if ([self pathExtensionAllowed:[filename pathExtension] forFormat:notesStorageFormat])
 		return YES;
-    
-	NSUInteger i;
-    for (i=0; i<[typeStrings[notesStorageFormat] count]; i++) {
+
+    for (NSUInteger i = 0; i < [typeStrings[notesStorageFormat] count]; ++i) {
 		if (catEntry->fileType == allowedTypes[i]) {
 			return YES;
 		}

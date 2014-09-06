@@ -31,6 +31,7 @@
 #import "NotesTableHeaderCell.h"
 #import "LinkingEditor.h"
 #import "AppController.h"
+#import "AttributedPlainText.h"
 
 #define STATUS_STRING_FONT_SIZE 16.0f
 #define SET_DUAL_HIGHLIGHTS 0
@@ -152,22 +153,20 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 
 //extracted from initialization to run in a safe way
 - (void)restoreColumns {
-	unsigned int i;
-	
 	//if columns currently exist, then remove them first, so that nstableview's autosave/restore works properly
 	if ([[self tableColumns] count]) {
-		for (i=0; i<[allColumns count]; i++) {
-			[self removeTableColumn:allColumns[i]];
+		for (NSTableColumn *column in allColumns) {
+			[self removeTableColumn:column];
 		}
 	}
 	
 	//horizontal view has only a single column; store column widths separately for it
 	NSArray *columnsToDisplay = [globalPrefs horizontalLayout] ? @[NoteTitleColumnString] : [globalPrefs visibleTableColumns];
-	
-	for (i=0; i<[allColumns count]; i++) {
-		NoteAttributeColumn *column = allColumns[i];
-		if ([columnsToDisplay containsObject:[column identifier]])
+
+	for (NoteAttributeColumn *column in allColumns) {
+		if ([columnsToDisplay containsObject:[column identifier]]) {
 			[self addTableColumn:column];
+		}
 		
 		[column updateWidthForHighlight];
 	}	
@@ -182,12 +181,12 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 }
 
 - (void)awakeFromNib {
-	[globalPrefs registerTarget:self forChangesInSettings:
-		@selector(setTableFontSize:sender:),
-		@selector(setHorizontalLayout:sender:),
-		@selector(setShowGrid:sender:),
-		@selector(setAlternatingRows:sender:),
-		NULL];
+    [globalPrefs registerTarget:self forChangesInSettings:
+        @selector(setTableFontSize:sender:),
+        @selector(setHorizontalLayout:sender:),
+        @selector(setShowGrid:sender:),
+        @selector(setAlternatingRows:sender:),
+        NULL];
 
 	NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
 	
@@ -305,9 +304,8 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	[col setDataCell: horiz ? [[[UnifiedCell alloc] init] autorelease] : cachedCell];
 	
 	NSFont *font = [NSFont systemFontOfSize:[globalPrefs tableFontSize]];
-	NSUInteger i;
-	for (i=0; i<[allColumns count]; i++) {
-		[[allColumns[i] dataCell] setFont:font];
+	for (NoteAttributeColumn *column in allColumns) {
+		[column.dataCell setFont:font];
 	}
 
 	[self setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleRegular];
@@ -343,7 +341,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 		
 		viewMenusValid = NO;
 	} else if (sel_isEqual(selector, @selector(setShowGrid:sender:)) || sel_isEqual(selector, @selector(setAlternatingRows:sender:))) {
-		if (sel_isEqual(selector, @selector(setAlternatingRows:sender:))) {
+        if (sel_isEqual(selector, @selector(setAlternatingRows:sender:))) {
             [self setUsesAlternatingRowBackgroundColors:[globalPrefs alternatingRows]];
         }
         [self updateGrid];
@@ -750,7 +748,52 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	_CopyItemWithSelectorFromMenu(theMenu, notesMenu, @selector(printNote:), target, -1);
 	
 	NSArray *notes = [(FastListDataSource*)[self dataSource] objectsAtFilteredIndexes:[self selectedRowIndexes]];
-	[notes addMenuItemsForURLsInNotes:theMenu];
+
+	//iterate over notes in array
+	//accumulate links as NSMenuItems, with separators between them and disabled items being names of notes
+
+	NSDictionary *blackAttrs = @{
+								 NSFontAttributeName: [NSFont menuFontOfSize:13]
+								 };
+
+	NSDictionary *grayAttrs = @{
+								NSForegroundColorAttributeName: [NSColor grayColor],
+								NSFontAttributeName: [NSFont menuFontOfSize:13]
+								};
+
+	BOOL didAddInitialSeparator = NO;
+
+	for (NoteObject *aNote in notes) {
+		NSArray *urls = [[aNote contentString] allLinks];
+		if (![urls count]) {
+			continue;
+		}
+
+		if (!didAddInitialSeparator) {
+			[theMenu addItem:[NSMenuItem separatorItem]];
+			didAddInitialSeparator = YES;
+		}
+
+		for (NSURL *url in urls) {
+			NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Copy URL",@"contextual menu item title to copy urls")
+														  action:@selector(copyItemToPasteboard:) keyEquivalent:@""];
+
+			//_other_ people would use "_web_userVisibleString" here, but resourceSpecifier looks like it's good enough
+			NSString *urlString = [[url scheme] isEqualToString:@"mailto"] ? [url resourceSpecifier] : [url absoluteString];
+			NSString *truncatedURLString = [urlString length] > 60 ? [[urlString substringToIndex: 60] stringByAppendingString:NSLocalizedString(@"...", @"ellipsis character")] : urlString;
+			NSMutableAttributedString *titleString = [[NSMutableAttributedString alloc] initWithString:[NSLocalizedString(@"Copy ",@"menu item prefix to copy a URL") stringByAppendingString:truncatedURLString] attributes:blackAttrs];
+
+			NSAttributedString *titleDesc = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" (%@)", titleOfNote(aNote)] attributes:grayAttrs];
+			[titleString appendAttributedString:titleDesc];
+			[item setAttributedTitle:titleString];
+			[titleDesc release];
+			[titleString release];
+			[item setRepresentedObject:urlString];
+			[item setTarget:[item representedObject]];
+			[theMenu addItem:item];
+			[item release];
+		}
+	}
 	
 	return theMenu;
 }
@@ -840,9 +883,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 		
         NSArray *notes = [(FastListDataSource*)[self dataSource] objectsAtFilteredIndexes:selectedRows];
 		NSMutableArray *paths = [NSMutableArray arrayWithCapacity:[notes count]];
-		unsigned int i;
-		for (i=0;i<[notes count]; i++) {
-			NoteObject *note = notes[i];
+		for (NoteObject *note in notes) {
 			//for now, allow option-dragging-out only for notes with separate file-backing stores
 			if (storageFormatOfNote(note) != SingleDatabaseFormat) {
 				NSString *aPath = [note noteFilePath];

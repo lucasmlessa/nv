@@ -270,6 +270,7 @@
 		result = kItemVerifyErr;
 		goto returnResult;
 	}
+
 	unsigned int i;
 	for (i=0; i<[notesToVerify count]; i++) {
 		if ([[notesToVerify[i] contentString] length] != [[allNotes[i] contentString] length]) {
@@ -462,7 +463,7 @@ bail:
 			CFUUIDBytes *objUUIDBytes = (CFUUIDBytes *)keys[i];
 			id<SynchronizedNote> obj = (id)values[i];
 			
-			NSUInteger existingNoteIndex = [allNotes indexOfNoteWithUUIDBytes:objUUIDBytes];
+			NSUInteger existingNoteIndex = [self indexOfNoteForUUIDBytes:objUUIDBytes];
 			
 			if ([obj isKindOfClass:[DeletedNoteObject class]]) {
 				
@@ -855,14 +856,12 @@ bail:
 
 - (void)addNotesFromSync:(NSArray*)noteArray {
 	
-	if (![noteArray count]) return; 
-	
-	unsigned int i;
-	
-	if ([[self undoManager] isUndoing]) [undoManager beginUndoGrouping];
-	for (i=0; i<[noteArray count]; i++) {
-		NoteObject * note = noteArray[i];
-		
+	if (![noteArray count]) return;
+
+	BOOL isUndoing = [[self undoManager] isUndoing];
+	if (isUndoing) { [undoManager beginUndoGrouping]; }
+
+	for (NoteObject *note in noteArray) {
 		[self _addNote:note];
 		
 		[note makeNoteDirtyUpdateTime:NO updateFile:YES];
@@ -871,7 +870,8 @@ bail:
 		[note registerModificationWithOwnedServices];
 		[self schedulePushToAllSyncServicesForNote:note];
 	}
-	if ([[self undoManager] isUndoing]) [undoManager endUndoGrouping];
+
+	if (isUndoing) { [undoManager beginUndoGrouping]; }
 	//don't need to reverse-register undo because removeNote/s: will never use this method
 	
 	[self updateTitlePrefixConnections];
@@ -885,19 +885,18 @@ bail:
 - (void)addNotes:(NSArray*)noteArray {
 	
 	if (![noteArray count]) return; 
-	
-	unsigned int i;
-	
-	if ([[self undoManager] isUndoing]) [undoManager beginUndoGrouping];
-	for (i=0; i<[noteArray count]; i++) {
-		NoteObject * note = noteArray[i];
-		
+
+	BOOL isUndoing = [[self undoManager] isUndoing];
+	if (isUndoing) { [undoManager beginUndoGrouping]; }
+
+	for (NoteObject *note in noteArray) {
 		[self _addNote:note];
 		
 		[note makeNoteDirtyUpdateTime:YES updateFile:YES];
 	}
-	if ([[self undoManager] isUndoing]) [undoManager endUndoGrouping];
-	
+
+	if (isUndoing) { [undoManager beginUndoGrouping]; }
+
 	[self updateTitlePrefixConnections];
 	
 	[self synchronizeNoteChanges:nil];
@@ -1133,14 +1132,10 @@ bail:
 	//purge deletedNotes of objects without any more syncMD entries;
 	//once a note has been deleted from all services, there's no need to keep it around anymore
 
-	NSUInteger i = 0;
-	NSArray *dnArray = [deletedNotes allObjects];
-	for (i = 0; i<[dnArray count]; i++) {
-		DeletedNoteObject *dnObj = dnArray[i];
-		if (![[dnObj syncServicesMD] count]) {
-			[deletedNotes removeObject:dnObj];
-			notesChanged = YES;
-		}
+	for (DeletedNoteObject *dnObj in deletedNotes) {
+		if ([[dnObj syncServicesMD] count]) { continue; }
+		[deletedNotes removeObject:dnObj];
+		notesChanged = YES;
 	}
 	//NSLog(@"%s: deleted notes left: %@", _cmd, deletedNotes);
 }
@@ -1235,8 +1230,15 @@ bail:
 
 //used by BookmarksController
 
+- (NSUInteger)indexOfNoteForUUIDBytes:(CFUUIDBytes*)bytes {
+	return [allNotes indexOfObjectPassingTest:^BOOL(NoteObject *note, NSUInteger idx, BOOL *stop) {
+		CFUUIDBytes *noteBytes = [note uniqueNoteIDBytes];
+		return !memcmp(noteBytes, bytes, sizeof(CFUUIDBytes));
+	}];
+}
+
 - (NoteObject*)noteForUUIDBytes:(CFUUIDBytes*)bytes {
-	NSUInteger noteIndex = [allNotes indexOfNoteWithUUIDBytes:bytes];
+	NSUInteger noteIndex = [self indexOfNoteForUUIDBytes:bytes];
 	if (noteIndex != NSNotFound) return allNotes[noteIndex];
 	return nil;	
 }
@@ -1388,12 +1390,10 @@ bail:
 				selectedNoteIndex = i;
 				//this note matches, but what if there are other note-titles that are prefixes of both this one and the search string?
 				//find the first prefix-parent of which searchString is also a prefix
-				NSUInteger j = 0, prefixParentIndex = NSNotFound;
+				NSUInteger prefixParentIndex = NSNotFound;
 				NSArray *prefixParents = prefixParentsOfNote(notesBuffer[i]);
-				
-				for (j=0; j<[prefixParents count]; j++) {
-					NoteObject *obj = prefixParents[j];
-					
+
+				for (NoteObject *obj in prefixParents) {
 					if (noteTitleHasPrefixOfUTF8String(obj, searchString, newLen) &&
 						(prefixParentIndex = [notesListDataSource indexOfObjectIdenticalTo:obj]) != NSNotFound) {
 						//figure out where this prefix parent actually is in the list--if it actually is in the list, that is
@@ -1423,19 +1423,19 @@ bail:
 - (NSArray*)noteTitlesPrefixedByString:(NSString*)prefixString indexOfSelectedItem:(NSInteger *)anIndex {
 	NSMutableArray *objs = [NSMutableArray arrayWithCapacity:[allNotes count]];
 	const char *searchString = [prefixString lowercaseUTF8String];
-	NSUInteger i, titleLen, strLen = strlen(searchString), j = 0, shortestTitleLen = UINT_MAX;
+	NSUInteger titleLen, strLen = strlen(searchString), j = 0, shortestTitleLen = UINT_MAX;
 
-	for (i=0; i<[allNotes count]; i++) {
-		NoteObject *thisNote = allNotes[i];
-		if (noteTitleHasPrefixOfUTF8String(thisNote, searchString, strLen)) {
-			[objs addObject:titleOfNote(thisNote)];
-			if (anIndex && (titleLen = CFStringGetLength((CFStringRef)titleOfNote(thisNote))) < shortestTitleLen) {
-				*anIndex = j;
-				shortestTitleLen = titleLen;
-			}
-			j++;
+	for (NoteObject *thisNote in allNotes) {
+		if (!noteTitleHasPrefixOfUTF8String(thisNote, searchString, strLen)) { continue; }
+
+		[objs addObject:titleOfNote(thisNote)];
+		if (anIndex && (titleLen = CFStringGetLength((CFStringRef)titleOfNote(thisNote))) < shortestTitleLen) {
+			*anIndex = j;
+			shortestTitleLen = titleLen;
 		}
+		j++;
 	}
+
 	return objs;
 }
 

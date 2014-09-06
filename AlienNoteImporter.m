@@ -299,9 +299,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		
 		NSMutableArray *array = [NSMutableArray array];
 		NSFileManager *fileMan = [NSFileManager defaultManager];
-		unsigned int i;
-		for (i=0; i<[paths count]; i++) {
-			NSString *path = paths[i];
+		for (NSString *path in paths) {
 			NSArray *notes = nil;
 			 NSDictionary *pathAttributes = [fileMan attributesAtPath:path followLink:YES];
 //			NSDictionary *pathAttributes = [fileMan fileAttributesAtPath:path traverseLink:YES];
@@ -633,28 +631,26 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 	
 	if (stickyNotes && [stickyNotes isKindOfClass:[NSMutableArray class]]) {
 		NSMutableArray *notes = [NSMutableArray arrayWithCapacity:[stickyNotes count]];
-		
-		unsigned int i;
-		for (i=0; i<[stickyNotes count]; i++) {
-			StickiesDocument *doc = stickyNotes[i];
-			if ([doc isKindOfClass:[StickiesDocument class]]) {
-				NSMutableAttributedString *attributedString = [[[NSMutableAttributedString alloc] initWithRTFD:[doc RTFDData] documentAttributes:NULL] autorelease];
-				[attributedString removeAttachments];
-				[attributedString santizeForeignStylesForImporting];
-				NSString *syntheticTitle = [attributedString trimLeadingSyntheticTitle];
-				
-				NoteObject *noteObject = [[[NoteObject alloc] initWithNoteBody:attributedString title:syntheticTitle 
-																	  delegate:nil format:SingleDatabaseFormat labels:nil] autorelease];
-				if (noteObject) {
-					[noteObject setDateAdded:CFDateGetAbsoluteTime((CFDateRef)[doc creationDate])];
-					[noteObject setDateModified:CFDateGetAbsoluteTime((CFDateRef)[doc modificationDate])];
-
-					[notes addObject:noteObject];
-				} else {
-					NSLog(@"couldn't generate note object from sticky note??");
-				}
-			} else {
+		for (StickiesDocument *doc in stickyNotes) {
+			if (![doc isKindOfClass:[StickiesDocument class]]) {
 				NSLog(@"Sticky document is wrong: %@", [doc description]);
+				continue;
+			}
+
+			NSMutableAttributedString *attributedString = [[[NSMutableAttributedString alloc] initWithRTFD:[doc RTFDData] documentAttributes:NULL] autorelease];
+			[attributedString removeAttachments];
+			[attributedString santizeForeignStylesForImporting];
+			NSString *syntheticTitle = [attributedString trimLeadingSyntheticTitle];
+			
+			NoteObject *noteObject = [[[NoteObject alloc] initWithNoteBody:attributedString title:syntheticTitle 
+																  delegate:nil format:SingleDatabaseFormat labels:nil] autorelease];
+			if (noteObject) {
+				[noteObject setDateAdded:CFDateGetAbsoluteTime((CFDateRef)[doc creationDate])];
+				[noteObject setDateModified:CFDateGetAbsoluteTime((CFDateRef)[doc modificationDate])];
+
+				[notes addObject:noteObject];
+			} else {
+				NSLog(@"couldn't generate note object from sticky note??");
 			}
 		}
 		
@@ -734,14 +730,10 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
     [contents replaceOccurrencesOfString:@"\r" withString:@"\n" options:0 range:NSMakeRange(0, [contents length])];
     
     NSMutableArray *notes = [NSMutableArray array];
-    NSArray *lines = [contents componentsSeparatedByString:@"\n"];
-    NSEnumerator *en = [lines objectEnumerator];
-    NSString *curLine;
-	
 	CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
-	
+
     // Assume first entry in line is note title and any other entries go in the note body
-    while ((curLine = [en nextObject])) {
+	for (NSString *curLine in [contents componentsSeparatedByString:@"\n"]) {
         NSArray *fields = [curLine componentsSeparatedByString:delimiter];
         NSUInteger count = [fields count];
         if (count > 1) {

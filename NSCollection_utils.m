@@ -125,82 +125,12 @@
 @implementation NSArray (NoteUtilities)
 
 - (NSArray*)objectsFromDictionariesForKey:(id)aKey {
-	NSUInteger i = 0;
-	NSMutableArray *objects = [NSMutableArray arrayWithCapacity:[self count]];
-	for (i=0; i<[self count]; i++) {
-		id obj = self[i][aKey];
+	NSMutableArray *objects = [NSMutableArray array];
+	for (NSDictionary *dict in self) {
+		id obj = dict[aKey];
 		if (obj) [objects addObject:obj];
 	}
 	return objects;
-}
-
-- (NSUInteger)indexOfNoteWithUUIDBytes:(CFUUIDBytes*)bytes {
-	NSUInteger i;
-    for (i=0; i<[self count]; i++) {
-		NoteObject *note = self[i];
-		CFUUIDBytes *noteBytes = [note uniqueNoteIDBytes];
-		if (!memcmp(noteBytes, bytes, sizeof(CFUUIDBytes)))
-			return i;
-    }
-    
-    return NSNotFound;
-}
-
-- (void)addMenuItemsForURLsInNotes:(NSMenu*)urlsMenu {
-	//iterate over notes in array
-	//accumulate links as NSMenuItems, with separators between them and disabled items being names of notes
-	unsigned int i;
-	
-	//while ([urlsMenu numberOfItems]) {
-	//	[urlsMenu removeItemAtIndex:0];
-	//}
-	
-//	NSMenu *urlsMenu = [[NSMenu alloc] initWithTitle:@"URLs Menu"];
-	NSDictionary *blackAttrs = @{
-		NSFontAttributeName: [NSFont menuFontOfSize:13]
-	};
-	NSDictionary *grayAttrs = @{
-		NSForegroundColorAttributeName: [NSColor grayColor],
-		NSFontAttributeName: [NSFont menuFontOfSize:13]
-	};
-
-	BOOL didAddInitialSeparator = NO;
-	
-	for (i = 0; i<[self count]; i++) {
-		NoteObject *aNote = self[i];
-		NSArray *urls = [[aNote contentString] allLinks];
-		if ([urls count] > 0) {
-			if (!didAddInitialSeparator) {
-				[urlsMenu addItem:[NSMenuItem separatorItem]];
-				didAddInitialSeparator = YES;
-			}
-			
-			unsigned int j;
-			for (j=0; j<[urls count]; j++) {
-				NSURL *url = urls[j];
-				NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Copy URL",@"contextual menu item title to copy urls")
-															  action:@selector(copyItemToPasteboard:) keyEquivalent:@""];
-				//_other_ people would use "_web_userVisibleString" here, but resourceSpecifier looks like it's good enough
-				NSString *urlString = [[url scheme] isEqualToString:@"mailto"] ? [url resourceSpecifier] : [url absoluteString];
-				NSString *truncatedURLString = [urlString length] > 60 ? [[urlString substringToIndex: 60] stringByAppendingString:NSLocalizedString(@"...", @"ellipsis character")] : urlString;
-				NSMutableAttributedString *titleString = [[NSMutableAttributedString alloc] initWithString:[NSLocalizedString(@"Copy ",@"menu item prefix to copy a URL") stringByAppendingString:truncatedURLString] attributes:blackAttrs];
-				
-				NSAttributedString *titleDesc = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" (%@)", titleOfNote(aNote)] attributes:grayAttrs];
-				[titleString appendAttributedString:titleDesc];
-				[item setAttributedTitle:titleString];
-				[titleDesc release];
-				[titleString release];
-				[item setRepresentedObject:urlString];
-				[item setTarget:[item representedObject]];
-				[urlsMenu addItem:item];
-				[item release];
-			}
-		}
-	}
-//	if (![urlsMenu numberOfItems])
-//		[urlsMenu addItemWithTitle:@"No URLs Found" action:NULL keyEquivalent:@""];
-	
-//	return [urlsMenu autorelease];
 }
 
 @end

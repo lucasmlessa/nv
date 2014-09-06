@@ -182,8 +182,11 @@
 			
 			if ([idStr hasPrefix:@"NV="] && [idStr length] > 3) {
 				NSData *uuidData = [[NSData alloc] initWithBase64Encoding:[[idStr substringFromIndex:3] stringByReplacingPercentEscapes]];
-				if ((foundNote = [notationController noteForUUIDBytes:(CFUUIDBytes*)[uuidData bytes]]))
+				foundNote = [notationController noteForUUIDBytes:(CFUUIDBytes*)[uuidData bytes]];
+				[uuidData release];
+				if (foundNote) {
 					goto handleFound;
+				}
 			}
 			
 			for (j=0; j<[svcs count]; j++) {
@@ -210,8 +213,7 @@
 		//parameters: "title" and one of the following for the body: "txt", "html" (maybe "md" for markdown in the future)
 		//if title is missing, add the body via -[addNotesFromPasteboard:]
 		NSString *title = nil, *txtBody = nil, *htmlBody = nil, *tags = nil, *urlTxt = nil;
-		for (i=0; i<[params count]; i++) {
-			NSString *compStr = params[i];
+		for (NSString *compStr in params) {
 			if ([compStr hasPrefix:@"title="] && [compStr length] > 6) {
 				title = [[compStr substringFromIndex:6] stringByReplacingPercentEscapes];
 			} else if ([compStr hasPrefix:@"txt="] && [compStr length] > 4) {
@@ -226,6 +228,7 @@
                 htmlBody = nil;
 			}
 		}
+
         if (urlTxt) {
             //  NSPasteboard *pboard = [NSPasteboard pasteboardWithUniqueName];
             NSURL *theURL = [NSURL URLWithString:urlTxt];
@@ -293,46 +296,39 @@
 	NSArray *files = [pboard propertyListForType:NSFilenamesPboardType];
 	if ([files isKindOfClass:[NSArray class]]) {
 		NSArray *unknownPaths = files;
-		NSUInteger i;
-		
+
 		if ([notationController currentNoteStorageFormat] != SingleDatabaseFormat) {
 			//notes are stored as separate files, so if these paths are in the notes folder then NV can create double-bracketed-links to them instead
 			
 			NSSet *existingNotes = [notationController notesWithFilenames:files unknownFiles:&unknownPaths];
-			if ([existingNotes count]) {
+			NSArray *existingArray = existingNotes.allObjects;
+			NSUInteger count = existingArray.count;
+			[existingArray enumerateObjectsUsingBlock:^(NoteObject *existingNote, NSUInteger i, BOOL *stop) {
 				//create double-bracketed links using these notes' titles
-				NSArray *existingArray = [existingNotes allObjects];
-				for (i=0; i<[existingArray count]; i++) {
-					[allURLsString appendFormat:@"[[%@]]%s", titleOfNote(existingArray[i]), 
-					 (i < [existingArray count] - 1) || [unknownPaths count] ? "\n" : ""];
+				[allURLsString appendFormat:@"[[%@]]%s", titleOfNote(existingNote), (i < count - 1) || [unknownPaths count] ? "\n" : ""];
+			}];
+		}
+
+		NSUInteger count = unknownPaths.count;
+		[unknownPaths enumerateObjectsUsingBlock:^(NSString *path, NSUInteger i, BOOL *stop) {
+			NSURL *url = [NSURL fileURLWithPath:path];
+			if (!url) return;
+
+			NSString *linkFormat = @"<%@>%s";
+			NSString *pathString = [url absoluteString];
+			NSLog(@"%@",pathString);
+			if ([pathString hasSuffix:@"jpg"] || [pathString hasSuffix:@"jpeg"] || [pathString hasSuffix:@"gif"] || [pathString hasSuffix:@"png"]) {
+				currentPreviewMode = [[NSUserDefaults standardUserDefaults] integerForKey:@"markupPreviewMode"];
+				if (currentPreviewMode == MarkdownPreview || currentPreviewMode == MultiMarkdownPreview) {
+					linkFormat = @"![](%@)%s";
+				} else if (currentPreviewMode == TextilePreview) {
+					linkFormat = @"!%@()!%s";
 				}
 			}
-		}
-		//NSLog(@"paths not found in DB: %@", unknownPaths);
-		
-		for (i=0; i<[unknownPaths count]; i++) {
-			NSURL *url = [NSURL fileURLWithPath:unknownPaths[i]];
-			if (url) {
-        NSString *linkFormat = @"<%@>%s";
-        NSString *pathString = [url absoluteString];
-        NSLog(@"%@",pathString);
-        if ([pathString hasSuffix:@"jpg"]   || 
-            [pathString hasSuffix:@"jpeg"]  ||
-            [pathString hasSuffix:@"gif"]   ||
-            [pathString hasSuffix:@"png"])
-        {
-          currentPreviewMode = [[NSUserDefaults standardUserDefaults] integerForKey:@"markupPreviewMode"];
-          if (currentPreviewMode == MarkdownPreview || currentPreviewMode == MultiMarkdownPreview) {
-            linkFormat = @"![](%@)%s";
-          } else if (currentPreviewMode == TextilePreview) {
-            linkFormat = @"!%@()!%s"; 
-          }
-        }
-        [allURLsString appendFormat:linkFormat, 
-         [pathString stringByReplacingOccurrencesOfString:@"file://localhost" withString:@"file://"],
-         (i < [unknownPaths count] - 1) ? "\n" : ""];          
-			}
-		}
+			[allURLsString appendFormat:linkFormat,
+			 [pathString stringByReplacingOccurrencesOfString:@"file://localhost" withString:@"file://"],
+			 (i < count - 1) ? "\n" : ""];
+		}];
 	}
 	return allURLsString;
 }
