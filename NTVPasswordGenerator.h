@@ -6,7 +6,7 @@
 //  Copyright 2009 Brian Bergstrand. All rights reserved.
 //
 
-#include <Foundation/Foundation.h>
+@import Foundation;
 
 typedef NS_ENUM(NSUInteger, NTVPasswordSet) {
 	NTVPasswordSetNumeric,

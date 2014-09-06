@@ -9,7 +9,7 @@
 #import "NSData+NTVCommonDigest.h"
 #import <CommonCrypto/CommonDigest.h>
 #import "NTVBrokenMD5.h"
-#include <malloc/malloc.h>
+@import Darwin.malloc;
 
 // Function pointer types for functions used in the computation
 // of a cryptographic hash.

@@ -17,7 +17,7 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#include "BufferUtils.h"
+#import "BufferUtils.h"
 
 static const unsigned char gsToLowerMap[256] = {
 '\0', 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, '\t',
@@ -46,14 +46,6 @@ static const unsigned char gsToLowerMap[256] = {
 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef,
 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9,
 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
-
-#if !defined(MIN)
-#define MIN(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
-#endif
-
-#if !defined(MAX)
-#define MAX(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __b : __a; })
-#endif
 
 static u_int32_t u8_nextchar(const char *s, size_t *i);
 

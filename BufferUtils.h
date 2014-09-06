@@ -16,9 +16,8 @@
    - Neither the name of Notational Velocity nor the names of its contributors may be used to endorse 
      or promote products derived from this software without specific prior written permission. */
 
-
-#include <CoreFoundation/CoreFoundation.h>
-#include <Carbon/Carbon.h>
+@import Foundation;
+@import Carbon;
 
 #define UTCDateTimeIsEmpty(__UTCDT) (*(int64_t*)&((__UTCDT)) == 0LL)
 

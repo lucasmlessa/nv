@@ -15,8 +15,7 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#import <Cocoa/Cocoa.h>
-
+@import Foundation;
 
 @interface TemporaryFileCache : NSObject {
 	NSString *cachePath;

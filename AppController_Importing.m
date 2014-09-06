@@ -17,6 +17,7 @@
 
 
 #import "AppController_Importing.h"
+@import WebKit.WebArchive;
 #import "NotationController.h"
 #import "NotationFileManager.h"
 #import "BookmarksController.h"
@@ -26,7 +27,6 @@
 #import "NotationDirectoryManager.h"
 #import "AlienNoteImporter.h"
 #import "NSString_NV.h"
-#import <WebKit/WebArchive.h>
 #import "GlobalPrefs.h"
 #import "NSData_transformations.h"
 #import "AttributedPlainText.h"

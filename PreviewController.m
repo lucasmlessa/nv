@@ -17,6 +17,7 @@
 #import "BTTransparentScroller.h"
 #import "NSFileManager_NV.h"
 #import "NSFileManager+DirectoryLocations.h"
+#import "MAAttachedWindow.h"
 
 #define kDefaultMarkupPreviewVisible @"markupPreviewVisible"
 

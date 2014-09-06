@@ -18,9 +18,8 @@
 /* NSData_transformations.m */
 
 #import "NSData_transformations.h"
-#include <zlib.h>
-
-#import <WebKit/WebKit.h>
+@import WebKit;
+#import <zlib.h>
 
 @implementation NSData (NVUtilities)
 

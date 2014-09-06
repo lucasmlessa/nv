@@ -6,7 +6,7 @@
 //  Copyright (c) 2003 Quentin D. Carnicelli. All rights reserved.
 //
 
-#import <AppKit/AppKit.h>
+@import Cocoa;
 
 @class PTKeyBroadcaster;
 @class PTKeyCombo;

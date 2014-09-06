@@ -5,7 +5,7 @@
 //  Created by elasticthreads on 3/14/11.
 //
 
-#import <Foundation/Foundation.h>
+@import Cocoa;
 #import "GlobalPrefs.h"
 
 @interface ETScrollView : NSScrollView <GlobalPrefsObserver> {

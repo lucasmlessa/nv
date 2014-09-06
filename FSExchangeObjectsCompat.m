@@ -3,10 +3,10 @@
  *  based on MoreFilesX
  */
 
-#include "FSExchangeObjectsCompat.h"
-#include <sys/attr.h>
-#include <sys/stat.h>
-#include <sys/mount.h>
+#import "FSExchangeObjectsCompat.h"
+@import Darwin.sys.attr;
+@import Darwin.sys.mount;
+@import Darwin.POSIX.sys.stat;
 
 u_int32_t volumeCapabilities(const char *path)
 {

@@ -16,12 +16,11 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
+@import CoreServices;
 #import "NTVNotesListDataSource.h"
 #import "NTVLabelsListDataSource.h"
 #import "WALController.h"
-
-#import <CoreServices/CoreServices.h>
 
 //enum { kUISearch, kUINewNote, kUIDeleteNote, kUIRenameNote, kUILabelOperation };
 

@@ -30,7 +30,7 @@
 #import "AttributedPlainText.h"
 #import "NSString_CustomTruncation.h"
 #import "NSFileManager_NV.h"
-#include "BufferUtils.h"
+#import "BufferUtils.h"
 #import "NotationFileManager.h"
 #import "NotationSyncServiceManager.h"
 #import "SyncServiceSessionProtocol.h"

@@ -16,9 +16,9 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 #import "NotationController.h"
-#include "FSExchangeObjectsCompat.h"
+#import "FSExchangeObjectsCompat.h"
 #import "BufferUtils.h"
 
 extern NSString *NotesDatabaseFileName;

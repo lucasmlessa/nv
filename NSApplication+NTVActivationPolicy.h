@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 elasticthreads. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 @interface NSApplication (NTVActivationPolicy)
 

@@ -7,7 +7,7 @@
 //
 
 #import "NSData+NTVCrypto.h"
-#import <Security/Security.h>
+@import Security;
 #import <CommonCrypto/CommonCrypto.h>
 
 static BOOL NTVCryptAESDataInPlace(NSMutableData *data, CCOperation op, NSData *key, NSData *iv) {

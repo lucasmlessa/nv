@@ -5,13 +5,13 @@
 //  Created by Christian Tietze on 15.10.10.
 //  Copyright 2010
 
-#import <Cocoa/Cocoa.h>
-#import <WebKit/WebKit.h>
-#import "MAAttachedWindow.h"
+@import Cocoa;
+@import WebKit;
 
 @class AppController;
 @class NoteObject;
 @class ETTransparentButton;
+@class MAAttachedWindow;
 
 @interface PreviewController : NSWindowController 
 {

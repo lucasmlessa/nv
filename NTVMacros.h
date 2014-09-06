@@ -9,6 +9,8 @@
 #ifndef NTV_MACROS
 #define NTV_MACROS
 
+@import Cocoa;
+
 @class AppController;
 
 #if !defined(NTV_ALWAYS_INLINE)

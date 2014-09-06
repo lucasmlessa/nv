@@ -17,7 +17,7 @@
 
 
 #import "SecureTextEntryManager.h"
-#include <Carbon/Carbon.h>
+@import Carbon;
 
 NSString *ShouldHideSecureTextEntryWarningKey = @"ShouldHideSecureTextEntryWarning";
 

@@ -14,19 +14,19 @@
      the distribution.
    - Neither the name of Notational Velocity nor the names of its contributors may be used to endorse 
      or promote products derived from this software without specific prior written permission. 
- to debug services  
- #include <Foundation/Foundation.h>
- #include <AppKit/AppKit.h>
- NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
- NSUpdateDynamicServices();
- NSLog(@"The services menu has been rebuilt.\n");
- NSLog(@"You must restart any active applications to see changes.\n");
- [pool release];
  */
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 int main(int argc, char *argv[])
 {
     return NSApplicationMain(argc,  (const char **) argv);
+    
+    /* To debug services:
+    @autoreleasepool {
+        NSUpdateDynamicServices();
+        NSLog(@"The services menu has been rebuilt.\n");
+        NSLog(@"You must restart any active applications to see changes.\n");
+    }
+    */
 }

@@ -7,8 +7,7 @@
  */
 /* NSData_crypto.h */
 
-#import <Foundation/Foundation.h>
-#include <openssl/evp.h>
+@import Foundation;
 
 @interface NSData (NVUtilities)
 

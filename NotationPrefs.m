@@ -16,6 +16,9 @@
      or promote products derived from this software without specific prior written permission. */
 
 #import "AppController.h"
+@import CoreServices;
+@import Security;
+@import ApplicationServices;
 #import "NotationPrefs.h"
 #import "GlobalPrefs.h"
 #import "NSString_NV.h"
@@ -27,9 +30,6 @@
 #import "SecureTextEntryManager.h"
 #import "DiskUUIDEntry.h"
 #import "NSData+NTVCrypto.h"
-#include <CoreServices/CoreServices.h>
-#include <Security/Security.h>
-#include <ApplicationServices/ApplicationServices.h>
 
 #define DEFAULT_HASH_ITERATIONS 8000
 #define DEFAULT_KEY_LENGTH 256

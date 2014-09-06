@@ -18,13 +18,13 @@
 
 
 #import "NSAppleEventDescriptor-Extensions.h"
+@import Carbon;
 #import "ODBEditor.h"
 #import "ODBEditorSuite.h"
 #import "NotationPrefs.h"
 #import "TemporaryFileCachePreparer.h"
 #import "ExternalEditorListController.h"
 #import "NoteObject.h"
-#import <Carbon/Carbon.h>
 
 NSString * const ODBEditorCustomPathKey		= @"ODBEditorCustomPath";
 NSString * const ODBEditorNonRetainedClient = @"ODBEditorNonRetainedClient";

@@ -3,7 +3,7 @@
  *
  */
 
-#include "idea_ossl.h"
+#import "idea_ossl.h"
 
 #define IDEA_BLOCK	8
 #define IDEA_KEY_LENGTH	16

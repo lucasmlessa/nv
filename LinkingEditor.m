@@ -11,6 +11,8 @@
 
 
 #import "LinkingEditor.h"
+@import CoreServices;
+@import Carbon;
 #import "GlobalPrefs.h"
 #import "AppController.h"
 #import "AppController_Importing.h"
@@ -22,9 +24,6 @@
 #import "NTVPasswordGenerator.h"
 #import "ETClipView.h"
 #import "AppController.h"
-
-#include <CoreServices/CoreServices.h>
-#include <Carbon/Carbon.h>
 
 @interface LinkingEditor ()
 

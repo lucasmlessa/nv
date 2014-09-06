@@ -2,8 +2,11 @@
 // Prefix header for all source files of the 'Notation' target in the 'Notation' project
 //
 
-#include <Availability.h>
-#include <AvailabilityMacros.h>
+#if defined(__OBJC__) && __OBJC__
+
+@import Darwin.Availability;
+#import "NTVMacros.h"
+#import "NTVMath.h"
 
 #ifndef MAC_OS_X_VERSION_10_8
 #define MAC_OS_X_VERSION_10_8 1080
@@ -17,13 +20,6 @@
 #define MAC_OS_X_VERSION_10_10 101000
 #endif
 
-#if defined(__OBJC__) && __OBJC__
-#import <Cocoa/Cocoa.h>
-#import <objc/runtime.h>
-#import "NTVMacros.h"
-#import "NTVMath.h"
-#endif
-
 // As of DP6. Plan accordingly.
 #ifndef NSFoundationVersionNumber10_10
 #define NSFoundationVersionNumber10_10 1150.12
@@ -35,21 +31,17 @@
 #define NSFoundationVersionNumber10_8 945.00
 #endif
 
-#ifndef NSINTEGER_DEFINED
-#if __LP64__ || NS_BUILD_32_LIKE_64
-typedef long NSInteger;
-typedef unsigned long NSUInteger;
-#else
-typedef int NSInteger;
-typedef unsigned int NSUInteger;
+#define VAR_STR(x) @#x
+#define SEL_STR(name) NSStringFromSelector(@selector(name))
+
+#define force_inline __attribute__((always_inline))
+
+#define IsMountainLionOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_8)
+#define IsMavericksOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_9)
+#define IsYosemiteOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_10)
+
 #endif
 
-#define NSIntegerMax    LONG_MAX
-#define NSIntegerMin    LONG_MIN
-#define NSUIntegerMax   ULONG_MAX
-
-#define NSINTEGER_DEFINED 1
-#endif
 #define DebugPath(__p) (__p = ((!(__p)) ? __FILE__ : (__p)))
 #define _COMPILE_ASSERT_SYMBOL_INNER(line, msg) __COMPILE_ASSERT_ ## line ## __ ## msg
 #define _COMPILE_ASSERT_SYMBOL(line, msg) _COMPILE_ASSERT_SYMBOL_INNER(line, msg)
@@ -60,11 +52,6 @@ typedef char _COMPILE_ASSERT_SYMBOL(__LINE__, msg) [ ((test) ? 1 : -1) ]
 + __GNUC_MINOR__ * 100 \
 + __GNUC_PATCHLEVEL__)
 
-#define VAR_STR(x) @#x
-
-#define SEL_STR(name) NSStringFromSelector(@selector(name))
-
-#define force_inline __attribute__((always_inline))
 
 #define UTXT_TYPE_ID 0x75747874
 #define TEXT_TYPE_ID 0x54455854
@@ -86,12 +73,6 @@ typedef char _COMPILE_ASSERT_SYMBOL(__LINE__, msg) [ ((test) ? 1 : -1) ]
 
 #define VERIFY_SALT "Salt for verifying master key in a single iteration"
 #define LOG_SESSION_SALT "Salt for encrypting a write-ahead-log session"
-
-
-#define IsMountainLionOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_8)
-#define IsMavericksOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_9)
-#define IsYosemiteOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_10)
-
 
 #define NOTES_MENU_ID 89
 #define VIEW_MENU_ID 99

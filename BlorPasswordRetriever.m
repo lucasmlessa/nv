@@ -22,7 +22,7 @@
 #import "NSData_transformations.h"
 #import "AttributedPlainText.h"
 #import "NotationPrefs.h"
-#include "idea_ossl.h"
+#import "idea_ossl.h"
 #import "NSData+NTVCommonDigest.h"
 
 @implementation BlorPasswordRetriever

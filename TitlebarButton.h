@@ -15,7 +15,7 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 typedef NS_ENUM(NSInteger, TitleBarButtonIcon) { NoIcon, DownArrowIcon, SynchronizingIcon, AlertIcon } ;
 

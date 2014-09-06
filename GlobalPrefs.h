@@ -21,9 +21,9 @@
     along with Notational Velocity.  If not, see <http://www.gnu.org/licenses/>. */
 
 
-#import <Cocoa/Cocoa.h>
-#import "SynchronizedNoteProtocol.h"
+@import Cocoa;
 @import ObjectiveC.runtime;
+#import "SynchronizedNoteProtocol.h"
 
 extern NSString *NoteTitleColumnString;
 extern NSString *NoteLabelsColumnString;

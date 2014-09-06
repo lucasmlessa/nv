@@ -17,6 +17,9 @@
 
 
 #import "NotationFileManager.h"
+@import Darwin.sys.param;
+@import Darwin.sys.mount;
+@import Foundation;
 #import "NotationPrefs.h"
 #import "NSString_NV.h"
 #import "NSFileManager_NV.h"
@@ -24,10 +27,6 @@
 #import "GlobalPrefs.h"
 #import "NSData_transformations.h"
 #import "NSData+NTVCommonDigest.h"
-#include <sys/param.h>
-#include <sys/mount.h>
-
-#import <Foundation/Foundation.h>
 #import "FSExchangeObjectsCompat.h"
 
 NSString *NotesDatabaseFileName = @"Notes & Settings";

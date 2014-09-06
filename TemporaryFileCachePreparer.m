@@ -22,7 +22,7 @@
 
 #import "TemporaryFileCachePreparer.h"
 #import "NotationPrefs.h"
-#include <sys/mount.h>
+@import Darwin.sys.mount;
 
 //used to mount a RAM disk for temporary file editing
 //instances of this class are probably not useful for more than one preparation

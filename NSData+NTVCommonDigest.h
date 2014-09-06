@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 ElasticThreads. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 typedef const struct __NTVDigest *NTVDigestRef;
 

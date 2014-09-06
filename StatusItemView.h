@@ -6,7 +6,7 @@
 //  Copyright 2010 elasticthreads. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
 
 
 typedef NS_ENUM(NSInteger, StatusIconType) { DarkMenuIcon, SelectedMenuIcon } ;

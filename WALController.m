@@ -16,11 +16,11 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <sys/stat.h>
+@import Darwin.C.stdio;
+@import Darwin.C.stdlib;
+@import Darwin.POSIX.unistd;
+@import Darwin.POSIX.fcntl;
+@import Darwin.POSIX.sys.stat;
 #import "NSData_transformations.h"
 #import "WALController.h"
 #import "DeletedNoteObject.h"

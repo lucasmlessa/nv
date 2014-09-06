@@ -6,8 +6,7 @@
 //  Copyright (c) 2003 Quentin D. Carnicelli. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-
+@import Cocoa;
 
 @interface PTKeyCombo : NSObject <NSCopying>
 {

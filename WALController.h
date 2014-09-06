@@ -16,10 +16,10 @@
      or promote products derived from this software without specific prior written permission. */
 
 
-#import <Cocoa/Cocoa.h>
+@import Cocoa;
+@import Darwin.POSIX.sys.types;
 #import "SynchronizedNoteProtocol.h"
-#include <sys/types.h>
-#include <zlib.h>
+#import <zlib.h>
 
 #define RECORD_SALT_LEN 32
 
