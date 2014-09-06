@@ -1,6 +1,8 @@
 
 #import "NTVBrokenMD5.h"
-#include <string.h>	/* for memcpy() */
+
+@import Foundation;
+@import Darwin.C.string;
 
 /* The four core functions - F1 is optimized somewhat */
 typedef CC_LONG(*MD5_FN)(CC_LONG, CC_LONG, CC_LONG);

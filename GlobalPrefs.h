@@ -23,6 +23,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "SynchronizedNoteProtocol.h"
+@import ObjectiveC.runtime;
 
 extern NSString *NoteTitleColumnString;
 extern NSString *NoteLabelsColumnString;
