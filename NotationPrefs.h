@@ -17,21 +17,13 @@
 
 
 @import Cocoa;
+#import "NTVTypes.h"
 #import "NotationController.h"
 
 /* this class is responsible for managing all preferences specific to a notational database,
 including encryption, file formats, synchronization, passwords management, and others */
 
 #define EPOC_ITERATION 4
-
-typedef NS_ENUM(NSInteger, NTVStorageFormat) {
-    NTVStorageFormatDatabase = 0,
-    NTVStorageFormatPlainText,
-    NTVStorageFormatRichText,
-    NTVStorageFormatHTML,
-    NTVStorageFormatWord,
-    NTVStorageFormatOpenXML
-};
 
 extern NSString *NotationPrefsDidChangeNotification;
 
@@ -47,7 +39,7 @@ extern NSString *NotationPrefsDidChangeNotification;
 
 	NSColor *foregroundColor;
 	NSFont *baseBodyFont;
-	NSInteger notesStorageFormat;
+	NTVStorageFormat notesStorageFormat;
 	BOOL confirmFileDeletion;
 	
 	NSUInteger chosenExtIndices[4];
@@ -78,7 +70,7 @@ extern NSString *NotationPrefsDidChangeNotification;
 - (NSFont*)baseBodyFont;
 
 - (BOOL)storesPasswordInKeychain;
-- (NSInteger)notesStorageFormat;
+- (NTVStorageFormat)notesStorageFormat;
 - (BOOL)confirmFileDeletion;
 - (BOOL)doesEncryption;
 - (NSDictionary*)syncServiceAccounts;

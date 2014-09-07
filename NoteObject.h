@@ -22,7 +22,8 @@
 
 
 @import Cocoa;
-#import "NotationController.h"
+#import "NTVTypes.h"
+#import "NoteCatalogEntry.h"
 #import "BufferUtils.h"
 #import "SynchronizedNoteProtocol.h"
 #import "NoteAttributeColumn.h"
@@ -37,54 +38,6 @@ typedef struct _NoteFilterContext {
 	BOOL useCachedPositions;
 } NoteFilterContext;
 
-@interface NoteObject : NSObject <NSCoding, SynchronizedNote> {
-	NSAttributedString *tableTitleString;
-	NSMutableAttributedString *contentString;
-	
-	//caching/searching purposes only -- created at runtime
-	char *cTitle, *cContents, *cLabels, *cTitleFoundPtr, *cContentsFoundPtr, *cLabelsFoundPtr;
-	NSMutableSet *labelSet;
-	BOOL contentsWere7Bit, contentCacheNeedsUpdate;
-	//if this note's title is "Chicken Shack menu listing", its prefix parent might have the title "Chicken Shack"
-	
-//	NSString *wordCountString;
-	NSString *dateModifiedString, *dateCreatedString;
-	
-	id delegate; //the notes controller
-	
-	//for syncing to text file
-	UInt32 nodeID;
-	PerDiskInfo *perDiskInfoGroups;
-	size_t perDiskInfoGroupCount;
-	BOOL shouldWriteToFile, didUnarchive;
-	
-	//for storing in write-ahead-log
-	unsigned int logSequenceNumber;
-	
-	//not determined until it's time to read to or write from a text file
-	FSRef *noteFileRef;
-	
-	NSMutableDictionary *syncServicesMD;
-	
-	//more metadata
-	NSRange selectedRange;
-	
-	//each note has its own undo manager--isn't that nice?
-	NSUndoManager *undoManager;
-@public
-
-	//the first for syncing w/ NV server, as the ID cannot be encrypted
-	CFUUIDBytes uniqueNoteIDBytes;
-	NSMutableArray *prefixParentNotes;
-	NSString *filename;
-	NSString *titleString, *labelString;
-	UInt32 logicalSize;
-	UTCDateTime fileModifiedDate, *attrsModifiedDate;
-	NSStringEncoding fileEncoding;
-	NSInteger currentFormatID;
-	CFAbsoluteTime modifiedDate, createdDate;
-}
-
 extern NSComparator const NTVNoteCompareDateModified;
 extern NSComparator const NTVNoteCompareDateCreated;
 extern NSComparator const NTVNoteCompareLabelString;
@@ -93,26 +46,6 @@ extern NSComparator const NTVNoteCompareTitle;
 extern NSComparator const NTVNoteCompareFilename;
 extern NSComparator const NTVNoteCompareNodeID;
 extern NSComparator const NTVNoteCompareFileSize;
-
-	//syncing w/ files in directory
-	NSInteger storageFormatOfNote(NoteObject *note);
-	NSString* filenameOfNote(NoteObject *note);
-	UInt32 fileNodeIDOfNote(NoteObject *note);
-	UInt32 fileSizeOfNote(NoteObject *note);
-	UTCDateTime fileModifiedDateOfNote(NoteObject *note);
-	UTCDateTime *attrsModifiedDateOfNote(NoteObject *note);
-	CFAbsoluteTime modifiedDateOfNote(NoteObject *note);
-	CFAbsoluteTime createdDateOfNote(NoteObject *note);
-
-	NSStringEncoding fileEncodingOfNote(NoteObject *note);
-	
-	NSString* titleOfNote(NoteObject *note);
-	NSString* labelsOfNote(NoteObject *note);
-
-	NSMutableArray* prefixParentsOfNote(NoteObject *note);
-
-#define DefColAttrAccessor(__FName, __IVar) force_inline id __FName(NotesTableView *tv, NoteObject *note, NSInteger row) { return note->__IVar; }
-#define DefModelAttrAccessor(__FName, __IVar) force_inline typeof (((NoteObject *)0)->__IVar) __FName(NoteObject *note) { return note->__IVar; }
 
 extern NTVColumnAttributeGetter const NTVNoteUnifiedCellGetter;
 extern NTVColumnAttributeGetter const NTVNoteUnifiedCellSingleLineGetter;
@@ -127,40 +60,90 @@ extern NTVColumnAttributeGetter const NTVNoteDateCreatedStringGetter;
 extern NTVColumnAttributeSetter const NTVNoteTitleSetter;
 extern NTVColumnAttributeSetter const NTVNoteLabelCellSetter;
 
-	void resetFoundPtrsForNote(NoteObject *note);
-	BOOL noteContainsUTF8String(NoteObject *note, NoteFilterContext *context);
-	BOOL noteTitleHasPrefixOfUTF8String(NoteObject *note, const char* fullString, size_t stringLen);
-	BOOL noteTitleIsAPrefixOfOtherNoteTitle(NoteObject *longerNote, NoteObject *shorterNote);
+extern NSString *const NTVNoteFileUpdatedNotification;
+extern NSString *const NTVNoteContentsUpdatedNotification;
+extern NSString *const NTVNoteNeedsWriteNotification;
 
-- (id)delegate;
-- (void)setDelegate:(id)theDelegate;
-- (id)initWithNoteBody:(NSAttributedString*)bodyText title:(NSString*)aNoteTitle 
-			  delegate:(id)aDelegate format:(NSInteger)formatID labels:(NSString*)aLabelString;
-- (id)initWithCatalogEntry:(NoteCatalogEntry*)entry delegate:(id)aDelegate;
+@class NoteObject;
 
-- (NSSet*)labelSet;
+@protocol NoteObjectDelegate <NSObject>
+
+@property (nonatomic, readonly) NTVStorageFormat currentNoteStorageFormat;
+
+- (void)note:(NoteObject *)note didAddLabelSet:(NSSet *)labelSet;
+- (void)note:(NoteObject *)note didRemoveLabelSet:(NSSet *)labelSet;
+- (void)note:(NoteObject *)note attributeChanged:(NSString *)attribute;
+- (void)noteDidNotWrite:(NoteObject*)note errorCode:(OSStatus)error;
+
+- (void)updateLinksToNote:(NoteObject*)aNoteObject fromOldName:(NSString*)oldname;
+
+@property (nonatomic, readonly) CGFloat titleColumnWidth;
+
+
+@end
+
+@protocol NoteObjectFileManager <NSObject>
+
+@property (nonatomic, readonly) UInt32 diskUUIDIndex;
+@property (nonatomic, readonly) long blockSize;
+
+- (NSString*)uniqueFilenameForTitle:(NSString*)title fromNote:(NoteObject*)note;
+
+- (BOOL)notesDirectoryContainsFile:(NSString*)filename returningFSRef:(FSRef*)childRef;
+- (OSStatus)refreshFileRefIfNecessary:(FSRef *)childRef withName:(NSString *)filename charsBuffer:(UniChar*)charsBuffer;
+
+- (NSMutableData*)dataFromFileInNotesDirectory:(FSRef*)childRef forFilename:(NSString*)filename;
+- (NSMutableData*)dataFromFileInNotesDirectory:(FSRef*)childRef forCatalogEntry:(NoteCatalogEntry*)catEntry;
+
+- (OSStatus)noteFileRenamed:(FSRef*)childRef fromName:(NSString*)oldName toName:(NSString*)newName;
+- (OSStatus)fileInNotesDirectory:(FSRef*)childRef isOwnedByUs:(BOOL*)owned hasCatalogInfo:(FSCatalogInfo *)info;
+- (OSStatus)createFileIfNotPresentInNotesDirectory:(FSRef*)childRef forFilename:(NSString*)filename fileWasCreated:(BOOL*)created;
+- (OSStatus)storeDataAtomicallyInNotesDirectory:(NSData*)data withName:(NSString*)filename destinationRef:(FSRef*)destRef;
+- (OSStatus)moveFileToTrash:(FSRef *)childRef forFilename:(NSString*)filename;
+
+@end
+
+@interface NoteObject : NSObject <SynchronizedNote>
+
+//syncing w/ files in directory
+@property (nonatomic, readonly) NSInteger storageFormat;
+@property (nonatomic, copy, readonly) NSString *filename;
+@property (nonatomic, readonly) UInt32 fileNodeID;
+@property (nonatomic, readonly) UInt32 fileSize;
+@property (nonatomic, readonly) const UTCDateTime *fileModifiedDate;
+@property (nonatomic, readonly) const UTCDateTime *attributesModifiedDate;
+@property (nonatomic) CFAbsoluteTime modifiedDate;
+@property (nonatomic) CFAbsoluteTime createdDate;
+@property (nonatomic) NSStringEncoding fileEncoding;
+
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic, copy) NSString *labels;
+@property (nonatomic, copy, readonly) NSArray *prefixParents;
+
+- (void)resetFoundPtrs;
+BOOL noteContainsUTF8String(NoteObject *note, NoteFilterContext *context);
+BOOL noteTitleHasPrefixOfUTF8String(NoteObject *note, const char* fullString, size_t stringLen);
+BOOL noteTitleIsAPrefixOfOtherNoteTitle(NoteObject *longerNote, NoteObject *shorterNote);
+
+@property (nonatomic, assign) id<NoteObjectDelegate> delegate;
+@property (nonatomic, assign) id<NoteObjectFileManager> fileManager;
+
+- (instancetype)initWithNoteBody:(NSAttributedString*)bodyText title:(NSString*)aNoteTitle delegate:(id <NoteObjectDelegate>)aDelegate fileManager:(id <NoteObjectFileManager>)fileManager format:(NTVStorageFormat)formatID labels:(NSString*)aLabelString NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithCatalogEntry:(NoteCatalogEntry*)entry delegate:(id <NoteObjectDelegate>)aDelegate fileManager:(id <NoteObjectFileManager>)fileManager NS_DESIGNATED_INITIALIZER;
+
+@property (nonatomic, readonly) NSSet *labelSet;
 - (void)replaceMatchingLabelSet:(NSSet*)aLabelSet;
 - (void)replaceMatchingLabel:(LabelObject*)label;
 - (void)updateLabelConnectionsAfterDecoding;
 - (void)updateLabelConnections;
 - (void)disconnectLabels;
-- (BOOL)_setLabelString:(NSString*)newLabelString;
-- (void)setLabelString:(NSString*)newLabels;
 - (NSMutableSet*)labelSetFromCurrentString;
 - (NSArray*)orderedLabelTitles;
-- (NSSize)sizeOfLabelBlocks;
-- (void)_drawLabelBlocksInRect:(NSRect)aRect rightAlign:(BOOL)onRight highlighted:(BOOL)isHighlighted getSizeOnly:(NSSize*)reqSize;
-- (void)drawLabelBlocksInRect:(NSRect)aRect rightAlign:(BOOL)onRight highlighted:(BOOL)isHighlighted;
 
-- (void)setSyncObjectAndKeyMD:(NSDictionary*)aDict forService:(NSString*)serviceName;
-- (void)removeAllSyncMDForService:(NSString*)serviceName;
-//- (void)removeKey:(NSString*)aKey forService:(NSString*)serviceName;
 - (void)updateWithSyncBody:(NSString*)newBody andTitle:(NSString*)newTitle;
 - (void)registerModificationWithOwnedServices;
 
 - (OSStatus)writeCurrentFileEncodingToFSRef:(FSRef*)fsRef;
-- (void)_setFileEncoding:(NSStringEncoding)encoding;
-- (BOOL)setFileEncodingAndReinterpret:(NSStringEncoding)encoding;
 - (BOOL)upgradeToUTF8IfUsingSystemEncoding;
 - (BOOL)upgradeEncodingToUTF8;
 - (BOOL)updateFromFile;
@@ -193,36 +176,29 @@ extern NTVColumnAttributeSetter const NTVNoteLabelCellSetter;
 
 - (void)setFilenameFromTitle;
 - (void)setFilename:(NSString*)aString withExternalTrigger:(BOOL)externalTrigger;
-- (BOOL)_setTitleString:(NSString*)aNewTitle;
-- (void)setTitleString:(NSString*)aNewTitle;
 - (void)updateTablePreviewString;
 - (void)initContentCacheCString;
 - (void)updateContentCacheCStringIfNecessary;
-- (void)setContentString:(NSAttributedString*)attributedString;
-- (NSAttributedString*)contentString;
+@property (nonatomic, copy) NSAttributedString *contentString;
 - (NSAttributedString*)printableStringRelativeToBodyFont:(NSFont*)bodyFont;
 - (NSString*)combinedContentWithContextSeparator:(NSString*)sepWContext;
 - (void)setForegroundTextColorOnly:(NSColor*)aColor;
 - (void)_resanitizeContent;
 - (void)updateUnstyledTextWithBaseFont:(NSFont*)baseFont;
 - (void)updateDateStrings;
-- (void)setDateModified:(CFAbsoluteTime)newTime;
-- (void)setDateAdded:(CFAbsoluteTime)newTime;
-- (void)setSelectedRange:(NSRange)newRange;
-- (NSRange)lastSelectedRange;
+@property (nonatomic) NSRange selectedRange;
 - (BOOL)contentsWere7Bit;
 - (void)addPrefixParentNote:(NoteObject*)aNote;
 - (void)removeAllPrefixParentNotes;
 - (void)previewUsingMarked;
 
-- (NSUndoManager*)undoManager;
-- (void)_undoManagerDidChange:(NSNotification *)notification;
+@property (nonatomic, readonly) NSUndoManager *undoManager;
 
 @end
 
-@interface NSObject (NoteObjectDelegate)
-- (void)note:(NoteObject*)note didAddLabelSet:(NSSet*)labelSet;
-- (void)note:(NoteObject*)note didRemoveLabelSet:(NSSet*)labelSet;
-- (void)note:(NoteObject*)note attributeChanged:(NSString*)attribute;
-@end
+@interface NoteObject (NTVLabelDrawing)
 
+- (NSSize)sizeOfLabelBlocks;
+- (void)drawLabelBlocksInRect:(NSRect)aRect rightAlign:(BOOL)onRight highlighted:(BOOL)isHighlighted;
+
+@end

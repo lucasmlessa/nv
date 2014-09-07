@@ -78,10 +78,12 @@
 	
 	lastWriteError = noErr;
 	unwrittenNotes = [[NSMutableSet alloc] init];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteNoteFileDirty:) name:NTVNoteFileUpdatedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteScheduleNoteWrite:) name:NTVNoteNeedsWriteNotification object:nil];
 
 	return self;
 }
-
 
 - (id)initWithAliasData:(NSData*)data error:(OSStatus*)err {
 	if (!data) {
@@ -650,7 +652,7 @@ bail:
 	[[ODBEditor sharedODBEditor] performSelector:@selector(initializeDatabase:) withObject:notationPrefs afterDelay:0.0];
 }
 
-- (NSInteger)currentNoteStorageFormat {
+- (NTVStorageFormat)currentNoteStorageFormat {
     return [notationPrefs notesStorageFormat];
 }
 
@@ -671,7 +673,7 @@ bail:
     if ([unwrittenNotes count] > 0) {
 		lastWriteError = noErr;
 		if ([notationPrefs notesStorageFormat] != NTVStorageFormatDatabase) {
-			//to avoid mutation enumeration if writing this file triggers a filename change which then triggers another makeNoteDirty which then triggers another scheduleWriteForNote:
+			//to avoid mutation enumeration if writing this file triggers a filename change which then triggers another makeNoteDirty which then triggers another scheduled write
 			//loose-coupling? what?
 			[[[unwrittenNotes copy] autorelease] makeObjectsPerformSelector:@selector(writeUsingCurrentFileFormatIfNecessary)];
 			
@@ -827,7 +829,7 @@ bail:
 		//NSLog(@"registering %s", _cmd);
 		[undoManager registerUndoWithTarget:self selector:@selector(removeNote:) object:note];
 		if (! [[self undoManager] isUndoing] && ! [[self undoManager] isRedoing])
-			[undoManager setActionName:[NSString stringWithFormat:NSLocalizedString(@"Create Note quotemark%@quotemark",@"undo action name for creating a single note"), titleOfNote(note)]];
+			[undoManager setActionName:[NSString stringWithFormat:NSLocalizedString(@"Create Note quotemark%@quotemark",@"undo action name for creating a single note"), note.title]];
 	}
     
 	[self resortAllNotes];
@@ -838,7 +840,7 @@ bail:
 
 //do not update the view here (why not?)
 - (NoteObject*)addNoteFromCatalogEntry:(NoteCatalogEntry*)catEntry {
-	NoteObject *newNote = [[NoteObject alloc] initWithCatalogEntry:catEntry delegate:self];
+	NoteObject *newNote = [[NoteObject alloc] initWithCatalogEntry:catEntry delegate:self fileManager:self];
 	[self _addNote:newNote];
 	[newNote release];
 	
@@ -1004,42 +1006,6 @@ bail:
 	}
 }
 
-- (void)scheduleWriteForNote:(NoteObject*)note {
-
-	if ([allNotes containsObject:note]) {
-	
-		BOOL immediately = NO;
-		notesChanged = YES;
-		
-		[unwrittenNotes addObject:note];
-		
-		//always synchronize absolutely no matter what 15 seconds after any change
-		if (!changeWritingTimer)
-			changeWritingTimer = [[NSTimer scheduledTimerWithTimeInterval:(immediately ? 0.0 : 15.0) target:self 
-									 selector:@selector(synchronizeNoteChanges:)
-									 userInfo:nil repeats:NO] retain];
-		
-		//next user change always invalidates queued write from performSelector, but not queued write from timer
-		//this avoids excessive writing and any potential and unnecessary disk access while user types
-		[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(synchronizeNoteChanges:) object:nil];
-		
-		if (walWriter) {
-			//perhaps a more general user interface activity timer would be better for this? update process syncs every 30 secs, anyway...
-			[NSObject cancelPreviousPerformRequestsWithTarget:walWriter selector:@selector(synchronize) object:nil];
-			//fsyncing WAL to disk can cause noticeable interruption when run from main thread
-			[walWriter performSelector:@selector(synchronize) withObject:nil afterDelay:15.0];
-		}
-		
-		if (!immediately) {
-			//timer is already scheduled if immediately is true
-			//queue to write 2.7 seconds after last user change; 
-			[self performSelector:@selector(synchronizeNoteChanges:) withObject:nil afterDelay:2.7];
-		}
-	} else {
-		NSLog(@"not writing note %@ because it is not controlled by NoteController", note);
-	}
-}
-
 //the gatekeepers!
 - (void)_addNote:(NoteObject*)aNoteObject {
     [aNoteObject setDelegate:self];	
@@ -1162,7 +1128,7 @@ bail:
 - (void)_registerDeletionUndoForNote:(NoteObject*)aNote {	
 	[undoManager registerUndoWithTarget:self selector:@selector(addNewNote:) object:aNote];			
 	if (![undoManager isUndoing] && ![undoManager isRedoing])
-		[undoManager setActionName:[NSString stringWithFormat:NSLocalizedString(@"Delete quotemark%@quotemark",@"undo action name for deleting a single note"), titleOfNote(aNote)]];				
+		[undoManager setActionName:[NSString stringWithFormat:NSLocalizedString(@"Delete quotemark%@quotemark",@"undo action name for deleting a single note"), aNote.title]];
 }			
 
 
@@ -1363,8 +1329,9 @@ bail:
 			NSAssert(filteredNoteCount >= [allNotes count], @"filtered notes were claimed to be filtered but were not");
 			
 			//reset found-ptr values; the search string was effectively blank and so no notes were examined
-			for (i=0; i<filteredNoteCount; i++)
-				resetFoundPtrsForNote(notesBuffer[i]);
+            for (i=0; i<filteredNoteCount; i++) {
+                [notesBuffer[i] resetFoundPtrs];
+            }
 		}
 		
 		//we have to re-create the array at each iteration while searching notes, but not here, so we can wait until the end
@@ -1385,7 +1352,7 @@ bail:
 				//this note matches, but what if there are other note-titles that are prefixes of both this one and the search string?
 				//find the first prefix-parent of which searchString is also a prefix
 				NSUInteger prefixParentIndex = NSNotFound;
-				NSArray *prefixParents = prefixParentsOfNote(notesBuffer[i]);
+                NSArray *prefixParents = notesBuffer[i].prefixParents;
 
 				for (NoteObject *obj in prefixParents) {
 					if (noteTitleHasPrefixOfUTF8String(obj, searchString, newLen) &&
@@ -1417,13 +1384,13 @@ bail:
 - (NSArray*)noteTitlesPrefixedByString:(NSString*)prefixString indexOfSelectedItem:(NSInteger *)anIndex {
 	NSMutableArray *objs = [NSMutableArray arrayWithCapacity:[allNotes count]];
 	const char *searchString = [prefixString lowercaseUTF8String];
-	NSUInteger titleLen, strLen = strlen(searchString), j = 0, shortestTitleLen = UINT_MAX;
+	NSUInteger titleLen, strLen = strlen(searchString), j = 0, shortestTitleLen = NSUIntegerMax;
 
 	for (NoteObject *thisNote in allNotes) {
 		if (!noteTitleHasPrefixOfUTF8String(thisNote, searchString, strLen)) { continue; }
 
-		[objs addObject:titleOfNote(thisNote)];
-		if (anIndex && (titleLen = CFStringGetLength((CFStringRef)titleOfNote(thisNote))) < shortestTitleLen) {
+		[objs addObject:thisNote.title];
+		if (anIndex && (titleLen = thisNote.title.length) < shortestTitleLen) {
 			*anIndex = j;
 			shortestTitleLen = titleLen;
 		}
@@ -1580,7 +1547,8 @@ bail:
 }
 
 - (void)dealloc {
- 
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
 	[walWriter setDelegate:nil];
 	[notationPrefs setDelegate:nil];
 	[allNotes makeObjectsPerformSelector:@selector(setDelegate:) withObject:nil];
@@ -1623,6 +1591,51 @@ bail:
         NSLog(@"Unable to find or create cache folder:\n%@", path);
     }
     return nil;
+}
+
+#pragma mark - Notifications
+
+- (void)noteNoteFileDirty:(NSNotification *)note // NTVNoteObjectDirtyFileNotification
+{
+    [self schedulePushToAllSyncServicesForNote:note.object];
+}
+
+- (void)noteScheduleNoteWrite:(NSNotification *)notification // NTVNoteNeedsWriteNotification
+{
+    NoteObject *note = notification.object;
+    
+    if (![allNotes containsObject:note]) {
+        NSLog(@"not writing note %@ because it is not controlled by NoteController", note);
+        return;
+    }
+
+    BOOL immediately = NO;
+    notesChanged = YES;
+    
+    [unwrittenNotes addObject:note];
+    
+    //always synchronize absolutely no matter what 15 seconds after any change
+    if (!changeWritingTimer)
+        changeWritingTimer = [[NSTimer scheduledTimerWithTimeInterval:(immediately ? 0.0 : 15.0) target:self
+                                                             selector:@selector(synchronizeNoteChanges:)
+                                                             userInfo:nil repeats:NO] retain];
+    
+    //next user change always invalidates queued write from performSelector, but not queued write from timer
+    //this avoids excessive writing and any potential and unnecessary disk access while user types
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(synchronizeNoteChanges:) object:nil];
+    
+    if (walWriter) {
+        //perhaps a more general user interface activity timer would be better for this? update process syncs every 30 secs, anyway...
+        [NSObject cancelPreviousPerformRequestsWithTarget:walWriter selector:@selector(synchronize) object:nil];
+        //fsyncing WAL to disk can cause noticeable interruption when run from main thread
+        [walWriter performSelector:@selector(synchronize) withObject:nil afterDelay:15.0];
+    }
+    
+    if (!immediately) {
+        //timer is already scheduled if immediately is true
+        //queue to write 2.7 seconds after last user change; 
+        [self performSelector:@selector(synchronizeNoteChanges:) withObject:nil afterDelay:2.7];
+    }
 }
 
 @end

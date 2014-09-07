@@ -764,8 +764,8 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 	BOOL didAddInitialSeparator = NO;
 
 	for (NoteObject *aNote in notes) {
-		NSArray *urls = [[aNote contentString] allLinks];
-		if (![urls count]) {
+        NSArray *urls = aNote.contentString.allLinks;
+		if (!urls.count) {
 			continue;
 		}
 
@@ -783,7 +783,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 			NSString *truncatedURLString = [urlString length] > 60 ? [[urlString substringToIndex: 60] stringByAppendingString:NSLocalizedString(@"...", @"ellipsis character")] : urlString;
 			NSMutableAttributedString *titleString = [[NSMutableAttributedString alloc] initWithString:[NSLocalizedString(@"Copy ",@"menu item prefix to copy a URL") stringByAppendingString:truncatedURLString] attributes:blackAttrs];
 
-			NSAttributedString *titleDesc = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" (%@)", titleOfNote(aNote)] attributes:grayAttrs];
+			NSAttributedString *titleDesc = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@" (%@)", aNote.title] attributes:grayAttrs];
 			[titleString appendAttributedString:titleDesc];
 			[item setAttributedTitle:titleString];
 			[titleDesc release];
@@ -1099,8 +1099,9 @@ enum { kNext_Tag = 'j', kPrev_Tag = 'k' };
 			[[self window] makeFirstResponder:[self nextValidKeyView]];
 			NSText *editor = (NSText*)[self nextValidKeyView];
 			if ([editor isKindOfClass:[NSText class]]) {
-				[editor setSelectedRange:NSMakeRange(0, 0)];
-				[editor scrollRangeToVisible:NSMakeRange(0, 0)];
+                NSRange range = NSMakeRange(0, 0);
+                editor.selectedRange = range;
+				[editor scrollRangeToVisible:range];
 			}
 			return YES;
 		}
@@ -1232,11 +1233,11 @@ enum { kNext_Tag = 'j', kPrev_Tag = 'k' };
 		NoteObject *note = [(FastListDataSource*)[self dataSource] immutableObjects][rowIndex];
 		
 		NSTextView *editor = (NSTextView*)[self currentEditor];
-		[editor setString: tagsInTitleColumn ? labelsOfNote(note) : titleOfNote(note)];
+		[editor setString: tagsInTitleColumn ? note.labels : note.title];
 		
-		NSRange range = NSMakeRange(0, [[editor string] length]);
-		
-		if (flag) [editor setSelectedRange:range];
+        if (flag) {
+            editor.selectedRange = NSMakeRange(0, editor.string.length);
+        }
 	}	
 }
 

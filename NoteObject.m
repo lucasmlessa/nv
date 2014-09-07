@@ -31,7 +31,6 @@
 #import "NSString_CustomTruncation.h"
 #import "NSFileManager_NV.h"
 #import "BufferUtils.h"
-#import "NotationFileManager.h"
 #import "NotationSyncServiceManager.h"
 #import "SyncServiceSessionProtocol.h"
 #import "SyncSessionController.h"
@@ -46,36 +45,82 @@
 
 #if __LP64__
 // Needed for compatability with data created by 32bit app
-typedef struct NSRange32 {
+typedef struct {
     unsigned int location;
     unsigned int length;
-} NSRange32;
+} NTVRange32;
 #else
-typedef NSRange NSRange32;
+typedef NSRange NTVRange32;
 #endif
+
+NSString *const NTVNoteFileUpdatedNotification = @"NTVNoteFileUpdatedNotification";
+NSString *const NTVNoteContentsUpdatedNotification = @"NTVNoteContentsUpdatedNotification";
+NSString *const NTVNoteNeedsWriteNotification = @"NTVNoteNeedsWriteNotification";
+
+@interface NoteObject () {
+    //caching/searching purposes only -- created at runtime
+    char *cTitle, *cContents, *cLabels, *cTitleFoundPtr, *cContentsFoundPtr, *cLabelsFoundPtr;
+    NSMutableSet *labelSet;
+    BOOL contentsWere7Bit, contentCacheNeedsUpdate;
+    //if this note's title is "Chicken Shack menu listing", its prefix parent might have the title "Chicken Shack"
+        
+    //for syncing to text file
+    PerDiskInfo *perDiskInfoGroups;
+    size_t perDiskInfoGroupCount;
+    BOOL shouldWriteToFile, didUnarchive;
+    
+    //not determined until it's time to read to or write from a text file
+    FSRef *noteFileRef;
+    
+    NSMutableDictionary *syncServicesMD;
+    
+    NSMutableAttributedString *contentString;
+    UTCDateTime fileModifiedDate, attrsModifiedDate;
+    NSMutableArray *prefixParentNotes;
+    CFUUIDBytes uniqueNoteIDBytes;
+    NSString *titleString, *labelString;
+}
+
+@property (nonatomic, copy) NSAttributedString *tableTitleString;
+@property (nonatomic, copy) NSString *dateCreatedString;
+@property (nonatomic, copy) NSString *dateModifiedString;
+
+- (id)initWithCoder:(NSCoder *)decoder NS_DESIGNATED_INITIALIZER;
+
+@end
 
 @implementation NoteObject
 
+@synthesize storageFormat = currentFormatID;
+@synthesize filename = filename;
+@synthesize fileNodeID = nodeID;
+@synthesize fileSize = logicalSize;
+@synthesize createdDate = createdDate;
+@synthesize modifiedDate = modifiedDate;
+@synthesize fileEncoding = fileEncoding;
+@synthesize title = titleString;
+@synthesize labels = labelString;
+@synthesize tableTitleString = tableTitleString;
+@synthesize undoManager = undoManager;
+@synthesize selectedRange = selectedRange;
 @synthesize logSequenceNumber = logSequenceNumber;
 @synthesize syncServicesMD = syncServicesMD;
+@synthesize dateCreatedString = dateCreatedString;
+@synthesize dateModifiedString = dateModifiedString;
+@synthesize labelSet = labelSet;
 
 static FSRef *noteFileRefInit(NoteObject* obj);
 static void setAttrModifiedDate(NoteObject *note, UTCDateTime *dateTime);
 static void setCatalogNodeID(NoteObject *note, UInt32 cnid);
 
-- (id)init {
-	self = [super init];
-	if (!self) { return nil; }
-
-	perDiskInfoGroups = calloc(1, sizeof(PerDiskInfo));
-	perDiskInfoGroups[0].diskIDIndex = -1;
-	perDiskInfoGroupCount = 1;
-
-	fileEncoding = NSUTF8StringEncoding;
-	selectedRange = NSMakeRange(NSNotFound, 0);
-
-	//other instance variables initialized on demand
-	return self;
+- (void)commonInit
+{
+    perDiskInfoGroups = calloc(1, sizeof(PerDiskInfo));
+    perDiskInfoGroups[0].diskIDIndex = -1;
+    perDiskInfoGroupCount = 1;
+    
+    fileEncoding = NSUTF8StringEncoding;
+    selectedRange = NSMakeRange(NSNotFound, 0);
 }
 
 - (void)dealloc {
@@ -101,20 +146,26 @@ static void setCatalogNodeID(NoteObject *note, UInt32 cnid);
 	[super dealloc];
 }
 
-- (id)delegate {
-	return delegate;
-}
-
-- (void)setDelegate:(id)theDelegate {
+- (void)setDelegate:(id <NoteObjectDelegate>)theDelegate {
 	
 	if (theDelegate) {
-		delegate = theDelegate;
+		_delegate = theDelegate;
 		
 		//do things that ought to have been done during init, but were not possible due to lack of delegate information
-		if (!filename) filename = [[delegate uniqueFilenameForTitle:titleString fromNote:self] retain];
 		if (!tableTitleString && !didUnarchive) [self updateTablePreviewString];
 		if (!labelSet && !didUnarchive) [self updateLabelConnectionsAfterDecoding];
 	}
+}
+
+- (void)setFileManager:(id<NoteObjectFileManager>)fileManager
+{
+    _fileManager = fileManager;
+    
+    if (_fileManager) {
+        if (!filename) {
+            filename = [[self.fileManager uniqueFilenameForTitle:titleString fromNote:self] retain];
+        }
+    }
 }
 
 static FSRef *noteFileRefInit(NoteObject* obj) {
@@ -125,68 +176,50 @@ static FSRef *noteFileRefInit(NoteObject* obj) {
 }
 
 static void setAttrModifiedDate(NoteObject *note, UTCDateTime *dateTime) {
-	size_t idx = SetPerDiskInfoWithTableIndex(dateTime, NULL, (UInt32)diskUUIDIndexForNotation(note->delegate),
+	size_t idx = SetPerDiskInfoWithTableIndex(dateTime, NULL, note.fileManager.diskUUIDIndex,
 													&(note->perDiskInfoGroups), &(note->perDiskInfoGroupCount));
-	note->attrsModifiedDate = &(note->perDiskInfoGroups[idx].attrTime);
+    memcpy(&(note->attrsModifiedDate), &(note->perDiskInfoGroups[idx].attrTime), sizeof(UTCDateTime));
 }
+
 static void setCatalogNodeID(NoteObject *note, UInt32 cnid) {
-	SetPerDiskInfoWithTableIndex(NULL, &cnid, (UInt32)diskUUIDIndexForNotation(note->delegate),
+	SetPerDiskInfoWithTableIndex(NULL, &cnid, note.fileManager.diskUUIDIndex,
 								 &(note->perDiskInfoGroups), &(note->perDiskInfoGroupCount));
 	note->nodeID = cnid;
 }
 
-UTCDateTime *attrsModifiedDateOfNote(NoteObject *note) {
-	//once unarchived, the disk UUID index won't change, so this pointer will always reflect the current attr mod time
-	if (!note->attrsModifiedDate) {
-		//init from delegate based on disk table index
-		unsigned int i, tableIndex = (UInt32)diskUUIDIndexForNotation(note->delegate);
-		
-		for (i=0; i<note->perDiskInfoGroupCount; i++) {
-			//check if this date has actually been initialized; this entry could be here only because setCatalogNodeID was called
-			if (note->perDiskInfoGroups[i].diskIDIndex == tableIndex && !UTCDateTimeIsEmpty(note->perDiskInfoGroups[i].attrTime)) {
-				note->attrsModifiedDate = &(note->perDiskInfoGroups[i].attrTime);
-				goto giveDate;
-			}
-		}
-		//this note doesn't have a file-modified date, so initialize a fairly reasonable one here
-		setAttrModifiedDate(note, &(note->fileModifiedDate));
-	}
-giveDate:	
-	return note->attrsModifiedDate;
-}
-
-UInt32 fileNodeIDOfNote(NoteObject *note) {
-	if (!note->nodeID) {
-		unsigned int i, tableIndex = (UInt32)diskUUIDIndexForNotation(note->delegate);
-		
-		for (i=0; i<note->perDiskInfoGroupCount; i++) {
-			//check if this nodeID has actually been initialized; this entry could be here only because setAttrModifiedDate was called
-			if (note->perDiskInfoGroups[i].diskIDIndex == tableIndex && note->perDiskInfoGroups[i].nodeID != 0U) {
-				note->nodeID = note->perDiskInfoGroups[i].nodeID;
-				goto giveID;
-			}
-		}
-		//this note doesn't have a file-modified date, so initialize something that at least won't repeat this lookup
-		setCatalogNodeID(note, 1);
-	}
+- (UInt32)fileNodeID
+{
+    if (!nodeID) {
+        UInt32 tableIndex = self.fileManager.diskUUIDIndex;
+        
+        for (size_t i=0; i<perDiskInfoGroupCount; i++) {
+            //check if this nodeID has actually been initialized; this entry could be here only because setAttrModifiedDate was called
+            if (perDiskInfoGroups[i].diskIDIndex == tableIndex && perDiskInfoGroups[i].nodeID != 0U) {
+                nodeID = perDiskInfoGroups[i].nodeID;
+                goto giveID;
+            }
+        }
+        //this note doesn't have a file-modified date, so initialize something that at least won't repeat this lookup
+        setCatalogNodeID(self, 1);
+    }
 giveID:	
-	return note->nodeID;
+    return nodeID;
 }
 
 NSComparisonResult(^const NTVNoteCompareDateModified)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
-	return NTVCompare(one->modifiedDate, two->modifiedDate);
+	return NTVCompare(one.modifiedDate, two.modifiedDate);
 };
 
 NSComparisonResult(^const NTVNoteCompareDateCreated)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
-	return NTVCompare(one->createdDate, two->createdDate);
+	return NTVCompare(one.createdDate, two.createdDate);
 };
 
 NSComparisonResult(^const NTVNoteCompareLabelString)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
-	return [labelsOfNote(one) compare:labelsOfNote(two) options:NSCaseInsensitiveSearch];
+	return [one.labels compare:two.labels options:NSCaseInsensitiveSearch];
 };
 
 NSComparisonResult(^const NTVNoteCompareTitle)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
-	NSComparisonResult stringResult = [titleOfNote(one) compare:titleOfNote(two) options:NSCaseInsensitiveSearch];
+	NSComparisonResult stringResult = [one.title compare:two.title options:NSCaseInsensitiveSearch];
 	if (stringResult != NSOrderedSame) { return stringResult; }
 
 	NSComparisonResult dateResult = NTVNoteCompareDateCreated(one, two);
@@ -196,31 +229,31 @@ NSComparisonResult(^const NTVNoteCompareTitle)(NoteObject *, NoteObject *) = ^(N
 };
 
 NSComparisonResult(^const NTVNoteCompareFilename)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
-	return [one->filename compare:two->filename options:NSCaseInsensitiveSearch];
+	return [one.filename compare:two.filename options:NSCaseInsensitiveSearch];
 };
 
 NSComparisonResult(^const NTVNoteCompareNodeID)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
-	return NTVCompare(fileNodeIDOfNote(one), fileNodeIDOfNote(two));
+    return NTVCompare(one.fileNodeID, two.fileNodeID);
 };
 
 NSComparisonResult(^const NTVNoteCompareFileSize)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
-	return NTVCompare(one->logicalSize, two->logicalSize);
+	return NTVCompare(one.fileSize, two.fileSize);
 };
 
 - (void)setSyncObjectAndKeyMD:(NSDictionary*)aDict forService:(NSString*)serviceName {
-	NSMutableDictionary *dict = syncServicesMD[serviceName];
-	if (!dict) {
-		dict = [[NSMutableDictionary alloc] initWithDictionary:aDict];
-		if (!syncServicesMD) syncServicesMD = [[NSMutableDictionary alloc] init];
-		syncServicesMD[serviceName] = dict;
-		[dict release];
-	} else {
-		[dict addEntriesFromDictionary:aDict];
-	}
+    NSMutableDictionary *dict = syncServicesMD[serviceName];
+    if (!dict) {
+        dict = [[NSMutableDictionary alloc] initWithDictionary:aDict];
+        if (!syncServicesMD) syncServicesMD = [[NSMutableDictionary alloc] init];
+        syncServicesMD[serviceName] = dict;
+        [dict release];
+    } else {
+        [dict addEntriesFromDictionary:aDict];
+    }
 }
 
 - (void)removeAllSyncMDForService:(NSString*)serviceName {
-	[syncServicesMD removeObjectForKey:serviceName];
+    [syncServicesMD removeObjectForKey:serviceName];
 }
 
 - (const CFUUIDBytes *)uniqueNoteIDBytes {
@@ -239,33 +272,19 @@ NSComparisonResult(^const NTVNoteCompareFileSize)(NoteObject *, NoteObject *) = 
     return NTVSynchronizedNoteIsEqual(self, otherNote);
 }
 
-//syncing w/ server and from journal;
-
-DefModelAttrAccessor(filenameOfNote, filename)
-DefModelAttrAccessor(fileSizeOfNote, logicalSize)
-DefModelAttrAccessor(titleOfNote, titleString)
-DefModelAttrAccessor(labelsOfNote, labelString)
-DefModelAttrAccessor(fileModifiedDateOfNote, fileModifiedDate)
-DefModelAttrAccessor(modifiedDateOfNote, modifiedDate)
-DefModelAttrAccessor(createdDateOfNote, createdDate)
-DefModelAttrAccessor(storageFormatOfNote, currentFormatID)
-DefModelAttrAccessor(fileEncodingOfNote, fileEncoding)
-DefModelAttrAccessor(prefixParentsOfNote, prefixParentNotes)
-
-- (NSAttributedString *)tableTitleString
+- (const UTCDateTime *)fileModifiedDate
 {
-	return tableTitleString;
+    return &fileModifiedDate;
 }
 
-- (id)tableTitle
+- (const UTCDateTime *)attributesModifiedDate
 {
-	if (tableTitleString) return tableTitleString;
-	return titleString;
+    return &attrsModifiedDate;
 }
 
-- (NSString *)title
+- (NSArray *)prefixParents
 {
-	return titleString;
+    return [[prefixParentNotes copy] autorelease];
 }
 
 - (NSString *)dateCreatedString
@@ -298,7 +317,7 @@ id(^const NTVNoteUnifiedCellSingleLineGetter)(NSTableView *, NoteObject *, NSInt
 	return obj;
 };
 id(^const NTVNoteTableTitleGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
-	return note.tableTitle;
+	return note.tableTitleString ?: note.title;
 };
 id(^const NTVNoteHighlightedTableTitleGetter)(NSTableView *, NoteObject *, NSInteger) = ^id(NSTableView *tv, NoteObject *note, NSInteger row){
 	if (note.tableTitleString) {
@@ -317,8 +336,7 @@ id(^const NTVNoteTitleGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTabl
 id(^const NTVNoteLabelCellGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	LabelColumnCell *cell = [[tv tableColumnWithIdentifier:NoteLabelsColumnString] dataCellForRow:row];
 	[cell setNoteObject:note];
-
-	return labelsOfNote(note);
+    return note.labels;
 };
 id(^const NTVNoteDateModifiedStringGetter)(NSTableView *, NoteObject *, NSInteger) = ^(NSTableView *tv, NoteObject *note, NSInteger row){
 	return note.dateModifiedString;
@@ -328,11 +346,11 @@ id(^const NTVNoteDateCreatedStringGetter)(NSTableView *, NoteObject *, NSInteger
 };
 
 void(^const NTVNoteTitleSetter)(NSTableView *, NSString *, NoteObject *, NSInteger) = ^(NSTableView *tv, NSString *title, NoteObject *note, NSInteger row){
-	[note setTitleString:title];
+    note.title = title;
 };
 
 void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSInteger) = ^(NSTableView *tv, NSString *string, NoteObject *note, NSInteger row){
-	[note setLabelString:string];
+    note.labels = string;
 };
 
 //make notationcontroller should send setDelegate: and setLabelString: (if necessary) to each note when unarchiving this way
@@ -341,9 +359,11 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 //the overhead of the _decodeObject* C functions must be significantly greater than the objc_msgSend and argument passing overhead
 #define DECODE_INDIVIDUALLY 1
 
-- (id)initWithCoder:(NSCoder*)decoder {
-	self = [self init];
+- (id)initWithCoder:(NSCoder *)decoder {
+	self = [super init];
 	if (!self) { return nil; }
+    
+    [self commonInit];
 
 	if ([decoder allowsKeyedCoding]) {
 		//(hopefully?) no versioning necessary here
@@ -363,7 +383,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		logicalSize = [decoder decodeInt32ForKey:VAR_STR(logicalSize)];
 		
 		int64_t fileModifiedDate64 = [decoder decodeInt64ForKey:VAR_STR(fileModifiedDate)];
-		memcpy(&fileModifiedDate, &fileModifiedDate64, sizeof(int64_t));
+		memcpy(&fileModifiedDate, &fileModifiedDate64, sizeof(UTCDateTime));
 					
 		size_t decodedPerDiskByteCount = 0;
 		const uint8_t *decodedPerDiskBytes = [decoder decodeBytesForKey:VAR_STR(perDiskInfoGroups) returnedLength:&decodedPerDiskByteCount];
@@ -385,7 +405,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		filename = [[decoder decodeObjectForKey:VAR_STR(filename)] retain];
 		
 	} else {
-		NSRange32 range32;
+		NTVRange32 range32;
 		unsigned int serverModifiedTime = 0;
 		float scrolledProportion = 0.0;
 		#if __LP64__
@@ -529,16 +549,18 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	}
 }
 
-- (id)initWithNoteBody:(NSAttributedString*)bodyText title:(NSString*)aNoteTitle delegate:(id)aDelegate format:(NSInteger)formatID labels:(NSString*)aLabelString {
+- (id)initWithNoteBody:(NSAttributedString*)bodyText title:(NSString*)aNoteTitle delegate:(id <NoteObjectDelegate>)aDelegate fileManager:(id<NoteObjectFileManager>)fileManager format:(NTVStorageFormat)formatID labels:(NSString *)aLabelString {
 	//delegate optional here
 	if (!bodyText || !aNoteTitle) {
 		[self release];
 		return (self = nil);
 	}
 
-	self = [self init];
-	if (!self) { return nil; }
-
+    self = [super init];
+    if (!self) { return nil; }
+    
+    [self commonInit];
+    
 	contentString = [[NSMutableAttributedString alloc] initWithAttributedString:bodyText];
 	[self initContentCacheCString];
 	if (!cContents) {
@@ -547,16 +569,20 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		return (self = nil);
 	}
 
-	if (![self _setTitleString:aNoteTitle])
+    if (![self setTitle:aNoteTitle notify:NO]) {
 		titleString = NSLocalizedString(@"Untitled Note", @"Title of a nameless note");
+    }
 
-	if (![self _setLabelString:aLabelString]) {
+    if (![self setLabels:aLabelString notify:NO]) {
 		labelString = @"";
 		cLabelsFoundPtr = cLabels = strdup("");
 	}
 
+    _delegate = aDelegate;
+    _fileManager = fileManager;
+    
 	currentFormatID = formatID;
-	filename = [[delegate uniqueFilenameForTitle:titleString fromNote:nil] retain];
+	filename = [[self.fileManager uniqueFilenameForTitle:titleString fromNote:nil] retain];
 
 	CFUUIDRef uuidRef = CFUUIDCreate(kCFAllocatorDefault);
 	uniqueNoteIDBytes = CFUUIDGetUUIDBytes(uuidRef);
@@ -566,7 +592,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	dateCreatedString = [dateModifiedString = [[NSString relativeDateStringWithAbsoluteTime:modifiedDate] retain] retain];
 	UCConvertCFAbsoluteTimeToUTCDateTime(modifiedDate, &fileModifiedDate);
 
-	if (delegate)
+	if (_delegate)
 		[self updateTablePreviewString];
 
 
@@ -575,15 +601,19 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 
 //only get the fsrefs until we absolutely need them
 
-- (id)initWithCatalogEntry:(NoteCatalogEntry*)entry delegate:(id)aDelegate {
-	NSAssert(aDelegate != nil, @"must supply a delegate");
+- (id)initWithCatalogEntry:(NoteCatalogEntry*)entry delegate:(id <NoteObjectDelegate>)aDelegate fileManager:(id<NoteObjectFileManager>)fileManager {
+    NSAssert(aDelegate != nil, @"must supply a delegate");
+    NSAssert(fileManager != nil, @"must supply a file manager");
 
-	self = [self init];
-	if (!self) { return nil; }
-
-	delegate = aDelegate;
+    self = [super init];
+    if (!self) { return nil; }
+    
+    [self commonInit];
+    
+	_delegate = aDelegate;
+    _fileManager = fileManager;
 	filename = [(NSString*)entry->filename copy];
-	currentFormatID = [delegate currentNoteStorageFormat];
+	currentFormatID = _delegate.currentNoteStorageFormat;
 	fileModifiedDate = entry->lastModified;
 	setAttrModifiedDate(self, &(entry->lastAttrModified));
 	setCatalogNodeID(self, entry->nodeID);
@@ -593,8 +623,9 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	uniqueNoteIDBytes = CFUUIDGetUUIDBytes(uuidRef);
 	CFRelease(uuidRef);
 
-	if (![self _setTitleString:[filename stringByDeletingPathExtension]])
+    if (![self setTitle:[filename stringByDeletingPathExtension] notify:NO]) {
 		titleString = NSLocalizedString(@"Untitled Note", @"Title of a nameless note");
+    }
 
 	labelString = @""; //set by updateFromCatalogEntry if there are openmeta extended attributes
 	cLabelsFoundPtr = cLabels = strdup("");
@@ -633,7 +664,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		contentCacheNeedsUpdate = YES;
 		//[self updateContentCacheCStringIfNecessary];
 		
-		[delegate note:self attributeChanged:NotePreviewString];
+		[self.delegate note:self attributeChanged:NotePreviewString];
 	
 		[self makeNoteDirtyUpdateTime:updateTime updateFile:YES];
 	}
@@ -732,7 +763,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	[noAttrBreak release];
 
 	//other header things here, too? like date created/mod/printed? tags?
-	NSMutableAttributedString *contentMinusColor = [[self contentString] mutableCopy];
+    NSMutableAttributedString *contentMinusColor = [self.contentString mutableCopy];
 	[contentMinusColor removeAttribute:NSForegroundColorAttributeName range:NSMakeRange(0, [contentMinusColor length])];
 	
 	[largeAttributedTitleString appendAttributedString:contentMinusColor];
@@ -752,10 +783,10 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 			//is called for visible notes at launch and resize only, generation of images for invisible notes is delayed until after launch
 			
 			CGSize labelBlockSize = ColumnIsSet(NoteLabelsColumn, [prefs tableColumnsBitmap]) ? [self sizeOfLabelBlocks] : NSZeroSize;
-			tableTitleString = [[titleString attributedMultiLinePreviewFromBodyText:contentString upToWidth:[delegate titleColumnWidth] 
+			tableTitleString = [[titleString attributedMultiLinePreviewFromBodyText:contentString upToWidth:self.delegate.titleColumnWidth
 																	 intrusionWidth:labelBlockSize.width] retain];
 		} else {
-			tableTitleString = [[titleString attributedSingleLinePreviewFromBodyText:contentString upToWidth:[delegate titleColumnWidth]] retain];
+			tableTitleString = [[titleString attributedSingleLinePreviewFromBodyText:contentString upToWidth:self.delegate.titleColumnWidth] retain];
 		}
 	} else {
 		if ([prefs horizontalLayout]) {
@@ -766,62 +797,57 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	}
 }
 
-- (void)setTitleString:(NSString*)aNewTitle {
-	
-	NSString *oldTitle = [titleString retain];
-	
-    if ([self _setTitleString:aNewTitle]) {
-		//do you really want to do this when the format is a single DB and the file on disk hasn't been removed?
-		//the filename could get out of sync if we lose the fsref and we could end up with a second file after note is rewritten
-		
-		//solution: don't change the name in that case and allow its new name to be generated
-		//when the format is changed and the file rewritten?
-		
-		
-		
-		//however, the filename is used for exporting and potentially other purposes, so we should also update
-		//it if we know that is has no currently existing (older) counterpart in the notes directory
-		
-		//woe to the exporter who also left the note files in the notes directory after switching to a singledb format
-		//his note names might not be up-to-date
-		if ([delegate currentNoteStorageFormat] != NTVStorageFormatDatabase ||
-			![delegate notesDirectoryContainsFile:filename returningFSRef:noteFileRefInit(self)]) {
-			
-			[self setFilenameFromTitle];
-		}
-		
-		//yes, the given extension could be different from what we had before
-		//but makeNoteDirty will eventually cause it to be re-written in the current format
-		//and thus the format ID will be changed if that was the case
-		[self makeNoteDirtyUpdateTime:YES updateFile:YES];
-		
-		[self updateTablePreviewString];
-		
-		/*NSUndoManager *undoMan = [delegate undoManager];
-		[undoMan registerUndoWithTarget:self selector:@selector(setTitleString:) object:oldTitle];
-		if (![undoMan isUndoing] && ![undoMan isRedoing])
-			[undoMan setActionName:[NSString stringWithFormat:@"Rename Note \"%@\"", titleString]];
-		*/
-		[oldTitle release];
-		
-		[delegate note:self attributeChanged:NoteTitleColumnString];
-    }
+- (void)setTitle:(NSString *)title
+{
+    [self setTitle:title notify:YES];
 }
 
-- (BOOL)_setTitleString:(NSString*)aNewTitle {
-    if (!aNewTitle || ![aNewTitle length] || (titleString && [aNewTitle isEqualToString:titleString]))
-	return NO;
-
-    [titleString release];
-    titleString = [aNewTitle copy];
+- (BOOL)setTitle:(NSString *)aNewTitle notify:(BOOL)notify
+{
+    if (!aNewTitle || ![aNewTitle length] || (titleString && [aNewTitle isEqualToString:titleString])) {
+        return NO;
+    }
     
+    NSString *oldTitle = titleString;
+    titleString = [aNewTitle copy];
     cTitleFoundPtr = cTitle = replaceString(cTitle, [titleString lowercaseUTF8String]);
     
+    if (notify) {
+        //do you really want to do this when the format is a single DB and the file on disk hasn't been removed?
+        //the filename could get out of sync if we lose the fsref and we could end up with a second file after note is rewritten
+        
+        //solution: don't change the name in that case and allow its new name to be generated
+        //when the format is changed and the file rewritten?
+        
+        
+        
+        //however, the filename is used for exporting and potentially other purposes, so we should also update
+        //it if we know that is has no currently existing (older) counterpart in the notes directory
+        
+        //woe to the exporter who also left the note files in the notes directory after switching to a singledb format
+        //his note names might not be up-to-date
+        if (self.delegate.currentNoteStorageFormat != NTVStorageFormatDatabase || ![self.fileManager notesDirectoryContainsFile:filename returningFSRef:noteFileRefInit(self)]) {
+            
+            [self setFilenameFromTitle];
+        }
+        
+        //yes, the given extension could be different from what we had before
+        //but makeNoteDirty will eventually cause it to be re-written in the current format
+        //and thus the format ID will be changed if that was the case
+        [self makeNoteDirtyUpdateTime:YES updateFile:YES];
+        
+        [self updateTablePreviewString];
+        
+        [self.delegate note:self attributeChanged:NoteTitleColumnString];
+    }
+    
+    [oldTitle release];
+
     return YES;
 }
 
 - (void)setFilenameFromTitle {
-	[self setFilename:[delegate uniqueFilenameForTitle:titleString fromNote:self] withExternalTrigger:NO];
+	[self setFilename:[self.fileManager uniqueFilenameForTitle:titleString fromNote:self] withExternalTrigger:NO];
 }
 
 - (void)setFilename:(NSString*)aString withExternalTrigger:(BOOL)externalTrigger {
@@ -831,7 +857,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		filename = [aString copy];
 		
 		if (!externalTrigger) {
-			if ([delegate noteFileRenamed:noteFileRefInit(self) fromName:oldName toName:filename] != noErr) {
+			if ([self.fileManager noteFileRenamed:noteFileRefInit(self) fromName:oldName toName:filename] != noErr) {
 				NSLog(@"Couldn't rename note %@", titleString);
 				
 				//revert name
@@ -840,15 +866,15 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 				return;
 			}
 		} else {
-			[self _setTitleString:[aString stringByDeletingPathExtension]];	
+			[self setTitle:aString.stringByDeletingPathExtension notify:NO];
 			
 			[self updateTablePreviewString];
-			[delegate note:self attributeChanged:NoteTitleColumnString];
+			[self.delegate note:self attributeChanged:NoteTitleColumnString];
 		}
 		
 		[self makeNoteDirtyUpdateTime:YES updateFile:NO];
 		
-		[delegate updateLinksToNote:self fromOldName:oldName];
+		[self.delegate updateLinksToNote:self fromOldName:oldName];
 		//update all the notes that link to the old filename as well!!
 		
 		[oldName release];
@@ -870,10 +896,10 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	CFMutableStringRef normalizedString = CFStringCreateMutableCopy(NULL, 0, (CFStringRef)titleString);
 	CFStringNormalize(normalizedString, kCFStringNormalizationFormC);
 	
-	[self _setTitleString:(NSString*)normalizedString];
+    [self setTitle:(NSString *)normalizedString notify:NO];
 	CFRelease(normalizedString);
 	
-	if ([delegate currentNoteStorageFormat] == NTVStorageFormatRichText)
+	if (self.delegate.currentNoteStorageFormat == NTVStorageFormatRichText)
 		[self makeNoteDirtyUpdateTime:NO updateFile:YES];
 }
 
@@ -884,7 +910,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	if ([contentString restyleTextToFont:[[GlobalPrefs defaultPrefs] noteBodyFont] usingBaseFont:baseFont] > 0) {
 		[undoManager removeAllActions];
 		
-		if ([delegate currentNoteStorageFormat] == NTVStorageFormatRichText)
+		if (self.delegate.currentNoteStorageFormat == NTVStorageFormatRichText)
 			[self makeNoteDirtyUpdateTime:NO updateFile:YES];
 	}
 }
@@ -897,7 +923,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	dateModifiedString = [[NSString relativeDateStringWithAbsoluteTime:modifiedDate] retain];
 }
 
-- (void)setDateModified:(CFAbsoluteTime)newTime {
+- (void)setModifiedDate:(CFAbsoluteTime)newTime {
 	modifiedDate = newTime;
 	
 	[dateModifiedString release];
@@ -905,7 +931,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	dateModifiedString = [[NSString relativeDateStringWithAbsoluteTime:modifiedDate] retain];
 }
 
-- (void)setDateAdded:(CFAbsoluteTime)newTime {
+- (void)setCreatedDate:(CFAbsoluteTime)newTime {
 	createdDate = newTime;
 	
 	[dateCreatedString release];
@@ -913,10 +939,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	dateCreatedString = [[NSString relativeDateStringWithAbsoluteTime:createdDate] retain];	
 }
 
-
 - (void)setSelectedRange:(NSRange)newRange {
-	//if (!newRange.length) newRange = NSMakeRange(0,0);
-	
 	//don't save the range if it's invalid, it's equal to the current range, or the entire note is selected
 	if ((newRange.location != NSNotFound) && !NSEqualRanges(newRange, selectedRange) && 
 		!NSEqualRanges(newRange, NSMakeRange(0, [contentString length]))) {
@@ -924,10 +947,6 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		selectedRange = newRange;
 		[self makeNoteDirtyUpdateTime:NO updateFile:NO];
 	}
-}
-
-- (NSRange)lastSelectedRange {
-	return selectedRange;
 }
 
 //these two methods let us get the actual label objects in use by other notes
@@ -953,39 +972,41 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 }
 
 - (void)updateLabelConnections {
-	//find differences between previous labels and new ones	
-	if (delegate) {
-		NSMutableSet *oldLabelSet = labelSet;
-		NSMutableSet *newLabelSet = [self labelSetFromCurrentString];
-		
-		if (!oldLabelSet) {
-			oldLabelSet = labelSet = [[NSMutableSet alloc] initWithCapacity:[newLabelSet count]];
-		}
-		
-		//what's left-over
-		NSMutableSet *oldLabels = [oldLabelSet mutableCopy];
-		[oldLabels minusSet:newLabelSet];
-		
-		//what wasn't there last time
-		NSMutableSet *newLabels = newLabelSet;
-		[newLabels minusSet:oldLabelSet];
-		
-		//update the currently known labels
-		[labelSet minusSet:oldLabels];
-		[labelSet unionSet:newLabels];
-		
-		//update our status within the list of all labels, adding or removing from the list and updating the labels where appropriate
-		//these end up calling replaceMatchingLabel*
-		[delegate note:self didRemoveLabelSet:oldLabels];
-        [oldLabels release];
-		[delegate note:self didAddLabelSet:newLabels];
-	}
+	//find differences between previous labels and new ones
+    id <NoteObjectDelegate> myDelegate = self.delegate;
+    if (!myDelegate) { return; }
+
+    NSMutableSet *oldLabelSet = labelSet;
+    NSMutableSet *newLabelSet = [self labelSetFromCurrentString];
+    
+    if (!oldLabelSet) {
+        oldLabelSet = labelSet = [[NSMutableSet alloc] initWithCapacity:[newLabelSet count]];
+    }
+    
+    //what's left-over
+    NSMutableSet *oldLabels = [oldLabelSet mutableCopy];
+    [oldLabels minusSet:newLabelSet];
+    
+    //what wasn't there last time
+    NSMutableSet *newLabels = newLabelSet;
+    [newLabels minusSet:oldLabelSet];
+    
+    //update the currently known labels
+    [labelSet minusSet:oldLabels];
+    [labelSet unionSet:newLabels];
+    
+    //update our status within the list of all labels, adding or removing from the list and updating the labels where appropriate
+    //these end up calling replaceMatchingLabel*
+    [myDelegate note:self didRemoveLabelSet:oldLabels];
+    [oldLabels release];
+    [myDelegate note:self didAddLabelSet:newLabels];
 }
 
 - (void)disconnectLabels {
 	//when removing this note from NotationController, other LabelObjects as well as NTVLabelsListDataSource should know not to list it
-	if (delegate) {
-		[delegate note:self didRemoveLabelSet:labelSet];
+    id <NoteObjectDelegate> myDelegate = self.delegate;
+	if (myDelegate) {
+		[myDelegate note:self didRemoveLabelSet:labelSet];
 		[labelSet autorelease];
 		labelSet = nil;
 	} else {
@@ -993,33 +1014,37 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	}
 }
 
-- (BOOL)_setLabelString:(NSString*)newLabelString {
-	if (newLabelString && ![newLabelString isEqualToString:labelString]) {
-		
-		[labelString release];
-		labelString = [newLabelString copy];
-		
-		cLabelsFoundPtr = cLabels = replaceString(cLabels, [labelString lowercaseUTF8String]);
-		
-		[self updateLabelConnections];
-		return YES;
-	}
-	return NO;
+- (void)setLabels:(NSString *)labels
+{
+    [self setLabels:labelString notify:YES];
 }
 
-- (void)setLabelString:(NSString*)newLabelString {
-	
-	if ([self _setLabelString:newLabelString]) {
-	
-		if ([[GlobalPrefs defaultPrefs] horizontalLayout]) {
-			[self updateTablePreviewString];
-		}
-		
-		[self makeNoteDirtyUpdateTime:YES updateFile:YES];
-		//[self registerModificationWithOwnedServices];
-		
-		[delegate note:self attributeChanged:NoteLabelsColumnString];
-	}
+- (BOOL)setLabels:(NSString *)newLabelString notify:(BOOL)update
+{
+    if (!newLabelString || [newLabelString isEqualToString:labelString]) {
+        return NO;
+    }
+    
+    NSString *oldLabelString = labelString;
+    labelString = [newLabelString copy];
+    [oldLabelString release];
+    
+    cLabelsFoundPtr = cLabels = replaceString(cLabels, [labelString lowercaseUTF8String]);
+    
+    [self updateLabelConnections];
+    
+    if (update) {
+        if ([[GlobalPrefs defaultPrefs] horizontalLayout]) {
+            [self updateTablePreviewString];
+        }
+        
+        [self makeNoteDirtyUpdateTime:YES updateFile:YES];
+        //[self registerModificationWithOwnedServices];
+        
+        [self.delegate note:self attributeChanged:NoteLabelsColumnString];
+    }
+    
+    return YES;
 }
 
 - (NSMutableSet*)labelSetFromCurrentString {
@@ -1047,77 +1072,6 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	return [labelString labelCompatibleWords];
 }
 
-- (NSSize)sizeOfLabelBlocks {
-	NSSize size = NSZeroSize;
-	[self _drawLabelBlocksInRect:NSZeroRect rightAlign:NO highlighted:NO getSizeOnly:&size];
-	return size;
-}
-
-- (void)drawLabelBlocksInRect:(NSRect)aRect rightAlign:(BOOL)onRight highlighted:(BOOL)isHighlighted {
-	return [self _drawLabelBlocksInRect:aRect rightAlign:onRight highlighted:isHighlighted getSizeOnly:NULL];
-}
-
-- (void)_drawLabelBlocksInRect:(NSRect)aRect rightAlign:(BOOL)onRight highlighted:(BOOL)isHighlighted getSizeOnly:(NSSize*)reqSize {
-	//used primarily by UnifiedCell, but also by LabelColumnCell, as well as to determine the width of all label-block-images for this note
-	//iterate over words in orderedLabelTitles, retrieving images via -[NTVLabelsListDataSource cachedLabelImageForWord:highlighted:]
-	//if right-align is enabled, then the label-images are queued on the first pass and drawn in reverse on the second
-	
-	CGFloat totalWidth = 0.0, height = 0.0;
-	
-	if (![labelString length]) goto returnSizeIfNecessary;
-	
-	NSArray *words = [self orderedLabelTitles];
-	if (![words count]) goto returnSizeIfNecessary;
-	
-	NSPoint nextBoxPoint = onRight ? NSMakePoint(NSMaxX(aRect), aRect.origin.y) : aRect.origin;
-	NSMutableArray *images = reqSize || !onRight ? nil : [NSMutableArray arrayWithCapacity:[words count]];
-    CGFloat tableFontSize = [[GlobalPrefs defaultPrefs] tableFontSize] - 1.0f;
-    nextBoxPoint.y-=round(tableFontSize * 1.3f);
-    NSRect dRect=NSZeroRect;
-	NSInteger i;
-	
-	for (i=0; i<(NSInteger)[words count]; i++) {
-		NSString *word = words[i];
-		if ([word length]) {
-			NSImage *img = [[delegate labelsListDataSource] cachedLabelImageForWord:word highlighted:isHighlighted];
-			
-            dRect.origin=nextBoxPoint;
-            dRect.size=[img size];
-			if (!reqSize) {
-				if (onRight) {
-					[images addObject:img];
-				} else {
-//					[img compositeToPoint:nextBoxPoint operation:NSCompositeSourceOver];
-                    
-                    [img drawInRect:dRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0f respectFlipped:YES hints:nil];
-					nextBoxPoint.x += [img size].width + 4.0;
-				}
-			} else {
-				totalWidth += [img size].width + 4.0;
-				height = MAX(height, [img size].height);
-			}
-		}
-	}
-	
-	if (!reqSize) {
-		if (onRight) {
-			//draw images in reverse instead
-			for (i = [images count] - 1; i>=0; i--) {
-				NSImage *img = images[i];
-				nextBoxPoint.x -= [img size].width + 4.0;
-                dRect.origin=nextBoxPoint;
-                dRect.size=[img size];
-//				[img compositeToPoint:nextBoxPoint operation:NSCompositeSourceOver];
-              [img drawInRect:dRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0f respectFlipped:YES hints:nil];
-			}
-		}
-	} else {
-	returnSizeIfNecessary:
-		if (reqSize) *reqSize = NSMakeSize(totalWidth, height);
-	}
-}
-
-
 - (NSURL*)uniqueNoteLink {
 	NSArray *names = SyncSessionController.allServiceNames;
 	NSArray *classes = SyncSessionController.allServiceClasses;
@@ -1139,7 +1093,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 
 - (NSString*)noteFilePath {
 	UniChar chars[256];
-	if ([delegate refreshFileRefIfNecessary:noteFileRefInit(self) withName:filename charsBuffer:chars] == noErr)
+	if ([self.fileManager refreshFileRefIfNecessary:noteFileRefInit(self) withName:filename charsBuffer:chars] == noErr)
 		return [[NSFileManager defaultManager] pathWithFSRef:noteFileRefInit(self)];
 	return nil;
 }
@@ -1161,7 +1115,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
     BOOL fileWasCreated = NO;
     BOOL fileIsOwned = NO;
 	
-    if ([delegate createFileIfNotPresentInNotesDirectory:noteFileRefInit(self) forFilename:filename fileWasCreated:&fileWasCreated] != noErr)
+    if ([self.fileManager createFileIfNotPresentInNotesDirectory:noteFileRefInit(self) forFilename:filename fileWasCreated:&fileWasCreated] != noErr)
 		return NO;
     
     if (fileWasCreated) {
@@ -1171,7 +1125,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
     
 	//createFileIfNotPresentInNotesDirectory: works by name, so if this file is not owned by us at this point, it was a race with moving it
     FSCatalogInfo info;
-    if ([delegate fileInNotesDirectory:noteFileRefInit(self) isOwnedByUs:&fileIsOwned hasCatalogInfo:&info] != noErr)
+    if ([self.fileManager fileInNotesDirectory:noteFileRefInit(self) isOwnedByUs:&fileIsOwned hasCatalogInfo:&info] != noErr)
 		return NO;
     
     CFAbsoluteTime timeOnDisk, lastTime;
@@ -1198,14 +1152,14 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		//update formatID to absolutely ensure we don't reload an earlier note back from disk, from text encoding menu, for example
 		//currentFormatID = NTVStorageFormatDatabase;
 	} else {
-		[delegate noteDidNotWrite:self errorCode:kWriteJournalErr];
+		[self.delegate noteDidNotWrite:self errorCode:kWriteJournalErr];
 	}
     
     return wroteAllOfNote;
 }
 
 - (void)mirrorTags {
-	if ([delegate currentNoteStorageFormat] == NTVStorageFormatDatabase)
+	if (self.delegate.currentNoteStorageFormat == NTVStorageFormatDatabase)
 		return;
 
 	@try {
@@ -1214,10 +1168,6 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	@catch (NSException *exception) {
 		NSLog(@"%@",exception);
 	}
-	@finally {
-		return;
-	}
-
 }
 
 
@@ -1227,7 +1177,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
     NSError *error = nil;
 	NSMutableAttributedString *contentMinusColor = nil;
 	
-    NSInteger formatID = [delegate currentNoteStorageFormat];
+    NTVStorageFormat formatID = self.delegate.currentNoteStorageFormat;
     switch (formatID) {
 		case NTVStorageFormatDatabase:
 			//we probably shouldn't be here
@@ -1241,7 +1191,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 				//just make the file unicode and ram it through
 				//unicode is probably better than UTF-8, as it's more easily auto-detected by other programs via the BOM
 				//but we can auto-detect UTF-8, so what the heck
-				[self _setFileEncoding:NSUTF8StringEncoding];
+                [self setFileEncoding:NSUTF8StringEncoding reinterpret:NO];
 				//maybe we could rename the file file.utf8.txt here
 				NSLog(@"promoting to unicode (UTF-8)");
 				formattedData = [[contentString string] dataUsingEncoding:fileEncoding allowLossyConversion:YES];
@@ -1282,10 +1232,10 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		//could offer to merge or revert changes
 		
 		OSStatus err = noErr;
-		if ((err = [delegate storeDataAtomicallyInNotesDirectory:formattedData withName:filename destinationRef:noteFileRefInit(self)]) != noErr) {
+		if ((err = [self.fileManager storeDataAtomicallyInNotesDirectory:formattedData withName:filename destinationRef:noteFileRefInit(self)]) != noErr) {
 			NSLog(@"Unable to save note file %@", filename);
 			
-			[delegate noteDidNotWrite:self errorCode:err];
+			[self.delegate noteDidNotWrite:self errorCode:err];
 			return NO;
 		}
 		//if writing plaintext set the file encoding with setxattr
@@ -1313,7 +1263,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		//tell any external editors that we've changed
 		
     } else {
-		[delegate noteDidNotWrite:self errorCode:kDataFormattingErr];
+		[self.delegate noteDidNotWrite:self errorCode:kDataFormattingErr];
 		NSLog(@"Unable to convert note contents into format %ld", (long)formatID);
 		return NO;
     }
@@ -1334,7 +1284,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	OSStatus err = noErr;
 	do {
 		if (noErr != err || IsZeros(noteFileRefInit(self), sizeof(FSRef))) {
-			if (![delegate notesDirectoryContainsFile:filename returningFSRef:noteFileRefInit(self)]) return fnfErr;
+			if (![self.fileManager notesDirectoryContainsFile:filename returningFSRef:noteFileRefInit(self)]) return fnfErr;
 		}
 		err = FSSetCatalogInfo(noteFileRefInit(self), kFSCatInfoCreateDate | kFSCatInfoContentMod, &catInfo);
 	} while (fnfErr == err);
@@ -1346,7 +1296,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	
 	//regardless of whether FSSetCatalogInfo was successful, the file mod date could still have changed
 	
-	if ((err = [delegate fileInNotesDirectory:noteFileRefInit(self) isOwnedByUs:NULL hasCatalogInfo:&catInfo]) != noErr) {
+	if ((err = [self.fileManager fileInNotesDirectory:noteFileRefInit(self) isOwnedByUs:NULL hasCatalogInfo:&catInfo]) != noErr) {
 		NSLog(@"Unable to get new modification date of file %@: %d", filename, err);
 		return err;
 	}
@@ -1383,17 +1333,17 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	BOOL didUpgrade = YES;
 	
 	if (NSUTF8StringEncoding != fileEncoding) {
-		[self _setFileEncoding:NSUTF8StringEncoding];
+		[self setFileEncoding:NSUTF8StringEncoding reinterpret:NO];
 		
 		if (!contentsWere7Bit && NTVStorageFormatPlainText == currentFormatID) {
 			//this note exists on disk as a plaintext file, and its encoding is incompatible with UTF-8
 			
-			if ([delegate currentNoteStorageFormat] == NTVStorageFormatPlainText) {
+			if (self.delegate.currentNoteStorageFormat == NTVStorageFormatPlainText) {
 				//actual conversion is expected because notes are presently being maintained as plain text files
 				
 				NSLog(@"rewriting %@ as utf8 data", titleString);
 				didUpgrade = [self writeUsingCurrentFileFormat];
-			} else if ([delegate currentNoteStorageFormat] == NTVStorageFormatDatabase) {
+			} else if (self.delegate.currentNoteStorageFormat == NTVStorageFormatDatabase) {
 				//update last-written-filemod time to guarantee proper encoding at next DB storage format switch, 
 				//in case this note isn't otherwise modified before that happens.
 				//a side effect is that if the user switches to an RTF or HTML format,
@@ -1405,45 +1355,49 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		//make note dirty to ensure these changes are saved
 		[self makeNoteDirtyUpdateTime:NO updateFile:NO];
 	}
+    
 	return didUpgrade;
 }
 
-- (void)_setFileEncoding:(NSStringEncoding)encoding {
-	fileEncoding = encoding;
+- (void)setFileEncoding:(NSStringEncoding)encoding
+{
+    [self setFileEncoding:encoding reinterpret:YES];
 }
 
-- (BOOL)setFileEncodingAndReinterpret:(NSStringEncoding)encoding {
-	//"reinterpret" the file using this encoding, also setting the actual file's extended attributes to match
-	BOOL updated = YES;
-	
-	if (encoding != fileEncoding) {
-		[self _setFileEncoding:encoding];
-		
-		//write the file encoding extended attribute before updating from disk. why?
-		//a) to ensure -updateFromData: finds the right encoding when re-reading the file, and
-		//b) because the file is otherwise not being rewritten, and the extended attribute--if it existed--may have been different
-		
-		UniChar chars[256];
-		if ([delegate refreshFileRefIfNecessary:noteFileRefInit(self) withName:filename charsBuffer:chars] != noErr)
-			return NO;
-		
-		if ([self writeCurrentFileEncodingToFSRef:noteFileRefInit(self)] != noErr)
-			return NO;		
-		
-		if ((updated = [self updateFromFile])) {
-			[self makeNoteDirtyUpdateTime:NO updateFile:NO];
-			//need to update modification time manually
-			[self registerModificationWithOwnedServices];
-			[delegate schedulePushToAllSyncServicesForNote:self];
-			//[[delegate delegate] contentsUpdatedForNote:self];
-		}
-	}
-	
-	return updated;
+- (BOOL)setFileEncoding:(NSStringEncoding)encoding reinterpret:(BOOL)reinterpret {
+    if (encoding == fileEncoding) {
+        return NO;
+    }
+    
+    //"reinterpret" the file using this encoding, also setting the actual file's extended attributes to match
+    fileEncoding = encoding;
+    
+    //write the file encoding extended attribute before updating from disk. why?
+    //a) to ensure -updateFromData: finds the right encoding when re-reading the file, and
+    //b) because the file is otherwise not being rewritten, and the extended attribute--if it existed--may have been different
+    
+    UniChar chars[256];
+    if ([self.fileManager refreshFileRefIfNecessary:noteFileRefInit(self) withName:filename charsBuffer:chars] != noErr)
+        return NO;
+    
+    if ([self writeCurrentFileEncodingToFSRef:noteFileRefInit(self)] != noErr)
+        return NO;
+    
+    if (![self updateFromFile]) {
+        return NO;
+    }
+    
+    [self makeNoteDirtyUpdateTime:NO updateFile:NO];
+
+    //need to update modification time manually
+    [self registerModificationWithOwnedServices];
+    [[NSNotificationCenter defaultCenter] postNotificationName:NTVNoteFileUpdatedNotification object:self];
+    
+    return YES;
 }
 
 - (BOOL)updateFromFile {
-    NSMutableData *data = [delegate dataFromFileInNotesDirectory:noteFileRefInit(self) forFilename:filename];
+    NSMutableData *data = [self.fileManager dataFromFileInNotesDirectory:noteFileRefInit(self) forFilename:filename];
     if (!data) {
 		NSLog(@"Couldn't update note from file on disk");
 		return NO;
@@ -1451,7 +1405,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	
     if ([self updateFromData:data inFormat:currentFormatID]) {
 		FSCatalogInfo info;
-		if ([delegate fileInNotesDirectory:noteFileRefInit(self) isOwnedByUs:NULL hasCatalogInfo:&info] == noErr) {
+		if ([self.fileManager fileInNotesDirectory:noteFileRefInit(self) isOwnedByUs:NULL hasCatalogInfo:&info] == noErr) {
 			fileModifiedDate = info.contentModDate;
 			setAttrModifiedDate(self, &info.attributeModDate);
 			setCatalogNodeID(self, info.nodeID);
@@ -1466,7 +1420,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 - (BOOL)updateFromCatalogEntry:(NoteCatalogEntry*)catEntry {
 	BOOL didRestoreLabels = NO;
 	
-    NSMutableData *data = [delegate dataFromFileInNotesDirectory:noteFileRefInit(self) forCatalogEntry:catEntry];
+    NSMutableData *data = [self.fileManager dataFromFileInNotesDirectory:noteFileRefInit(self) forCatalogEntry:catEntry];
     if (!data) {
 		NSLog(@"Couldn't update note from file on disk given catalog entry");
 		return NO;
@@ -1488,8 +1442,9 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		NSArray *openMetaTags = [[NSFileManager defaultManager] getTagsAtFSPath:[pathData bytes]];
 		if (openMetaTags) {
 			//overwrite this note's labels with those from the file; merging may be the wrong thing to do here
-			if ([self _setLabelString:[openMetaTags componentsJoinedByString:@" "]])
+            if ([self setLabels:[openMetaTags componentsJoinedByString:@" "] notify:NO]) {
 				[self updateTablePreviewString];
+            }
 		} else if ([labelString length]) {
 			//this file has either never had tags or has had them cleared by accident (e.g., non-user intervention)
 			//so if this note still has tags, then restore them now.
@@ -1503,7 +1458,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	OSStatus err = noErr;
 	CFAbsoluteTime aModDate, aCreateDate;
 	if (noErr == (err = UCConvertUTCDateTimeToCFAbsoluteTime(&fileModifiedDate, &aModDate))) {
-		[self setDateModified:aModDate];
+        self.modifiedDate = aModDate;
 	}
 	
 	if (createdDate == 0.0 || didRestoreLabels) {
@@ -1511,10 +1466,11 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		//or if this file has just been altered, grab its newly-changed modification dates
 		
 		FSCatalogInfo info;
-		if ([delegate fileInNotesDirectory:noteFileRefInit(self) isOwnedByUs:NULL hasCatalogInfo:&info] == noErr) {
+		if ([self.fileManager fileInNotesDirectory:noteFileRefInit(self) isOwnedByUs:NULL hasCatalogInfo:&info] == noErr) {
 			if (createdDate == 0.0 && UCConvertUTCDateTimeToCFAbsoluteTime(&info.createDate, &aCreateDate) == noErr) {
-				[self setDateAdded:aCreateDate];
+                self.createdDate = aCreateDate;
 			}
+            
 			if (didRestoreLabels) {
 				fileModifiedDate = info.contentModDate;
 				setAttrModifiedDate(self, &info.attributeModDate);
@@ -1603,12 +1559,12 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
     [self updateContentCacheCStringIfNecessary];
 	[undoManager removeAllActions];
 
-	[self setTitleString:newTitle];
+    self.title = newTitle;
 }
 
 - (void)moveFileToTrash {
 	OSStatus err = noErr;
-	if ((err = [delegate moveFileToTrash:noteFileRefInit(self) forFilename:filename]) != noErr) {
+	if ((err = [self.fileManager moveFileToTrash:noteFileRefInit(self) forFilename:filename]) != noErr) {
 		NSLog(@"Couldn't move file to trash: %d", err);
 	} else {
 		//file's gone! don't assume it's not coming back. if the storage format was not single-db, this note better be removed
@@ -1643,9 +1599,9 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	//else we don't turn file updating off--we might be overwriting the state of a previous note-dirty message
 	
 	if (updateTime) {
-		[self setDateModified:CFAbsoluteTimeGetCurrent()];
+        self.modifiedDate = CFAbsoluteTimeGetCurrent();
 		
-		if ([delegate currentNoteStorageFormat] == NTVStorageFormatDatabase) {
+		if (self.delegate.currentNoteStorageFormat == NTVStorageFormatDatabase) {
 			//only set if we're not currently synchronizing to avoid re-reading old data
 			//this will be updated again when writing to a file, but for now we have the newest version
 			//we must do this to allow new notes to be written when switching formats, and for encodingmanager checks
@@ -1657,11 +1613,11 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		//if this is a change that affects the actual content of a note such that we would need to updateFile
 		//and the modification time was actually updated, then dirty the note with the sync services, too
 		[self registerModificationWithOwnedServices];
-		[delegate schedulePushToAllSyncServicesForNote:self];
+        [[NSNotificationCenter defaultCenter] postNotificationName:NTVNoteFileUpdatedNotification object:self];
 	}
 	
 	//queue note to be written
-    [delegate scheduleWriteForNote:self];	
+    [[NSNotificationCenter defaultCenter] postNotificationName:NTVNoteNeedsWriteNotification object:self];
 	
 	//tell delegate that the date modified changed
 	//[delegate note:self attributeChanged:NoteDateModifiedColumnString];
@@ -1683,7 +1639,7 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 			NSAssert(NO, @"Warning! Tried to export data in single-db format!?");
 		case NTVStorageFormatPlainText:
 			if (!(formattedData = [[contentMinusColor string] dataUsingEncoding:fileEncoding allowLossyConversion:NO])) {
-				[self _setFileEncoding:NSUTF8StringEncoding];
+                [self setFileEncoding:NSUTF8StringEncoding reinterpret:NO];
 				NSLog(@"promoting to unicode (UTF-8) on export--probably because internal format is singledb");
 				formattedData = [[contentMinusColor string] dataUsingEncoding:fileEncoding allowLossyConversion:YES];
 			}
@@ -1731,12 +1687,12 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		return dupFNErr;
 	}
 	//yes, the file is probably not on the same volume as our notes directory
-	if ((err = FSRefWriteData(&fileRef, BlockSizeForNotation(delegate), [formattedData length], [formattedData bytes], 0, true)) != noErr) {
+	if ((err = FSRefWriteData(&fileRef, self.fileManager.blockSize, [formattedData length], [formattedData bytes], 0, true)) != noErr) {
 		NSLog(@"error writing to temporary file: %d", err);
 		return err;
     }
 	if (NTVStorageFormatPlainText == storageFormat) {
-		(void)[self writeCurrentFileEncodingToFSRef:&fileRef];
+        (void)[self writeCurrentFileEncodingToFSRef:&fileRef];
 	}
 	NSFileManager *fileMan = [NSFileManager defaultManager];
 	[fileMan setTags:[self orderedLabelTitles] atFSPath:[[fileMan pathWithFSRef:&fileRef] fileSystemRepresentation]];
@@ -1779,8 +1735,8 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 		//reflect the temp file's changes directly back to the backing-store-file, database, and sync services
 		[self makeNoteDirtyUpdateTime:YES updateFile:YES];
 		
-		[delegate note:self attributeChanged:NotePreviewString];
-		[[(NotationController *)delegate delegate] contentsUpdatedForNote:self];
+		[self.delegate note:self attributeChanged:NotePreviewString];
+        [[NSNotificationCenter defaultCenter] postNotificationName:NTVNoteContentsUpdatedNotification object:self];
 	} else {
 		NSBeep();
 		NSLog(@"odbEditor:didModifyFile: unable to get data from %@", path);
@@ -1811,16 +1767,17 @@ void(^const NTVNoteLabelCellSetter)(NSTableView *, NSString *, NoteObject *, NSI
 	return nextRange;
 }
 
-force_inline void resetFoundPtrsForNote(NoteObject *note) {
-	note->cTitleFoundPtr = note->cTitle;
-	note->cContentsFoundPtr = note->cContents;
-	note->cLabelsFoundPtr = note->cLabels;	
+- (void)resetFoundPtrs
+{
+    cTitleFoundPtr = cTitle;
+    cContentsFoundPtr = cContents;
+    cLabelsFoundPtr = cLabels;
 }
 
 BOOL noteContainsUTF8String(NoteObject *note, NoteFilterContext *context) {
 	
     if (!context->useCachedPositions) {
-		resetFoundPtrsForNote(note);
+        [note resetFoundPtrs];
     }
 	
 	char *needle = context->needle;
@@ -1879,18 +1836,11 @@ BOOL noteTitleIsAPrefixOfOtherNoteTitle(NoteObject *longerNote, NoteObject *shor
 }*/
 
 - (NSUndoManager*)undoManager {
-    if (!undoManager) {
-	undoManager = [[NSUndoManager alloc] init];
+    if (undoManager) { return undoManager; }
 	
-	id center = [NSNotificationCenter defaultCenter];
-	[center addObserver:self selector:@selector(_undoManagerDidChange:)
-		       name:NSUndoManagerDidUndoChangeNotification
-		     object:undoManager];
-	
-	[center addObserver:self selector:@selector(_undoManagerDidChange:)
-		       name:NSUndoManagerDidRedoChangeNotification
-		     object:undoManager];
-    }
+	NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+	[center addObserver:self selector:@selector(_undoManagerDidChange:) name:NSUndoManagerDidUndoChangeNotification object:undoManager];
+	[center addObserver:self selector:@selector(_undoManagerDidChange:) name:NSUndoManagerDidRedoChangeNotification object:undoManager];
     
     return undoManager;
 }
@@ -1901,5 +1851,79 @@ BOOL noteTitleIsAPrefixOfOtherNoteTitle(NoteObject *longerNote, NoteObject *shor
 }
 
 
+@end
+
+
+@implementation NoteObject (NTVLabelDrawing)
+
+- (NSSize)sizeOfLabelBlocks {
+	NSSize size = NSZeroSize;
+	[self _drawLabelBlocksInRect:NSZeroRect rightAlign:NO highlighted:NO getSizeOnly:&size];
+	return size;
+}
+
+- (void)drawLabelBlocksInRect:(NSRect)aRect rightAlign:(BOOL)onRight highlighted:(BOOL)isHighlighted {
+	return [self _drawLabelBlocksInRect:aRect rightAlign:onRight highlighted:isHighlighted getSizeOnly:NULL];
+}
+
+- (void)_drawLabelBlocksInRect:(NSRect)aRect rightAlign:(BOOL)onRight highlighted:(BOOL)isHighlighted getSizeOnly:(NSSize*)reqSize {
+	//used primarily by UnifiedCell, but also by LabelColumnCell, as well as to determine the width of all label-block-images for this note
+	//iterate over words in orderedLabelTitles, retrieving images via -[NTVLabelsListDataSource cachedLabelImageForWord:highlighted:]
+	//if right-align is enabled, then the label-images are queued on the first pass and drawn in reverse on the second
+	
+	CGFloat totalWidth = 0.0, height = 0.0;
+	
+	if (![labelString length]) goto returnSizeIfNecessary;
+	
+	NSArray *words = [self orderedLabelTitles];
+	if (![words count]) goto returnSizeIfNecessary;
+	
+	NSPoint nextBoxPoint = onRight ? NSMakePoint(NSMaxX(aRect), aRect.origin.y) : aRect.origin;
+	NSMutableArray *images = reqSize || !onRight ? nil : [NSMutableArray arrayWithCapacity:[words count]];
+    CGFloat tableFontSize = [[GlobalPrefs defaultPrefs] tableFontSize] - 1.0f;
+    nextBoxPoint.y-=round(tableFontSize * 1.3f);
+    NSRect dRect=NSZeroRect;
+	NSInteger i;
+	
+	for (i=0; i<(NSInteger)[words count]; i++) {
+		NSString *word = words[i];
+		if ([word length]) {
+			NSImage *img = [[(NotationController *)self.delegate labelsListDataSource] cachedLabelImageForWord:word highlighted:isHighlighted];
+			
+            dRect.origin=nextBoxPoint;
+            dRect.size=[img size];
+			if (!reqSize) {
+				if (onRight) {
+					[images addObject:img];
+				} else {
+//					[img compositeToPoint:nextBoxPoint operation:NSCompositeSourceOver];
+                    
+                    [img drawInRect:dRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0f respectFlipped:YES hints:nil];
+					nextBoxPoint.x += [img size].width + 4.0;
+				}
+			} else {
+				totalWidth += [img size].width + 4.0;
+				height = MAX(height, [img size].height);
+			}
+		}
+	}
+	
+	if (!reqSize) {
+		if (onRight) {
+			//draw images in reverse instead
+			for (i = [images count] - 1; i>=0; i--) {
+				NSImage *img = images[i];
+				nextBoxPoint.x -= [img size].width + 4.0;
+                dRect.origin=nextBoxPoint;
+                dRect.size=[img size];
+//				[img compositeToPoint:nextBoxPoint operation:NSCompositeSourceOver];
+              [img drawInRect:dRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0f respectFlipped:YES hints:nil];
+			}
+		}
+	} else {
+	returnSizeIfNecessary:
+		if (reqSize) *reqSize = NSMakeSize(totalWidth, height);
+	}
+}
 
 @end

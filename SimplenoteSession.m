@@ -175,14 +175,15 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 			NSMutableSet *mergedTags = [NSMutableSet setWithSet:localTagset];
 			[mergedTags unionSet:remoteTagset];
 			if ([mergedTags count]) {
-				newLabelString = [[mergedTags allObjects] componentsJoinedByString:@" "];
+				newLabelString = [mergedTags.allObjects componentsJoinedByString:@" "];
 			}
 		} else {
 			if ([remoteTagset count]) {
-				newLabelString = [[remoteTagset allObjects] componentsJoinedByString:@" "];
+				newLabelString = [remoteTagset.allObjects componentsJoinedByString:@" "];
 			}
 		}
-		[(NoteObject *)aNote setLabelString:newLabelString];
+        
+        ((NoteObject *)aNote).labels = newLabelString;
 	}
 
 	//set the metadata from the server if this is the first time syncing with api2
@@ -213,10 +214,10 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 	NSDictionary *aDict = [aNote syncServicesMD][SimplenoteServiceName];
 	if (aDict) {
 		NSAssert([aNote isKindOfClass:[NoteObject class]], @"can't modify a non-note!");
-		NSNumber *modDate = @(modifiedDateOfNote((NoteObject*)aNote));
+		NSNumber *modDate = @(((NoteObject*)aNote).modifiedDate);
 		if ([modDate compare:aDict[@"modify"]] != NSOrderedSame) {
 			[aNote setSyncObjectAndKeyMD:@{
-				@"modify": @(modifiedDateOfNote((NoteObject*)aNote)),
+				@"modify": @(((NoteObject*)aNote).modifiedDate),
 				@"dirty": @YES
 			} forService:SimplenoteServiceName];
 		}
@@ -683,22 +684,19 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 			NSUInteger bodyLoc = 0;
 			NSString *separator = nil;
 			NSString *combinedContent = info[@"content"];
-			NSString *newTitle = [combinedContent syntheticTitleAndSeparatorWithContext:&separator bodyLoc:&bodyLoc oldTitle:titleOfNote(aNote) maxTitleLen:60];
+			NSString *newTitle = [combinedContent syntheticTitleAndSeparatorWithContext:&separator bodyLoc:&bodyLoc oldTitle:aNote.title maxTitleLen:60];
 			
 			[aNote updateWithSyncBody:[combinedContent substringFromIndex:bodyLoc] andTitle:newTitle];
 			NSMutableSet *labelTitles = [NSMutableSet setWithArray:info[@"tags"]];
 			if ([self tagsShouldBeMergedForEntry:[aNote syncServicesMD][SimplenoteServiceName]]) {
 				[labelTitles addObjectsFromArray:[aNote orderedLabelTitles]];
 			}
-			if ([labelTitles count]) {
-				[aNote setLabelString:[[labelTitles allObjects] componentsJoinedByString:@" "]];
-			} else {
-				[aNote setLabelString:nil];
-			}
+            
+            aNote.labels = labelTitles.count ? [labelTitles.allObjects componentsJoinedByString:@" "] : nil;
 			
 			NSNumber *modNum = info[@"modify"];
 			//NSLog(@"updating mod time for note %@ to %@", aNote, modNum);
-			[aNote setDateModified:[modNum doubleValue]];
+            aNote.modifiedDate = modNum.doubleValue;
 			[aNote setSyncObjectAndKeyMD:@{
 				@"version": info[@"version"],
 				@"modify": modNum,
@@ -723,10 +721,10 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 	NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:[notes count]];
 	//build two kinds of dicts:
 	for (NoteObject *aNote in notes) {
-		NSMutableString *combined = [[NSMutableString alloc] initWithCapacity:[[aNote contentString] length] + [titleOfNote(aNote) length] + [sep length]];
-		[combined appendString:titleOfNote(aNote)];
+		NSMutableString *combined = [[NSMutableString alloc] initWithCapacity:aNote.contentString.length + aNote.title.length + sep.length];
+		[combined appendString:aNote.title];
 		[combined appendString:sep];
-		[combined appendString:[[aNote contentString] string]];
+		[combined appendString:aNote.contentString.string];
 		dict[@([combined hash])] = aNote;
 		[combined release];
 	}
@@ -838,11 +836,12 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 		[attributedBody addStrikethroughNearDoneTagsForRange:NSMakeRange(0, [attributedBody length])];
 		
 		NSString *labelString = [info[@"tags"] count] ? [info[@"tags"] componentsJoinedByString:@" "] : nil;
-		NoteObject *note = [[NoteObject alloc] initWithNoteBody:attributedBody title:title delegate:delegate format:NTVStorageFormatDatabase labels:labelString];
+        NoteObject *note = [[NoteObject alloc] initWithNoteBody:attributedBody title:title delegate:delegate fileManager:delegate format:NTVStorageFormatDatabase labels:labelString];
 		if (note) {
 			NSNumber *modNum = info[@"modify"];
-			[note setDateAdded:[info[@"create"] doubleValue]];
-			[note setDateModified:[modNum doubleValue]];
+            note.createdDate = [info[@"create"] doubleValue];
+            note.modifiedDate = modNum.doubleValue;
+            
 			//also set version, mod time, key, and sepWCtx for this note's syncServicesMD
 			[note setSyncObjectAndKeyMD:@{
 				@"version": info[@"version"],

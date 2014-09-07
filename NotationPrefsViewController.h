@@ -19,8 +19,6 @@
 #import "GlobalPrefs.h"
 
 @class NotationPrefs;
-@class PassphrasePicker;
-@class PassphraseChanger;
 @class SyncResponseFetcher;
 
 @interface FileKindListView : NSTableView {
@@ -57,20 +55,6 @@
 	IBOutlet NSTextField *syncEncAlertField;
     
     IBOutlet NSView *view;
-
-	BOOL didAwakeFromNib;
-    
-	NSInvocation *postStorageFormatInvocation;
-	NSInteger notesStorageFormatInProgress;
-    NotationPrefs *notationPrefs;
-	
-	PassphrasePicker *picker;
-	PassphraseChanger *changer;
-
-	BOOL verificationAttempted;
-	SyncResponseFetcher *loginVerifier;
-	
-	NSString *disableEncryptionString, *enableEncryptionString;
 }
 
 - (NSView*)view;

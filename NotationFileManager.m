@@ -242,17 +242,27 @@ NSUInteger diskUUIDIndexForNotation(NotationController *controller) {
 	return controller->diskUUIDIndex;
 }
 
-long BlockSizeForNotation(NotationController *controller) {
-    if (!controller->blockSize) {
-		long iosize = 0;
+- (UInt32)diskUUIDIndex
+{
+    return (UInt32)diskUUIDIndex;
+}
 
-		struct statfs * sfsb = StatFSVolumeInfo(controller);
-		if (sfsb) iosize = sfsb->f_iosize;
-		
-		controller->blockSize = MAX(iosize, 16 * 1024);
+- (long)blockSize
+{
+    if (!blockSize) {
+        long iosize = 0;
+        
+        struct statfs * sfsb = StatFSVolumeInfo(self);
+        if (sfsb) iosize = sfsb->f_iosize;
+        
+        blockSize = MAX(iosize, 16 * 1024);
     }
     
-    return controller->blockSize;
+    return blockSize;
+}
+
+long BlockSizeForNotation(NotationController *controller) {
+    return [controller blockSize];
 }
 
 - (OSStatus)refreshFileRefIfNecessary:(FSRef *)childRef withName:(NSString *)filename charsBuffer:(UniChar*)charsBuffer {
@@ -307,9 +317,9 @@ long BlockSizeForNotation(NotationController *controller) {
 	NoteObject *dbNote = nil, *walNote = nil;
 	
 	for (NoteObject *obj in allNotes) {
-		if (!dbNote && [filenameOfNote(obj) isEqualToString:NotesDatabaseFileName])
+		if (!dbNote && [obj.filename isEqualToString:NotesDatabaseFileName])
 			dbNote = [[obj retain] autorelease];
-		if (!walNote && [filenameOfNote(obj) isEqualToString:@"Interim Note-Changes"])
+		if (!walNote && [obj.filename isEqualToString:@"Interim Note-Changes"])
 			walNote = [[obj retain] autorelease];
 	}
 
@@ -413,12 +423,16 @@ terminate:
 	uniqueFilename = [[sanitizedName copy] autorelease];
 	
 	//use the note's current format if the current default format is for a database; get the "ideal" extension for that format
-	NSInteger noteFormat = [notationPrefs notesStorageFormat] || !note ? [notationPrefs notesStorageFormat] : storageFormatOfNote(note);
+	NSInteger noteFormat = [notationPrefs notesStorageFormat] || !note ? [notationPrefs notesStorageFormat] : note.storageFormat;
 	NSString *extension = [notationPrefs chosenPathExtensionForFormat:noteFormat];
 	
 	//if the note's current extension is compatible with the storage format above, then use the existing extension instead
-	if (note && filenameOfNote(note) && [notationPrefs pathExtensionAllowed:[filenameOfNote(note) pathExtension] forFormat:noteFormat])
-		extension = [filenameOfNote(note) pathExtension];
+    if (note && note.filename) {
+        NSString *notePathExtension = note.filename.pathExtension;
+        if ([notationPrefs pathExtensionAllowed:notePathExtension forFormat:noteFormat]) {
+            extension = notePathExtension;
+        }
+    }
 	
 	//assume that we won't have more than 999 notes with the exact same name and of more than 247 chars
 	uniqueFilename = [uniqueFilename filenameExpectingAdditionalCharCount:3 + [extension length] + 2];
@@ -430,7 +444,7 @@ terminate:
 		//this ought to just use an nsset, but then we'd have to maintain a parallel data structure for marginal benefit
 		//also, it won't quite work right for filenames with no (real) extensions and periods in their names
 		for (NoteObject *aNote in allNotes) {
-			NSString *basefilename = [filenameOfNote(aNote) stringByDeletingPathExtension];
+            NSString *basefilename = aNote.filename.stringByDeletingPathExtension;
 			
 			if (note != aNote && [basefilename caseInsensitiveCompare:uniqueFilename] == NSOrderedSame) {
 				isUnique = NO;

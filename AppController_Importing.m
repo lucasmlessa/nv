@@ -139,9 +139,11 @@
 		}
 		[newString santizeForeignStylesForImporting];
 		
-		NoteObject *note = [[[NoteObject alloc] initWithNoteBody:newString title:noteTitle delegate:notationController
+        NoteObject *note = [[[NoteObject alloc] initWithNoteBody:newString title:noteTitle delegate:notationController fileManager:notationController
 														  format:[notationController currentNoteStorageFormat] labels:nil] autorelease];
-		if (bodyLoc > 0 && [newString length] >= bodyLoc + prefixedSourceLength) [note setSelectedRange:NSMakeRange(prefixedSourceLength, bodyLoc)];
+        if (bodyLoc > 0 && [newString length] >= bodyLoc + prefixedSourceLength) {
+            note.selectedRange = NSMakeRange(prefixedSourceLength, bodyLoc);
+        }
 		[notationController addNewNote:note];
 		
 		return note != nil;
@@ -257,8 +259,7 @@
                 [attributedContents removeAttachments];
                 [attributedContents santizeForeignStylesForImporting];
                 
-                NoteObject *note = [[[NoteObject alloc] initWithNoteBody:[attributedContents autorelease] title:title delegate:notationController
-                                                                  format:[notationController currentNoteStorageFormat] labels:tags] autorelease];
+                NoteObject *note = [[[NoteObject alloc] initWithNoteBody:[attributedContents autorelease] title:title delegate:notationController fileManager:notationController format:[notationController currentNoteStorageFormat] labels:tags] autorelease];
                 [notationController addNewNote:note];
                 return YES;
             } else if (txtBody || htmlBody) {
@@ -305,7 +306,7 @@
 			NSUInteger count = existingArray.count;
 			[existingArray enumerateObjectsUsingBlock:^(NoteObject *existingNote, NSUInteger i, BOOL *stop) {
 				//create double-bracketed links using these notes' titles
-				[allURLsString appendFormat:@"[[%@]]%s", titleOfNote(existingNote), (i < count - 1) || [unknownPaths count] ? "\n" : ""];
+				[allURLsString appendFormat:@"[[%@]]%s", existingNote.title, (i < count - 1) || [unknownPaths count] ? "\n" : ""];
 			}];
 		}
 

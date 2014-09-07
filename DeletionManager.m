@@ -261,7 +261,7 @@ void updateForVerifiedExistingNote(DeletionManager *self, NoteObject *goodNote) 
 }
 
 - (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex {
-	return filenameOfNote((NoteObject *)deletedNotes[rowIndex]);
+    return [(NoteObject *)deletedNotes[rowIndex] filename];
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView {

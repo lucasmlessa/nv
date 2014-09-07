@@ -118,7 +118,7 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 - (NSString *)description {
 	NoteObject *note = [self noteObject];
 	if (note) {
-		return [searchString length] ? [NSString stringWithFormat:@"%@ [%@]", titleOfNote(note), searchString] : titleOfNote(note);
+		return [searchString length] ? [NSString stringWithFormat:@"%@ [%@]", note.title, searchString] : note.title;
 	}
 	return nil;
 }

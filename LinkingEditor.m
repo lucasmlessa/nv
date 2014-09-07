@@ -665,7 +665,7 @@ copyRTFType:
 - (void)setAutomaticallySelectedRange:(NSRange)newRange {
 	lastAutomaticallySelectedRange = newRange;
 	didChangeIntoAutomaticRange = NO;
-	[self setSelectedRange:newRange];
+	self.selectedRange = newRange;
 }
 
     
@@ -736,7 +736,7 @@ copyRTFType:
 		[NTVAppDelegate() renameNote:nil];
 		NSText *editor = [notesTableView currentEditor];
 		NSRange endRange = NSMakeRange([[editor string] length], 0);
-		[editor setSelectedRange:endRange];
+        editor.selectedRange = endRange;
 		[editor scrollRangeToVisible:endRange];
 		return YES;
 	}
@@ -796,11 +796,11 @@ copyRTFType:
                     selRange.location+=closer;  
                 }
                 [self insertText:insertString replacementRange:NSMakeRange(insertPt, 0)];
-                [self setSelectedRange:selRange];
+                self.selectedRange = selRange;
                 return;
             } 
         }else if((selectedRange.length==7)&&([[[self string]substringWithRange:selectedRange] isEqualToString:@"http://"])&&(([self.activeParagraphBeforeCursor rangeOfString:@"]: "].location!=NSNotFound)||([self.activeParagraphBeforeCursor hasSuffix:@"]("]))){
-            [self setSelectedRange:NSMakeRange(selectedRange.location+7, 0)];
+            self.selectedRange = NSMakeRange(selectedRange.location+7, 0);
             return;
         }      
     }
@@ -825,12 +825,11 @@ copyRTFType:
                 closer+=1;
                 insertPt+=closer;
             }
-            NSRange selRange=NSMakeRange((insertPt+1), 7);
             [self insertText:insertString replacementRange:NSMakeRange(insertPt, 0)];
-            [self setSelectedRange:selRange];
+            self.selectedRange = NSMakeRange((insertPt+1), 7);
             return;
-        }else if((selectedRange.length==7)&&([[[self string]substringWithRange:selectedRange] isEqualToString:@"http://"])&&([self.activeParagraphBeforeCursor hasSuffix:@"]("])){
-            [self setSelectedRange:NSMakeRange(selectedRange.location+7, 0)];
+        } else if((selectedRange.length==7)&&([[[self string]substringWithRange:selectedRange] isEqualToString:@"http://"])&&([self.activeParagraphBeforeCursor hasSuffix:@"]("])){
+            self.selectedRange = NSMakeRange(selectedRange.location+7, 0);
             return;
         }
     }
@@ -1150,7 +1149,7 @@ copyRTFType:
 		
 	} else if (![prefsController URLsAreClickable]) {
 		//pass normal mousedown?
-		[self setSelectedRange:NSMakeRange(charIndex, 0)];
+		self.selectedRange = NSMakeRange(charIndex, 0);
 		return;
 	}
 	
@@ -1629,11 +1628,10 @@ cancelCompetion:
 }
 
 - (void)selectRangeAndRegisterUndo:(NSRange)selRange{
-    if (!NSEqualRanges([self selectedRange], selRange)) {
-        [[[self undoManager] prepareWithInvocationTarget:self]
-         selectRangeAndRegisterUndo:[self selectedRange]];
-        [self setSelectedRange:selRange];
-    }
+    if (NSEqualRanges(self.selectedRange, selRange)) { return; }
+    
+    [[[self undoManager] prepareWithInvocationTarget:self] selectRangeAndRegisterUndo:[self selectedRange]];
+    self.selectedRange = selRange;
 }
 
 - (void)insertText:(id)string {
@@ -1711,11 +1709,11 @@ cancelCompetion:
                     [super insertText:oppositeAppend replacementRange:insRange];
                     insRange.location+=1;  //add oppappendstr.length
                     //                    selRange.length+=2;
-                    [self setSelectedRange:insRange];
+                    self.selectedRange = insRange;
                     return;
                 }else {
                     [super insertText:[appendString stringByAppendingString:oppositeAppend]];
-                    [self setSelectedRange:NSMakeRange(selRange.location+appendString.length, 0)];
+                    self.selectedRange = NSMakeRange(selRange.location+appendString.length, 0);
                     return;
                 }
             }
@@ -1730,17 +1728,6 @@ cancelCompetion:
     }
     
     [self changeMarkdownAttribute:@"[["];
-//    NSRange selRange = [self selectedRange];
-//    if (selRange.length>0) {
-//        NSString *selString = [[self string] substringWithRange:selRange];
-//        selString = [NSString stringWithFormat:@"[[%@]]",selString];
-//        [super insertText:selString];
-//        
-//    }else{
-//        [super insertText:@"[[]]"];
-//        [self setSelectedRange:NSMakeRange([self selectedRange].location-2, 0)];
-//    }
-    
 } 
 
 - (BOOL)changeMarkdownAttribute:(NSString *)syntaxBit{
@@ -1771,10 +1758,8 @@ cancelCompetion:
                 }
                 selRange.length=diff;
                 [self insertText:@"" replacementRange:selRange];
-            }else{
-                selRange.location+=([aftaString rangeOfString:matchingPair].location+syntaxLength);
-                selRange.length=0;
-                [self setSelectedRange:selRange];
+            }else {
+                self.selectedRange = NSMakeRange([aftaString rangeOfString:matchingPair].location + syntaxLength, 0);
             }
             return YES;
         }
@@ -1833,7 +1818,7 @@ cancelCompetion:
                 [self insertText:@"" replacementRange:synRange];
                 selRange.length-=syntaxLength;
                 [self insertText:syntaxBit replacementRange:insertRange];
-                [self setSelectedRange:selRange];
+                self.selectedRange = selRange;
                 return YES;
             }else{
                 NSLog(@"trying to add markdown syntax, but selection string contains an even# of the syntax. haven't dealt with this condition yet");
@@ -1844,11 +1829,12 @@ cancelCompetion:
             [super insertText:@"" replacementRange:afterSyntax];
             [super insertText:@"" replacementRange:beforeSyntax];
             if (selRange.location!=NSNotFound) {
-                [self setSelectedRange:selRange];
+                self.selectedRange = selRange;
             }
             return YES;
         }
     }
+    
     if (selRange.length>0) {
         NSRange insertRange=selRange;
         insertRange.length=0;
@@ -1856,17 +1842,13 @@ cancelCompetion:
         insertRange.location+=(selRange.length+syntaxLength);
         [super insertText:matchingPair replacementRange:insertRange];
         insertRange.location+=syntaxLength;
-        selRange.location+=syntaxLength;
-        [self setSelectedRange:selRange];
-        return YES;
-    }else{
-        NSString *doubleString=[syntaxBit stringByAppendingString:matchingPair];
-        [super insertText:doubleString];
-        selRange.location+=syntaxLength;
-        [self setSelectedRange:selRange];
-        return YES;
+    } else {
+        [super insertText:[syntaxBit stringByAppendingString:matchingPair]];
     }
-    return NO;
+    
+    self.selectedRange = NSMakeRange(selRange.location + syntaxLength, selRange.length);
+    
+    return YES;
 }
 
 
@@ -2330,9 +2312,7 @@ cancelCompetion:
                     urlString=[NSString stringWithFormat:@"[%@](%@)",selString,urlString];            
                 }
                 [super insertText:urlString];
-                selRange.location=[self selectedRange].location;
-                selRange.location-=(urlString.length-1);
-                [self setSelectedRange:selRange];
+                self.selectedRange = NSMakeRange(selRange.location - urlString.length - 1, selRange.length);
                 return;
                 // }
                 //            else  if ([urlString hasPrefix:@"http"]) {
@@ -2397,8 +2377,7 @@ cancelCompetion:
                 i++;
             }
             if (didIt) {
-                selRange.length+=xtraLength;
-                [self setSelectedRange:selRange];
+                self.selectedRange = NSMakeRange(selRange.location, selRange.length + xtraLength);
                 [self didChangeText];    
             }
         }        
@@ -2468,8 +2447,7 @@ cancelCompetion:
                 i++;
             }            
             if (didIt) {
-                selRange.length-=xtraLength;
-                [self setSelectedRange:selRange];
+                self.selectedRange = NSMakeRange(selRange.location, selRange.length - xtraLength);
                 [self didChangeText];
             } 
         }        

@@ -273,7 +273,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	return storesPasswordInKeychain;
 }
 
-- (NSInteger)notesStorageFormat {
+- (NTVStorageFormat)notesStorageFormat {
 	return notesStorageFormat;
 }
 - (BOOL)confirmFileDeletion {

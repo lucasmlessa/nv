@@ -71,11 +71,11 @@ NSString *ExternalEditorsChangedNotification = @"ExternalEditorsChanged";
 	//conversely ODB editors should never be allowed to open non-plain-text documents; for some reason LSCanURLAcceptURL claims they can do that
 	//one exception known: writeroom can edit rich-text documents
 	if (([self isODBEditor] && ![bundleIdentifier hasPrefix:@"com.hogbaysoftware.WriteRoom"]) || [bundleIdentifier hasPrefix:@"com.multimarkdown.composer.mac"]) {
-		return storageFormatOfNote(aNote) == NTVStorageFormatPlainText;
+        return aNote.storageFormat == NTVStorageFormatPlainText;
 	}
 		
 	if (!knownPathExtensions) knownPathExtensions = [NSMutableDictionary new];
-	NSString *extension = [[filenameOfNote(aNote) pathExtension] lowercaseString];
+    NSString *extension = aNote.filename.pathExtension.lowercaseString;
 	NSNumber *canHandleNumber = knownPathExtensions[extension];
 	
 	if (!canHandleNumber) {

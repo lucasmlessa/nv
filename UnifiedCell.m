@@ -161,7 +161,7 @@ NSAttributedString *AttributedStringForSelection(NSAttributedString *str) {
 		[dateStr drawInRect:NSMakeRect(NSMaxX(cellFrame) - dateLength-4.0, NSMinY(cellFrame), dateLength, fontHeight) withAttributes:baseAttrs];
 	}
 
-	if (ColumnIsSet(NoteLabelsColumn, columnsBitmap) && [labelsOfNote(noteObject) length]) {
+	if (ColumnIsSet(NoteLabelsColumn, columnsBitmap) && noteObject.title.length) {
 		NSRect rect = [self nv_tagsRectForFrame:cellFrame];
 		rect.origin.y += fontHeight;
 		rect = [controlView centerScanRect:rect];
@@ -179,7 +179,7 @@ NSAttributedString *AttributedStringForSelection(NSAttributedString *str) {
 		NSRange range = NSMakeRange(0, [cloneStr length]);
 		[cloneStr addAttribute:NSFontAttributeName value:[self font] range:range];
 		if (textColor) [cloneStr addAttribute:NSForegroundColorAttributeName value:textColor range:range];
-		[cloneStr addAttributes:LineTruncAttributesForTitle() range:NSMakeRange(0, [titleOfNote(noteObject) length])];
+		[cloneStr addAttributes:LineTruncAttributesForTitle() range:NSMakeRange(0, noteObject.title.length)];
 		
 		[cloneStr drawWithRect:NSInsetRect([self titleRectForBounds:cellFrame], 2., 0.) options: NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin];
 		[cloneStr release];

@@ -274,7 +274,7 @@
 	NSDictionary *info = [aNote syncServicesMD][SimplenoteServiceName];
 	//following assertion tests the efficacy our queued invocations system
 	NSAssert(doesCreate == (nil == info), @"noteobject has MD for this service when it was attempting to be created or vise versa!");
-	CFAbsoluteTime modNum = doesCreate ? modifiedDateOfNote(aNote) : [info[@"modify"] doubleValue];
+	CFAbsoluteTime modNum = doesCreate ? aNote.modifiedDate : [info[@"modify"] doubleValue];
 	
 	//always set the mod date, set created date if we are creating, set the key if we are updating
 	NSMutableString *noteBody = [[[aNote combinedContentWithContextSeparator: /* explicitly assume default separator if creating */
@@ -285,7 +285,7 @@
 	NSMutableDictionary *rawObject = [NSMutableDictionary dictionaryWithCapacity: 8];
 	if (modNum > 0.0) rawObject[@"modificationDate"] = @([[NSDate dateWithTimeIntervalSinceReferenceDate:modNum] timeIntervalSince1970]);
 	if (doesCreate) {
-		rawObject[@"creationDate"] = @([[NSDate dateWithTimeIntervalSinceReferenceDate:createdDateOfNote(aNote)] timeIntervalSince1970]);
+		rawObject[@"creationDate"] = @([[NSDate dateWithTimeIntervalSinceReferenceDate:aNote.createdDate] timeIntervalSince1970]);
 		rawObject[@"systemTags"] = [NSMutableArray array];
 		rawObject[@"shareURL"] = @"";
 		rawObject[@"publishURL"] = @"";
@@ -375,7 +375,7 @@
 	if ([entriesToCollect count] == 1) {
 		NoteObject *aNote = [currentFetcher representedObject];
 		if ([aNote isKindOfClass:[NoteObject class]]) {
-			return [NSString stringWithFormat:NSLocalizedString(@"%@ quot%@quot...",@"example: Updating 'joe shmoe note'"), opName, titleOfNote(aNote)];
+			return [NSString stringWithFormat:NSLocalizedString(@"%@ quot%@quot...",@"example: Updating 'joe shmoe note'"), opName, aNote.title];
 		} else {
 			return [NSString stringWithFormat:NSLocalizedString(@"%@ a note...", @"e.g., 'Deleting a note...'"), opName];
 		}
@@ -451,7 +451,8 @@
 					NSUInteger bodyLoc = 0;
 					NSString *separator = nil;
 					NSString *combinedContent = rawObject[@"content"];
-					NSString *newTitle = [combinedContent syntheticTitleAndSeparatorWithContext:&separator bodyLoc:&bodyLoc oldTitle:titleOfNote(aNote) maxTitleLen:60];
+                    NSAssert([aNote isKindOfClass:[NoteObject class]], @"received a non-noteobject from a fetcherForUpdatingNote: operation!");
+					NSString *newTitle = [combinedContent syntheticTitleAndSeparatorWithContext:&separator bodyLoc:&bodyLoc oldTitle:((NoteObject *)aNote).title maxTitleLen:60];
 				
 					[(NoteObject *)aNote updateWithSyncBody:[combinedContent substringFromIndex:bodyLoc] andTitle:newTitle];
 				}
@@ -461,8 +462,8 @@
 				NSSet *remoteTags = [NSSet setWithArray:rawObject[@"tags"]];
 				if (![localTags isEqualToSet:remoteTags]) {
 					NSLog(@"Updating tags with remote values.");
-					NSString *newLabelString = [[remoteTags allObjects] componentsJoinedByString:@" "];
-					[(NoteObject *)aNote setLabelString:newLabelString];
+					NSString *newLabelString = [remoteTags.allObjects componentsJoinedByString:@" "];
+                    ((NoteObject *)aNote).labels = newLabelString;
 				}
 			}
 			NSNumber *originalVersion = [aNote syncServicesMD][SimplenoteServiceName][@"version"];
@@ -472,7 +473,7 @@
 
 			//NSLog(@"note update:\n %@", [aNote syncServicesMD]);
 			if (merged) {
-				[[(NotationController *)[(NoteObject *)aNote delegate] delegate] contentsUpdatedForNote:aNote];
+                [[NSNotificationCenter defaultCenter] postNotificationName:NTVNoteContentsUpdatedNotification object:aNote];
 			}
 		} else {
 			NSLog(@"%@ called with unknown opSEL: %@", NSStringFromSelector(_cmd),NSStringFromSelector(fetcherOpSEL));

@@ -86,10 +86,7 @@ static const NSStringEncoding AllowedEncodings[] = {
 - (BOOL)checkUnicode {
 	
 	if (NSUnicodeStringEncoding == currentEncoding || NSUTF8StringEncoding == currentEncoding) {
-		
-		NSString * alertTitleString = NSLocalizedString(@"quotemark%@quotemark is a Unicode file and not directly interpretable using plain text encodings.", 
-													   @"alert title when converting from unicode");
-		if (NSRunAlertPanel([NSString stringWithFormat:alertTitleString, filenameOfNote(note)],	
+        if (NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"quotemark%@quotemark is a Unicode file and not directly interpretable using plain text encodings.",  @"alert title when converting from unicode"), note.filename],
 							NSLocalizedString(@"If you wish to convert it, you must open and re-save the file in an external editor.", "alert description when converting from unicode"), 
 							NSLocalizedString(@"OK", nil), NSLocalizedString(@"Open in TextEdit", @"title of button for opening the current note in text edit"), NULL) != NSAlertDefaultReturn) {
 
@@ -114,7 +111,7 @@ static const NSStringEncoding AllowedEncodings[] = {
 }
 
 - (void)showPanelForNote:(NoteObject*)aNote {
-	currentEncoding = fileEncodingOfNote(aNote);
+    currentEncoding = aNote.fileEncoding;
 	
 	[note release];
 	note = [aNote retain];
@@ -122,8 +119,8 @@ static const NSStringEncoding AllowedEncodings[] = {
 	bzero(&fsRef, sizeof(FSRef));
 	
 	[noteData release];
-	if (!(noteData = [[[note delegate] dataFromFileInNotesDirectory:&fsRef forFilename:filenameOfNote(note)] retain])) {
-		NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"Error: unable to read the contents of the file quotemark%@.quotemark",nil), filenameOfNote(aNote)], 
+	if (!(noteData = [[[note fileManager] dataFromFileInNotesDirectory:&fsRef forFilename:note.filename] retain])) {
+		NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"Error: unable to read the contents of the file quotemark%@.quotemark",nil), aNote.filename],
 						NSLocalizedString(@"The file may no longer exist or has incorrect permissions.",nil), NSLocalizedString(@"OK",nil), NULL, NULL);
 		return;
 	}
@@ -138,7 +135,7 @@ static const NSStringEncoding AllowedEncodings[] = {
 			}
 		}
 		
-		[helpStringField setStringValue:[NSString stringWithFormat:NSLocalizedString(@"nvALT should assume the file quotemark%@quotemark was saved with the encoding:",nil), filenameOfNote(note)]];
+		[helpStringField setStringValue:[NSString stringWithFormat:NSLocalizedString(@"nvALT should assume the file quotemark%@quotemark was saved with the encoding:",nil), note.filename]];
 		[encodingsPopUpButton setMenu:[self textConversionsMenu]];
 		
 		//setup panel for given note
@@ -246,20 +243,19 @@ static const NSStringEncoding AllowedEncodings[] = {
 - (BOOL)shouldUpdateNoteFromDisk {
 	FSCatalogInfo info;
 	OSStatus err = noErr;
-	if ((err = [[note delegate] fileInNotesDirectory:&fsRef isOwnedByUs:NULL hasCatalogInfo:&info]) != noErr) {
-		NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"Error: the modification date of the file quotemark%@quotemark could not be determined because %@",nil), 
-			filenameOfNote(note), [NSString reasonStringFromCarbonFSError:err]], NSLocalizedString(@"The file may no longer exist or has incorrect permissions.",nil), 
+	if ((err = [[note fileManager] fileInNotesDirectory:&fsRef isOwnedByUs:NULL hasCatalogInfo:&info]) != noErr) {
+		NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"Error: the modification date of the file quotemark%@quotemark could not be determined because %@",nil), note.filename, [NSString reasonStringFromCarbonFSError:err]], NSLocalizedString(@"The file may no longer exist or has incorrect permissions.",nil),
 						NSLocalizedString(@"OK",nil), NULL, NULL);
 		return NO;
 	}
 	
-	UTCDateTime fileModifiedDate = fileModifiedDateOfNote(note);
+    const UTCDateTime *fileModifiedDate = note.fileModifiedDate;
 	CFAbsoluteTime timeOnDisk, lastTime;
-    if ((err = (UCConvertUTCDateTimeToCFAbsoluteTime(&fileModifiedDate, &lastTime) == noErr)) &&
+    if ((err = (UCConvertUTCDateTimeToCFAbsoluteTime(fileModifiedDate, &lastTime) == noErr)) &&
 		(err = (UCConvertUTCDateTimeToCFAbsoluteTime(&info.contentModDate, &timeOnDisk) == noErr))) {
 		
 		if (lastTime > timeOnDisk) {
-			NSInteger result = NSRunCriticalAlertPanel([NSString stringWithFormat:NSLocalizedString(@"The note quotemark%@quotemark is newer than its file on disk.",nil), titleOfNote(note)],
+			NSInteger result = NSRunCriticalAlertPanel([NSString stringWithFormat:NSLocalizedString(@"The note quotemark%@quotemark is newer than its file on disk.",nil), note.title],
 												 NSLocalizedString(@"If you update this note with re-interpreted data from the file, you may overwrite your changes.",nil), 
 												 NSLocalizedString(@"Don't Update", @"don't update the note from its file on disk"), 
 												 NSLocalizedString(@"Overwrite Note", @"...from file on disk"), NULL);
@@ -271,8 +267,7 @@ static const NSStringEncoding AllowedEncodings[] = {
 			}
 		}
     } else {
-		NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"Error: the modification date of the file quotemark%@quotemark could not be compared because %@",nil), 
-			filenameOfNote(note), [NSString reasonStringFromCarbonFSError:err]], NSLocalizedString(@"This may be due to an error in the program or operating system.",nil), 
+		NSRunAlertPanel([NSString stringWithFormat:NSLocalizedString(@"Error: the modification date of the file quotemark%@quotemark could not be compared because %@",nil), note.filename, [NSString reasonStringFromCarbonFSError:err]], NSLocalizedString(@"This may be due to an error in the program or operating system.",nil),
 						NSLocalizedString(@"OK",nil), NULL, NULL);
 		return NO;
     }
@@ -284,7 +279,7 @@ static const NSStringEncoding AllowedEncodings[] = {
 	
 	//check whether file mod. date of note is older than mod. date on disk
 	if ([self shouldUpdateNoteFromDisk]) {
-		[note setFileEncodingAndReinterpret:currentEncoding];
+        note.fileEncoding = currentEncoding;
 		[NTVAppDelegate() contentsUpdatedForNote:note];
 	}
 	

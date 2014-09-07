@@ -142,7 +142,7 @@ static const u_int32_t offsetsFromUTF8[6] = {
 #define isutf(c) (((c)&0xC0)!=0x80)
 
 /* reads the next utf-8 sequence out of a string, updating an index */
-static force_inline u_int32_t u8_nextchar(const char *s, size_t *i) {
+NTV_ALWAYS_INLINE u_int32_t u8_nextchar(const char *s, size_t *i) {
 	u_int32_t ch = 0;
 	size_t sz = 0;
 	
@@ -310,7 +310,7 @@ size_t SetPerDiskInfoWithTableIndex(UTCDateTime *dateTime, UInt32 *nodeID, UInt3
 	//diskID not found in existing buffer; add a new entry one or both attributes
 	ResizeArray(perDiskGroups, count + 1, groupCount);
 	
-	//items not currently being set are initialized to a known value, so that they can be initialized later by attrsModifiedDateOfNote and fileNodeIDOfNote
+	//items not currently being set are initialized to a known value, so that they can be initialized later by attributesModifiedDate and fileNodeID
 	//although those functions do not initialize these to anything particularly useful, anyway
 	groups = *perDiskGroups;
 	groups[count].attrTime = dateTime ? *dateTime : (UTCDateTime){0, 0, 0};

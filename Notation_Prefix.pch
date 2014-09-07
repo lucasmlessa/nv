@@ -34,8 +34,6 @@
 #define VAR_STR(x) @#x
 #define SEL_STR(name) NSStringFromSelector(@selector(name))
 
-#define force_inline __attribute__((always_inline))
-
 #define IsMountainLionOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_8)
 #define IsMavericksOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_9)
 #define IsYosemiteOrLater (floor(NSFoundationVersionNumber) >= NSFoundationVersionNumber10_10)

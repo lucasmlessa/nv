@@ -172,15 +172,15 @@ static ODBEditor	*_sharedODBEditor;
 	}
 	
 	//now write aNote as text to path?
-	NSString *path = [self _nonexistingTemporaryPathForFilename:filenameOfNote(aNote)];	
+	NSString *path = [self _nonexistingTemporaryPathForFilename:aNote.filename];
 	NSError *error = nil;
-	if (![[[aNote contentString] string] writeToFile:path atomically:NO encoding:NSUTF8StringEncoding error:&error]) {
+	if (![aNote.contentString.string writeToFile:path atomically:NO encoding:NSUTF8StringEncoding error:&error]) {
 		NSLog(@"not editing '%@' because it could not be written to '%@'", aNote, path);
 		goto beepReturn;
 	}
 	
 	return [self editFile:path inEditor:ed options:@{
-		ODBEditorCustomPathKey: titleOfNote(aNote)
+		ODBEditorCustomPathKey: aNote.title
 	} forClient:aNote context:context];
 beepReturn:
 	NSBeep();

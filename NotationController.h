@@ -18,24 +18,13 @@
 
 @import Cocoa;
 @import CoreServices;
+#import "NTVTypes.h"
 #import "NTVNotesListDataSource.h"
 #import "NTVLabelsListDataSource.h"
 #import "WALController.h"
+#import "NoteCatalogEntry.h"
+#import "NoteObject.h"
 
-//enum { kUISearch, kUINewNote, kUIDeleteNote, kUIRenameNote, kUILabelOperation };
-
-typedef struct _NoteCatalogEntry {
-    UTCDateTime lastModified;
-	UTCDateTime lastAttrModified;
-    UInt32 logicalSize;
-    OSType fileType;
-    UInt32 nodeID;
-    CFMutableStringRef filename;
-    UniChar *filenameChars;
-    UniCharCount filenameCharCount;
-} NoteCatalogEntry;
-
-@class NoteObject;
 @class DeletedNoteObject;
 @class SyncSessionController;
 @class NotationPrefs;
@@ -44,7 +33,7 @@ typedef struct _NoteCatalogEntry {
 @class DeletionManager;
 @class GlobalPrefs;
 
-@interface NotationController : NSObject {
+@interface NotationController : NSObject <NoteObjectDelegate> {
     NSMutableArray *allNotes;
     NTVNotesListDataSource *notesListDataSource;
     NTVLabelsListDataSource *labelsListController;
@@ -120,7 +109,7 @@ typedef struct _NoteCatalogEntry {
 - (void)databaseEncryptionSettingsChanged;
 - (void)databaseSettingsChangedFromOldFormat:(NSInteger)oldFormat;
 
-- (NSInteger)currentNoteStorageFormat;
+- (NTVStorageFormat)currentNoteStorageFormat;
 - (void)synchronizeNoteChanges:(NSTimer*)timer;
 
 - (void)updateDateStringsIfNecessary;
@@ -129,8 +118,6 @@ typedef struct _NoteCatalogEntry {
 - (void)restyleAllNotes;
 - (void)setUndoManager:(NSUndoManager*)anUndoManager;
 - (NSUndoManager*)undoManager;
-- (void)noteDidNotWrite:(NoteObject*)note errorCode:(OSStatus)error;
-- (void)scheduleWriteForNote:(NoteObject*)note;
 - (void)closeAllResources;
 - (void)trashRemainingNoteFilesInDirectory;
 - (void)checkIfNotationIsTrashed;
@@ -184,8 +171,6 @@ typedef struct _NoteCatalogEntry {
 
 - (NotationPrefs*)notationPrefs;
 - (SyncSessionController*)syncSessionController;
-
-- (void)dealloc;
 
 #pragma mark nvALT stuff
 

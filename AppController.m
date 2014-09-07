@@ -118,6 +118,8 @@ BOOL splitViewAwoke;
 	
 	[nc addObserver:self selector:@selector(resetModTimers:) name:@"ModTimersShouldReset" object:nil];
 	[nc addObserver:self selector:@selector(releaseTagEditor:) name:@"TagEditorShouldRelease" object:nil];
+    [nc addObserver:self selector:@selector(noteNoteContentsUpdated:) name:NTVNoteContentsUpdatedNotification object:nil];
+    
 	// Setup URL Handling
 	NSAppleEventManager *appleEventManager = [NSAppleEventManager sharedAppleEventManager];
 	[appleEventManager setEventHandler:self andSelector:@selector(handleGetURLEvent:withReplyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
@@ -645,7 +647,7 @@ void outletObjectAwoke(id sender) {
 			[menuItem setTitle:NSLocalizedString(@"Enter Full Screen",@"menu item title for entering fullscreen")];
 		}
 	} else if (selector == @selector(fixFileEncoding:)) {
-		return (currentNote != nil && storageFormatOfNote(currentNote) == NTVStorageFormatPlainText && ![currentNote contentsWere7Bit]);
+		return (currentNote != nil && currentNote.storageFormat == NTVStorageFormatPlainText && ![currentNote contentsWere7Bit]);
     } else if (selector == @selector(editNoteExternally:)) {
         return (numberSelected > 0) && [[menuItem representedObject] canEditAllNotes:[notationController notesAtIndexes:[notesTableView selectedRowIndexes]]];
 	}else if (selector == @selector(previewNoteWithMarked:)){
@@ -818,11 +820,8 @@ void outletObjectAwoke(id sender) {
 	if ([indexes count] > 0) {
 		
 		if ([prefsController confirmNoteDeletion]) {
-//			[deleteObj retain];
-			NSString *warningSingleFormatString = NSLocalizedString(@"Delete the note titled quotemark%@quotemark?", @"alert title when asked to delete a note");
-			NSString *warningMultipleFormatString = NSLocalizedString(@"Delete %lu notes?", @"alert title when asked to delete multiple notes");
-			NSString *warnString = currentNote ? [NSString stringWithFormat:warningSingleFormatString, titleOfNote(currentNote)] :
-			[NSString stringWithFormat:warningMultipleFormatString, (unsigned long)[indexes count]];
+			NSString *warnString = currentNote ? [NSString stringWithFormat:NSLocalizedString(@"Delete the note titled quotemark%@quotemark?", @"alert title when asked to delete a note"), currentNote.title] :
+			[NSString stringWithFormat:NSLocalizedString(@"Delete %lu notes?", @"alert title when asked to delete multiple notes"), (unsigned long)indexes.count];
 			
             NSAlert *alert=[NSAlert new];
             alert.messageText=warnString;
@@ -1187,7 +1186,7 @@ void outletObjectAwoke(id sender) {
 			
 			NSUInteger strLen = [[aTextView string] length];
 			if (!singleSelection && [aTextView selectedRange].length != strLen) {
-				[aTextView setSelectedRange:NSMakeRange(0, strLen)];
+				aTextView.selectedRange = NSMakeRange(0, strLen);
 			}
 			
 			return YES;
@@ -1277,7 +1276,7 @@ void outletObjectAwoke(id sender) {
                     [aTextView insertText:@"," replacementRange:NSMakeRange(len, 0)];
                     len++;
                 }
-                [aTextView setSelectedRange:NSMakeRange(len, 0)];
+                aTextView.selectedRange = NSMakeRange(len, 0);
                 return YES;
             }
 		}else {
@@ -1301,7 +1300,9 @@ void outletObjectAwoke(id sender) {
 	//how do we test that?
 	BOOL wasAutomatic = NO;
 	NSRange currentRange = [textView selectedRangeWasAutomatic:&wasAutomatic];
-	if (!wasAutomatic) [currentNote setSelectedRange:currentRange];
+    if (!wasAutomatic) {
+        currentNote.selectedRange = currentRange;
+    }
 	
 	//regenerate content cache before switching to new note
 	[currentNote updateContentCacheCStringIfNecessary];
@@ -1373,19 +1374,15 @@ void outletObjectAwoke(id sender) {
 				NSRange typingRange = [fieldEditor selectedRange];
 				
 				//fill in the remaining characters of the title and select
-				if ([field lastLengthReplaced] > 0 && typingRange.location < [titleOfNote(currentNote) length]) {
+				if ([field lastLengthReplaced] > 0 && typingRange.location < currentNote.title.length) {
 					
 					[self cacheTypedStringIfNecessary:fieldString];
 					
 					NSAssert([fieldString isEqualToString:[fieldEditor string]], @"I don't think it makes sense for fieldString to change");
 					
-					NSString *remainingTitle = [titleOfNote(currentNote) substringFromIndex:typingRange.location];
-					typingRange.length = [fieldString length] - typingRange.location;
-					typingRange.length = MAX(typingRange.length, 0U);
-					
-					[fieldEditor replaceCharactersInRange:typingRange withString:remainingTitle];
-					typingRange.length = [remainingTitle length];
-					[fieldEditor setSelectedRange:typingRange];
+					NSString *remainingTitle = [currentNote.title substringFromIndex:typingRange.location];
+					[fieldEditor replaceCharactersInRange:NSMakeRange(typingRange.location, MAX(fieldString.length - typingRange.location, 0ULL)) withString:remainingTitle];
+                    fieldEditor.selectedRange = NSMakeRange(typingRange.location, remainingTitle.length);
 				}
 				
 			} else {
@@ -1424,7 +1421,7 @@ void outletObjectAwoke(id sender) {
 						tagString = [tagString stringByAppendingString:useStr];
 						selRange = NSMakeRange(selRange.location + selRange.length, useStr.length - searchString.length );
 						[tagEditor setTF:tagString];
-						[editor setSelectedRange:selRange];
+                        editor.selectedRange = selRange;
 
 						break;
                     }
@@ -1518,16 +1515,17 @@ void outletObjectAwoke(id sender) {
                     if ([self dualFieldIsVisible]) {
 						if (fieldEditor) {
 							//the field editor has focus--select text, too
-							[fieldEditor setString:titleOfNote(currentNote)];
-							NSUInteger strLen = [titleOfNote(currentNote) length];
-							if (strLen != [fieldEditor selectedRange].length)
-								[fieldEditor setSelectedRange:NSMakeRange(0, strLen)];
+                            fieldEditor.string = currentNote.title;
+                            NSUInteger strLen = currentNote.title.length;
+                            if (strLen != fieldEditor.selectedRange.length) {
+								fieldEditor.selectedRange = NSMakeRange(0, strLen);
+                            }
 						} else {
 							//this could be faster
-							[field setStringValue:titleOfNote(currentNote)];
+                            field.stringValue = currentNote.title;
 						}
 					} else {
-						[window setTitle:titleOfNote(currentNote)];
+                        window.title = currentNote.title;
 					}
 				}
 			}
@@ -1557,8 +1555,10 @@ void outletObjectAwoke(id sender) {
 				[window makeFirstResponder:field];
 				fieldEditor = (NSTextView*)[field currentEditor];
 			}
-			if (fieldEditor && [fieldEditor selectedRange].length)
-				[fieldEditor setSelectedRange:NSMakeRange([[fieldEditor string] length], 0)];
+            
+            if (fieldEditor.selectedRange.length) {
+                fieldEditor.selectedRange = NSMakeRange(fieldEditor.string.length, 0);
+            }
 			
 			
 			//remove snapback-button from dual field here?
@@ -1616,11 +1616,10 @@ void outletObjectAwoke(id sender) {
 		//actually load the new note
 		[self _setCurrentNote:note];
 		
-		NSRange firstFoundTermRange = NSMakeRange(NSNotFound,0);
-		NSRange noteSelectionRange = [currentNote lastSelectedRange];
+		NSRange firstFoundTermRange = NSMakeRange(NSNotFound, 0);
+		NSRange noteSelectionRange = currentNote.selectedRange;
 		
-		if (noteSelectionRange.location == NSNotFound ||
-			NSMaxRange(noteSelectionRange) > [[note contentString] length]) {
+		if (noteSelectionRange.location == NSNotFound || NSMaxRange(noteSelectionRange) > note.contentString.length) {
 			//revert to the top; selection is invalid
 			noteSelectionRange = NSMakeRange(0,0);
 		}
@@ -1636,7 +1635,7 @@ void outletObjectAwoke(id sender) {
 		}
 		
 		//restore string
-		[[textView textStorage] setAttributedString:[note contentString]];
+        textView.textStorage.attributedString = note.contentString;
 		[self postTextUpdate];
 		[self updateWordCount:(![prefsController showWordCount])];
 		//[textView setAutomaticallySelectedRange:NSMakeRange(0,0)];
@@ -1670,7 +1669,7 @@ void outletObjectAwoke(id sender) {
 	id textObject = [aNotification object];
     //[self resetModTimers];
 	if (textObject == textView) {
-		[currentNote setContentString:[textView textStorage]];
+        currentNote.contentString = textView.textStorage;
 		[self postTextUpdate];
 		[self updateWordCount:(![prefsController showWordCount])];
         [[NSNotificationCenter defaultCenter] postNotificationName:@"TextFindContextShouldUpdate" object:self];
@@ -1703,9 +1702,6 @@ void outletObjectAwoke(id sender) {
 */
 - (void)textDidEndEditing:(NSNotification *)aNotification {
 	if ([aNotification object] == textView) {
-		//save last selection range for currentNote?
-		//[currentNote setSelectedRange:[textView selectedRange]];
-		
 		//we need to set this here as we could return to searching before changing notes
 		//and the next time the note would change would be when searching had triggered it
 		//which would be too late
@@ -1765,8 +1761,7 @@ void outletObjectAwoke(id sender) {
 		NSString *title = [[field stringValue] length] ? [field stringValue] : NSLocalizedString(@"Untitled Note", @"Title of a nameless note");
 		NSAttributedString *attributedContents = [textView textStorage] ? [textView textStorage] : [[[NSAttributedString alloc] initWithString:@"" attributes:
 																									 [prefsController noteBodyAttributes]] autorelease];
-		NoteObject *note = [[[NoteObject alloc] initWithNoteBody:attributedContents title:title delegate:notationController
-														  format:[notationController currentNoteStorageFormat] labels:nil] autorelease];
+        NoteObject *note = [[[NoteObject alloc] initWithNoteBody:attributedContents title:title delegate:notationController fileManager:notationController format:[notationController currentNoteStorageFormat] labels:nil] autorelease];
 		[notationController addNewNote:note];
 		
 		isCreatingANote = NO;
@@ -1887,34 +1882,6 @@ void outletObjectAwoke(id sender) {
 	}
 	return proposedFrameSize;
 }
-/*
- - (void)_expandToolbar {
- if (![toolbar isVisible]) {
- [window setTitle:@"Notation"];
- if (currentNote)
- [field setStringValue:titleOfNote(currentNote)];
- [toolbar setVisible:YES];
- //[window toggleToolbarShown:nil];
- //	if (![splitView isDragging])
- //[[splitView subviewAtPosition:0] setDimension:100.0];
- //[[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"ToolbarHidden"];
- }
- //if ([[splitView subviewAtPosition:0] isCollapsed])
- //	[[splitView subviewAtPosition:0] expand];
- 
- }
- 
- - (void)_collapseToolbar {
- if ([toolbar isVisible]) {
- //	if (currentNote)
- //		[window setTitle:titleOfNote(currentNote)];
- //		[window toggleToolbarShown:nil];
- 
- [toolbar setVisible:NO];
- //[[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"ToolbarHidden"];
- }
- }
- */
 
 - (void)tableViewColumnDidResize:(NSNotification *)aNotification {
 	NoteAttributeColumn *col = [aNotification userInfo][@"NSTableColumn"];
@@ -1983,9 +1950,9 @@ void outletObjectAwoke(id sender) {
     if (aNoteObject == currentNote) {
         //	if ([toolbar isVisible]) {
         if ([self dualFieldIsVisible]) {
-			[field setStringValue:titleOfNote(currentNote)];
+            field.stringValue = currentNote.title;
 		} else {
-			[window setTitle:titleOfNote(currentNote)];
+            window.title = currentNote.title;
 		}
     }
 	[[prefsController bookmarksController] updateBookmarksUI];
@@ -1994,7 +1961,7 @@ void outletObjectAwoke(id sender) {
 - (void)contentsUpdatedForNote:(NoteObject*)aNoteObject {
 	if (aNoteObject == currentNote) {
 		NSArray *selRanges=[textView selectedRanges];
-		[[textView textStorage] setAttributedString:[aNoteObject contentString]];
+        textView.textStorage.attributedString = aNoteObject.contentString;
         if (![selRanges isEqualToArray:[textView selectedRanges]]) {
             NSRange testEnd=[[selRanges lastObject] rangeValue];
             NSUInteger test=testEnd.location+testEnd.length;
@@ -2092,7 +2059,9 @@ void outletObjectAwoke(id sender) {
 		//only save the state if the notation instance has actually loaded; i.e., don't save last-selected-note if we quit from a PW dialog
 		BOOL wasAutomatic = NO;
 		NSRange currentRange = [textView selectedRangeWasAutomatic:&wasAutomatic];
-		if (!wasAutomatic) [currentNote setSelectedRange:currentRange];
+        if (!wasAutomatic) {
+            currentNote.selectedRange = currentRange;
+        }
 		
 		[currentNote updateContentCacheCStringIfNecessary];
 		
@@ -2358,13 +2327,13 @@ void outletObjectAwoke(id sender) {
 	NSEnumerator *noteEnum = [[[notationController notesAtIndexes:selDexes] objectEnumerator] retain];
 	NoteObject *aNote;
 	aNote = [noteEnum nextObject];
-	NSString *existTags = labelsOfNote(aNote);
+    NSString *existTags = aNote.labels;
 	if (existTags&&(existTags.length>0)) {
         NSMutableSet *commonTags = [NSMutableSet new];
         
         [commonTags addObjectsFromArray:[existTags labelCompatibleWords]];
 		while (((aNote = [noteEnum nextObject]))&&([commonTags count]>0)) {
-			existTags = labelsOfNote(aNote);
+            existTags = aNote.labels;
 			if (!existTags||(existTags.length==0)) {
 				[commonTags removeAllObjects];
 				break;
@@ -2420,7 +2389,7 @@ void outletObjectAwoke(id sender) {
         NSMutableArray *finalTags = [NSMutableArray new];
         for (NoteObject *aNote in selNotes) {
             NSString *separator=@" ";
-            tagString=labelsOfNote(aNote);
+            tagString = aNote.labels;
             NSArray *filteredTags;
             
             if (tagString&&(tagString.length>0)) {
@@ -2452,8 +2421,8 @@ void outletObjectAwoke(id sender) {
             }else{
                 tagString=@"";
             }
-        
-            [aNote setLabelString:tagString];
+            
+            aNote.labels = tagString;
             [finalTags removeAllObjects];
         }
         
@@ -2538,16 +2507,16 @@ void outletObjectAwoke(id sender) {
 
 	if (isVis) {
         [window setTitle:@"nvALT"];
-        if (currentNote&&(![[field stringValue]isEqualToString:titleOfNote(currentNote)]))
-            [field setStringValue:titleOfNote(currentNote)];
-        
+        if (currentNote && ![field.stringValue isEqualToString:currentNote.title]) {
+            field.stringValue = currentNote.title;
+        }
         
         [window setInitialFirstResponder:field];
         
     }else{
-        if (currentNote)
-            [window setTitle:titleOfNote(currentNote)];
-        
+        if (currentNote) {
+            window.title = currentNote.title;
+        }
         
         [window setInitialFirstResponder:textView];
     }
@@ -3196,5 +3165,12 @@ void outletObjectAwoke(id sender) {
         [referenceLinks release];
         return returnArray;
     }
-    
+
+#pragma mark - Notifications
+
+- (void)noteNoteContentsUpdated:(NSNotification *)note // NTVNoteContentsUpdatedNotification
+{
+    [self contentsUpdatedForNote:note.object];
+}
+
     @end

@@ -233,21 +233,26 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 
 		if (filename) {
 			NSArray *notes = [self notesInFile:filename];
+            
 			if ([notes count]) {
-				NSMutableAttributedString *content = [[[GlobalPrefs defaultPrefs] pastePreservesStyle] ? [[[notes lastObject] contentString] mutableCopy] :
-													  [[NSMutableAttributedString alloc] initWithString:[[[notes lastObject] contentString] string]] autorelease];
+                NoteObject *note = notes.lastObject;
+				NSMutableAttributedString *content = [[[GlobalPrefs defaultPrefs] pastePreservesStyle] ? [note.contentString mutableCopy] :
+													  [[NSMutableAttributedString alloc] initWithString:note.contentString.string] autorelease];
 				if ([[[content string] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] length]) {
 					//only add string if it has at least one non-whitespace character
 					NSUInteger prefixedSourceLength = [[content prefixWithSourceString:[[getter url] absoluteString]] length];
 					[content santizeForeignStylesForImporting];
 					
-					[[notes lastObject] setContentString:content];
-					if ([getter userData]) [[notes lastObject] setTitleString:[getter userData]];
+                    note.contentString = content;
+                    if (getter.userData) {
+                        note.title = getter.userData;
+                    }
 					
 					//prefixing should push existing selections forward:
-					NSRange selRange = [[notes lastObject] lastSelectedRange];
-					if (selRange.length && prefixedSourceLength)
-						[[notes lastObject] setSelectedRange:NSMakeRange(selRange.location + prefixedSourceLength, selRange.length)];
+                    NSRange selRange = note.selectedRange;
+                    if (selRange.length && prefixedSourceLength) {
+                        note.selectedRange = NSMakeRange(selRange.location + prefixedSourceLength, selRange.length);
+                    }
 					
 					[receptionDelegate noteImporter:self importedNotes:notes];
 					
@@ -263,7 +268,7 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 				[newString santizeForeignStylesForImporting];
 				
 				NoteObject *noteObject = [[NoteObject alloc] initWithNoteBody:newString title:[getter userData] ? [getter userData] : urlString
-																	 delegate:nil format:NTVStorageFormatDatabase labels:nil];
+                                                                     delegate:nil fileManager:nil format:NTVStorageFormatDatabase labels:nil];
 				
 				[receptionDelegate noteImporter:self importedNotes:@[noteObject]];
 				[noteObject autorelease];
@@ -430,14 +435,16 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		NSArray *openMetaTags = [[NSFileManager defaultManager] getTagsAtFSPath:[filename fileSystemRepresentation]];
 		
 		//we do not also use filename as uniqueFilename, as we are only importing--not taking ownership
-		NoteObject *noteObject = [[NoteObject alloc] initWithNoteBody:attributedStringFromData title:title delegate:nil 
-															   format:NTVStorageFormatDatabase labels:[openMetaTags componentsJoinedByString:@" "]];
+		NoteObject *noteObject = [[NoteObject alloc] initWithNoteBody:attributedStringFromData title:title delegate:nil fileManager:nil format:NTVStorageFormatDatabase labels:[openMetaTags componentsJoinedByString:@" "]];
 		if (noteObject) {
-			if (bodyLoc > 0 && [attributedStringFromData length] >= bodyLoc + prefixedSourceLength) [noteObject setSelectedRange:NSMakeRange(prefixedSourceLength, bodyLoc)];
+            if (bodyLoc > 0 && [attributedStringFromData length] >= bodyLoc + prefixedSourceLength) {
+                noteObject.selectedRange = NSMakeRange(prefixedSourceLength, bodyLoc);
+            }
+            
 			if (shouldGrabCreationDates) {
-				[noteObject setDateAdded:CFDateGetAbsoluteTime((CFDateRef)attributes[NSFileCreationDate])];
+                noteObject.createdDate = CFDateGetAbsoluteTime((CFDateRef)attributes[NSFileCreationDate]);
 			}
-			[noteObject setDateModified:CFDateGetAbsoluteTime((CFDateRef)attributes[NSFileModificationDate])];
+            noteObject.modifiedDate = CFDateGetAbsoluteTime((CFDateRef)attributes[NSFileModificationDate]);
 			
 			return [noteObject autorelease];
 		} else {
@@ -642,11 +649,10 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 			[attributedString santizeForeignStylesForImporting];
 			NSString *syntheticTitle = [attributedString trimLeadingSyntheticTitle];
 			
-			NoteObject *noteObject = [[[NoteObject alloc] initWithNoteBody:attributedString title:syntheticTitle 
-																  delegate:nil format:NTVStorageFormatDatabase labels:nil] autorelease];
+			NoteObject *noteObject = [[[NoteObject alloc] initWithNoteBody:attributedString title:syntheticTitle  delegate:nil fileManager:nil format:NTVStorageFormatDatabase labels:nil] autorelease];
 			if (noteObject) {
-				[noteObject setDateAdded:CFDateGetAbsoluteTime((CFDateRef)[doc creationDate])];
-				[noteObject setDateModified:CFDateGetAbsoluteTime((CFDateRef)[doc modificationDate])];
+				noteObject.createdDate = CFDateGetAbsoluteTime((CFDateRef)[doc creationDate]);
+				noteObject.modifiedDate = CFDateGetAbsoluteTime((CFDateRef)[doc modificationDate]);
 
 				[notes addObject:noteObject];
 			} else {
@@ -700,8 +706,8 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
 		
 		[array addObject:note];
 		
-		[note setDateAdded:(creationTime += 1.0)];
-		[note setDateModified:(modificationTime += 1.0)];
+        note.createdDate = creationTime += 1.0;
+        note.modifiedDate = modificationTime += 1.0;
 	}
 	
 	if (count != [enumerator suspectedNoteCount]) {
@@ -730,10 +736,10 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
     [contents replaceOccurrencesOfString:@"\r" withString:@"\n" options:0 range:NSMakeRange(0, [contents length])];
     
     NSMutableArray *notes = [NSMutableArray array];
-	CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
 
     // Assume first entry in line is note title and any other entries go in the note body
-	for (NSString *curLine in [contents componentsSeparatedByString:@"\n"]) {
+    for (NSString *curLine in [contents componentsSeparatedByString:@"\n"]) {
         NSArray *fields = [curLine componentsSeparatedByString:delimiter];
         NSUInteger count = [fields count];
         if (count > 1) {
@@ -749,21 +755,22 @@ NSString *ShouldImportCreationDates = @"ShouldImportCreationDates";
                 continue;
             
             NSString *title = fields[0];
-			NSMutableAttributedString *attributedBody = [[[NSMutableAttributedString alloc] initWithString:s attributes:[[GlobalPrefs defaultPrefs] noteBodyAttributes]] autorelease];
-			[attributedBody addLinkAttributesForRange:NSMakeRange(0, [attributedBody length])];
-			[attributedBody addStrikethroughNearDoneTagsForRange:NSMakeRange(0, [attributedBody length])];
-			
-            NoteObject *note = [[[NoteObject alloc] initWithNoteBody:attributedBody title:title delegate:nil format:NTVStorageFormatDatabase labels:nil] autorelease];
-			if (note) {
-				now += 1.0; //to ensure a consistent sort order
-				[note setDateAdded:now];
-				[note setDateModified:now];
-				[notes addObject:note];
-			}
+            NSMutableAttributedString *attributedBody = [[[NSMutableAttributedString alloc] initWithString:s attributes:[[GlobalPrefs defaultPrefs] noteBodyAttributes]] autorelease];
+            [attributedBody addLinkAttributesForRange:NSMakeRange(0, [attributedBody length])];
+            [attributedBody addStrikethroughNearDoneTagsForRange:NSMakeRange(0, [attributedBody length])];
+            
+            NoteObject *note = [[[NoteObject alloc] initWithNoteBody:attributedBody title:title delegate:nil fileManager:nil format:NTVStorageFormatDatabase labels:nil] autorelease];
+            if (note) {
+                now += 1.0; //to ensure a consistent sort order
+                note.createdDate = now;
+                note.modifiedDate = now;
+                [notes addObject:note];
+            }
         }
     }
+    
 	[contents release];
     
-    return (notes);
+    return notes;
 }
 @end
