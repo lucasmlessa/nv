@@ -18,70 +18,53 @@
 
 #import "StickiesDocument.h"
 
-@implementation StickiesDocument
+#if __LP64__
+// Needed for compatability with data created by 32bit app
+typedef struct {
+    struct {
+        float x;
+        float y;
+    };
+    struct {
+        float width;
+        float height;
+    };
+} NTVRect32;
+#else
+typedef CGRect NTVRect32;
+#endif
+
+@implementation StickiesDocument {
+    int mWindowColor;
+    int mWindowFlags;
+    NTVRect32 mWindowFrame;
+}
 
 - (void)dealloc {
 	
-	[mRTFDData release];
-	[mCreationDate release];
-	[mModificationDate release];
+	[_RTFDData release];
+	[_creationDate release];
+	[_modificationDate release];
 	
 	[super dealloc];
 }
-
-/*
- int mWindowColor;
- int mWindowFlags;
- NSRect mWindowFrame;
- NSData *mRTFDData;
- NSDate *mCreationDate;
- NSDate *mModificationDate;
-*/
 
 - (id)initWithCoder:(id)decoder {
 	self = [super init];
 	if (!self) { return nil; }
 
-	mRTFDData = [[decoder decodeObject] retain];
+	_RTFDData = [[decoder decodeObject] retain];
 	[decoder decodeValueOfObjCType:@encode(int) at:&mWindowFlags];
-#if __LP64__
-	[decoder decodeValueOfObjCType:"{_NSRect={_NSPoint=ff}{_NSSize=ff}}" at:&mWindowFrame];
-#else
-	[decoder decodeValueOfObjCType:@encode(NSRect) at:&mWindowFrame];
-#endif
+	[decoder decodeValueOfObjCType:@encode(NTVRect32) at:&mWindowFrame];
 	[decoder decodeValueOfObjCType:@encode(int) at:&mWindowColor];
-	mCreationDate = [[decoder decodeObject] retain];
-	mModificationDate = [[decoder decodeObject] retain];
+	_creationDate = [[decoder decodeObject] retain];
+	_modificationDate = [[decoder decodeObject] retain];
         
 	return self;
 }
 
 - (void)encodeWithCoder:(id)coder {
-	NSAssert(0, @"Notational Velocity is not supposed to make stickies!");
-}
-
-- (NSDate *)creationDate {
-	return mCreationDate;
-}
-
-- (NSDate *)modificationDate {
-	return mModificationDate;
-}
-
-- (NSData*)RTFDData {
-	return mRTFDData;
-}
-
-- (int)windowColor {
-	return mWindowColor;
-}
-
-- (int)windowFlags {
-	return mWindowFlags;
-}
-
-- (NSRect32)windowFrame {
-	return mWindowFrame;
+	NSAssert(NO, @"Notational Velocity is not supposed to make stickies!");
 }
 
 @end
