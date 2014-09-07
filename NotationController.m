@@ -243,7 +243,7 @@
 	UInt64 fileSize = 0;
 	char *notesData = NULL;
 	OSStatus err = noErr, result = noErr;
-	if ((err = FSRefReadData(notesFileRef, BlockSizeForNotation(self), &fileSize, (void**)&notesData, forceReadMask)) != noErr)
+	if ((err = FSRefReadData(notesFileRef, self.blockSize, &fileSize, (void**)&notesData, forceReadMask)) != noErr)
 		return @(err);
 	
 	FrozenNotation *frozenNotation = nil;
@@ -296,7 +296,7 @@ returnResult:
 	
 	UInt64 fileSize = 0;
 	char *notesData = NULL;
-	if ((err = FSRefReadData(&noteDatabaseRef, BlockSizeForNotation(self), &fileSize, (void**)&notesData, noCacheMask)) != noErr)
+	if ((err = FSRefReadData(&noteDatabaseRef, self.blockSize, &fileSize, (void**)&notesData, noCacheMask)) != noErr)
 		return err;
 	
 	FrozenNotation *frozenNotation = nil;

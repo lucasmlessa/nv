@@ -38,8 +38,6 @@ typedef union VolumeUUID {
 OSStatus CreateTemporaryFile(FSRef *parentRef, FSRef *childTempRef);
 OSStatus CreateDirectoryIfNotPresent(FSRef *parentRef, CFStringRef subDirectoryName, FSRef *childRef);
 CFUUIDRef CopyHFSVolumeUUIDForMount(const char *mntonname);
-long BlockSizeForNotation(NotationController *controller);
-NSUInteger diskUUIDIndexForNotation(NotationController *controller) DEPRECATED_ATTRIBUTE;
 
 - (void)purgeOldPerDiskInfoFromNotes;
 - (void)initializeDiskUUIDIfNecessary;

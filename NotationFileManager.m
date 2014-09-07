@@ -238,10 +238,6 @@ static struct statfs *StatFSVolumeInfo(NotationController *controller) {
 	return controller->statfsInfo;
 }
 
-NSUInteger diskUUIDIndexForNotation(NotationController *controller) {
-	return controller->diskUUIDIndex;
-}
-
 - (UInt32)diskUUIDIndex
 {
     return (UInt32)diskUUIDIndex;
@@ -259,10 +255,6 @@ NSUInteger diskUUIDIndexForNotation(NotationController *controller) {
     }
     
     return blockSize;
-}
-
-long BlockSizeForNotation(NotationController *controller) {
-    return [controller blockSize];
 }
 
 - (OSStatus)refreshFileRefIfNecessary:(FSRef *)childRef withName:(NSString *)filename charsBuffer:(UniChar*)charsBuffer {
@@ -531,7 +523,7 @@ terminate:
 	OSStatus err = [self refreshFileRefIfNecessary:childRef withName:filename charsBuffer:chars];
 	if (noErr != err) return nil;
 	
-    if ((err = FSRefReadData(childRef, BlockSizeForNotation(self), &fileSize, (void**)&notesDataPtr, noCacheMask)) != noErr) {
+    if ((err = FSRefReadData(childRef, self.blockSize, &fileSize, (void**)&notesDataPtr, noCacheMask)) != noErr) {
 		NSLog(@"%@: error %d", NSStringFromSelector(_cmd), err);
 		return nil;
 	}    
@@ -563,7 +555,7 @@ terminate:
     }
     
     //now write to temporary file and swap
-    if ((err = FSRefWriteData(&tempFileRef, BlockSizeForNotation(self), [data length], [data bytes], pleaseCacheMask, false)) != noErr) {
+    if ((err = FSRefWriteData(&tempFileRef, self.blockSize, [data length], [data bytes], pleaseCacheMask, false)) != noErr) {
 		NSLog(@"error writing to temporary file: %d", err);
 		
 		return err;
