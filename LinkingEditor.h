@@ -17,7 +17,7 @@
 @class NotesTableView;
 @class NoteObject;
 
-@interface LinkingEditor : NSTextView <NSLayoutManagerDelegate, NSTextFinderClient, GlobalPrefsObserver>
+@interface LinkingEditor : NSTextView <NSLayoutManagerDelegate, NSTextFinderClient>
 {	
     NSTextFinder *textFinder;
     IBOutlet NSTextField *controlField;

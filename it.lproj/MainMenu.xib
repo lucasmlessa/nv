@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6206.8" systemVersion="14A329f" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6206.9" systemVersion="14A343f" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6206.8"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6206.9"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -988,7 +987,7 @@ CA
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
         </customView>
         <userDefaultsController representsSharedInstance="YES" id="1258"/>
-        <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="1016" userLabel="Scroll View - Linking Editor" customClass="ETScrollView">
+        <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="1016" userLabel="Scroll View - Linking Editor" customClass="NTVLinkingEditorScrollView">
             <rect key="frame" x="0.0" y="0.0" width="399" height="304"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <clipView key="contentView" drawsBackground="NO" id="TV6-mr-924">
@@ -1051,7 +1050,7 @@ CA
                 <rect key="frame" x="-100" y="-100" width="382" height="15"/>
                 <autoresizingMask key="autoresizingMask"/>
             </scroller>
-            <scroller key="verticalScroller" verticalHuggingPriority="750" arrowsPosition="none" horizontal="NO" id="1106">
+            <scroller key="verticalScroller" verticalHuggingPriority="750" arrowsPosition="none" doubleValue="1" horizontal="NO" id="1106">
                 <rect key="frame" x="383" y="17" width="16" height="136"/>
                 <autoresizingMask key="autoresizingMask"/>
             </scroller>

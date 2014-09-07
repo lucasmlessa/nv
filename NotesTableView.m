@@ -207,7 +207,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 #pragma mark - More legacy dragging
 
 
-- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender {
+/*- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender {
 	
 	if ([sender draggingSource] == self)
 		return NO;
@@ -229,7 +229,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 		return NO;
 
 	return [NTVAppDelegate() addNotesFromPasteboard:[sender draggingPasteboard]];
-}
+}*/
 
 #pragma mark - End legacy dragging
 
@@ -793,7 +793,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
 
 #pragma mark - Legacy dragging
 
-- (NSDragOperation)draggingSession:(NSDraggingSession *)session sourceOperationMaskForDraggingContext:(NSDraggingContext)context
+/*- (NSDragOperation)draggingSession:(NSDraggingSession *)session sourceOperationMaskForDraggingContext:(NSDraggingContext)context
 {
 	switch (context) {
 		case NSDraggingContextOutsideApplication:
@@ -865,7 +865,7 @@ static void _CopyItemWithSelectorFromMenu(NSMenu *destMenu, NSMenu *sourceMenu, 
     }
 	
 	[super mouseDown:event];
-}
+}*/
 
 #pragma mark - End legacy dragging
 

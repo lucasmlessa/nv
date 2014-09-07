@@ -250,6 +250,7 @@
 		DB98BBA319A90B2500055B14 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB98BBA219A90B2500055B14 /* libcrypto.dylib */; };
 		DB98BBA919A9110700055B14 /* NSData+NTVCommonDigest.m in Sources */ = {isa = PBXBuildFile; fileRef = DB98BBA819A9110700055B14 /* NSData+NTVCommonDigest.m */; };
 		DB98BBDF19A927C600055B14 /* NTVBrokenMD5.m in Sources */ = {isa = PBXBuildFile; fileRef = DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */; };
+		DB9D526319BCD23000ED7560 /* NTVLinkingEditorScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = DB9D526219BCD23000ED7560 /* NTVLinkingEditorScrollView.m */; };
 		DBC9DC7E19ABEC19009E8460 /* NTVNotesListDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DBC9DC7D19ABEC19009E8460 /* NTVNotesListDataSource.m */; };
 		DBD70D8A19A63C000026F349 /* HelpNotes in Resources */ = {isa = PBXBuildFile; fileRef = DBD70D8819A63C000026F349 /* HelpNotes */; };
 		DBD70E0B19A641F90026F349 /* SaveHTMLPreview.xib in Resources */ = {isa = PBXBuildFile; fileRef = DBD70E0919A641F90026F349 /* SaveHTMLPreview.xib */; };
@@ -635,6 +636,8 @@
 		DB98BBDC19A9276F00055B14 /* NTVMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NTVMacros.h; sourceTree = "<group>"; };
 		DB98BBDD19A927C600055B14 /* NTVBrokenMD5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVBrokenMD5.h; sourceTree = "<group>"; };
 		DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVBrokenMD5.m; sourceTree = "<group>"; };
+		DB9D526119BCD23000ED7560 /* NTVLinkingEditorScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVLinkingEditorScrollView.h; sourceTree = "<group>"; };
+		DB9D526219BCD23000ED7560 /* NTVLinkingEditorScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVLinkingEditorScrollView.m; sourceTree = "<group>"; };
 		DBC9DC7C19ABEC19009E8460 /* NTVNotesListDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVNotesListDataSource.h; sourceTree = "<group>"; };
 		DBC9DC7D19ABEC19009E8460 /* NTVNotesListDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVNotesListDataSource.m; sourceTree = "<group>"; };
 		DBD70CE119A638B50026F349 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/ServicesMenu.strings; sourceTree = "<group>"; };
@@ -874,6 +877,8 @@
 				2191930609CFBED200586B15 /* View Classes */,
 				21A73DC6099712A8009F8A6C /* WALController.h */,
 				21A73DC7099712A8009F8A6C /* WALController.m */,
+				DB9D526119BCD23000ED7560 /* NTVLinkingEditorScrollView.h */,
+				DB9D526219BCD23000ED7560 /* NTVLinkingEditorScrollView.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -1595,6 +1600,7 @@
 				21AD2550110A8BA600B7A985 /* SimplenoteEntryCollector.m in Sources */,
 				21AD2850110BE99B00B7A985 /* SyncSessionController.m in Sources */,
 				212C6952110E1940004DD82C /* TitlebarButton.m in Sources */,
+				DB9D526319BCD23000ED7560 /* NTVLinkingEditorScrollView.m in Sources */,
 				21B548FA112F307E00E163A1 /* NotationDirectoryManager.m in Sources */,
 				57F27FB91197407400C63ACF /* SearchCommand.m in Sources */,
 				216D987F12CE68AD0004B9CE /* NSFileManager_NV.m in Sources */,

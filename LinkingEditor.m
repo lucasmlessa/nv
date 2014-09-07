@@ -66,14 +66,6 @@ CGFloat _perceptualDarkness(NSColor*a);
 	
     [self setContinuousSpellCheckingEnabled:[prefsController checkSpellingAsYouType]];
 	[self setAutomaticTextReplacementEnabled:[prefsController useTextReplacement]];
-    
-	[prefsController registerTarget:self forChangesInSettings:
-	 @selector(setCheckSpellingAsYouType:sender:),
-	 @selector(setUseTextReplacement:sender:),
-	 @selector(setNoteBodyFont:sender:),
-	 @selector(setMakeURLsClickable:sender:),
-	 @selector(setSearchTermHighlightColor:sender:),
-	 @selector(setShouldHighlightSearchTerms:sender:), nil];
 	
     self.managesTextWidth=[prefsController managesTextWidthInWindow];
 	[self setSmartInsertDeleteEnabled:NO];
@@ -92,27 +84,6 @@ CGFloat _perceptualDarkness(NSColor*a);
 	[[self layoutManager] setDelegate:self];
    
 	outletObjectAwoke(self);
-}
-
-- (void)settingChangedForSelector:(SEL)selector {
-	if (sel_isEqual(selector, @selector(setCheckSpellingAsYouType:sender:))) {
-		[self setContinuousSpellCheckingEnabled:[prefsController checkSpellingAsYouType]];
-	} else if (sel_isEqual(selector, @selector(setUseTextReplacement:sender:))) {
-		[self setAutomaticTextReplacementEnabled:[prefsController useTextReplacement]];
-	} else if (sel_isEqual(selector, @selector(setNoteBodyFont:sender:))) {
-		[self setTypingAttributes:[prefsController noteBodyAttributes]];
-	} else if (sel_isEqual(selector, @selector(setMakeURLsClickable:sender:))) {
-		[self setLinkTextAttributes:[self preferredLinkAttributes]];
-	} else if (sel_isEqual(selector, @selector(setSearchTermHighlightColor:sender:)) ||
-			   sel_isEqual(selector, @selector(setShouldHighlightSearchTerms:sender:))) {
-		if (![prefsController highlightSearchTerms]) {
-			[self removeHighlightedTerms];
-		} else {
-			NSString *typedString = [NTVAppDelegate() typedString];
-			if (typedString)
-				[self highlightTermsTemporarilyReturningFirstRange:typedString avoidHighlight:NO];
-		}
-	}
 }
 
 - (BOOL)becomeFirstResponder {
