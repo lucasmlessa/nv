@@ -625,30 +625,9 @@ void outletObjectAwoke(id sender) {
 		
 	} else if (selector == @selector(revealNote:)) {
         
-		return (numberSelected == 1) && [notationController currentNoteStorageFormat] != SingleDatabaseFormat;
-		
-        //	} else if (selector == @selector(openFileInEditor:)) {
-        //		NSString *defApp = [prefsController textEditor];
-        //		if (![[self getTxtAppList] containsObject:defApp]) {
-        //			defApp = @"Default";
-        //			[prefsController setTextEditor:@"Default"];
-        //		}
-        //		if (([defApp isEqualToString:@"Default"])||(![[NSFileManager defaultManager] fileExistsAtPath:[[NSWorkspace sharedWorkspace] fullPathForApplication:defApp]])) {
-        //
-        //			if (![defApp isEqualToString:@"Default"]) {
-        //				[prefsController setTextEditor:@"Default"];
-        //			}
-        //			CFStringRef cfFormat = (CFStringRef)noteFormat;
-        //			defApp = [(NSString *)LSCopyDefaultRoleHandlerForContentType(cfFormat,kLSRolesEditor) autorelease];
-        //			defApp = [[NSWorkspace sharedWorkspace] absolutePathForAppBundleWithIdentifier: defApp];
-        //			defApp = [[NSFileManager defaultManager] displayNameAtPath: defApp];
-        //		}
-        //		if ((!defApp)||([defApp isEqualToString:@"Safari"])) {
-        //			defApp = @"TextEdit";
-        //		}
-        //		[menuItem setTitle:[@"Open Note in " stringByAppendingString:defApp]];
-        //		return (numberSelected == 1) && [notationController currentNoteStorageFormat] != SingleDatabaseFormat;
-	} else if (selector == @selector(toggleCollapse:)) {
+		return (numberSelected == 1) && [notationController currentNoteStorageFormat] != NTVStorageFormatDatabase;
+
+    } else if (selector == @selector(toggleCollapse:)) {
         if ([notesSubview isCollapsed]) {
             [menuItem setTitle:NSLocalizedString(@"Expand Notes List",@"menu item title for expanding notes list")];
         }else{
@@ -666,8 +645,7 @@ void outletObjectAwoke(id sender) {
 			[menuItem setTitle:NSLocalizedString(@"Enter Full Screen",@"menu item title for entering fullscreen")];
 		}
 	} else if (selector == @selector(fixFileEncoding:)) {
-		
-		return (currentNote != nil && storageFormatOfNote(currentNote) == PlainTextFormat && ![currentNote contentsWere7Bit]);
+		return (currentNote != nil && storageFormatOfNote(currentNote) == NTVStorageFormatPlainText && ![currentNote contentsWere7Bit]);
     } else if (selector == @selector(editNoteExternally:)) {
         return (numberSelected > 0) && [[menuItem representedObject] canEditAllNotes:[notationController notesAtIndexes:[notesTableView selectedRowIndexes]]];
 	}else if (selector == @selector(previewNoteWithMarked:)){
@@ -1139,7 +1117,7 @@ void outletObjectAwoke(id sender) {
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification {
 	[notationController checkJournalExistence];
 	
-    if ([notationController currentNoteStorageFormat] != SingleDatabaseFormat)
+    if ([notationController currentNoteStorageFormat] != NTVStorageFormatDatabase)
 		[notationController performSelector:@selector(synchronizeNotesFromDirectory) withObject:nil afterDelay:0.0];
 	[notationController updateDateStringsIfNecessary];
 }

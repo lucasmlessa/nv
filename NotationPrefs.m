@@ -71,7 +71,6 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	storesPasswordInKeychain = secureTextEntry = doesEncryption = NO;
 	syncServiceAccounts = [[NSMutableDictionary alloc] init];
 	seenDiskUUIDEntries = [[NSMutableArray alloc] init];
-	notesStorageFormat = SingleDatabaseFormat;
 	hashIterationCount = DEFAULT_HASH_ITERATIONS;
 	keyLengthInBits = DEFAULT_KEY_LENGTH;
 	baseBodyFont = [[[GlobalPrefs defaultPrefs] noteBodyFont] retain];
@@ -222,45 +221,48 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
     [super dealloc];
 }
 
-+ (NSMutableArray*)defaultTypeStringsForFormat:(int)formatID {
++ (NSMutableArray *)defaultTypeStringsForFormat:(NTVStorageFormat)formatID {
     switch (formatID) {
-	case SingleDatabaseFormat:
-	    return [NSMutableArray arrayWithCapacity:0];
-	case PlainTextFormat: 
-	    return [NSMutableArray arrayWithObjects:[(id)UTCreateStringForOSType(TEXT_TYPE_ID) autorelease], 
-			[(id)UTCreateStringForOSType(UTXT_TYPE_ID) autorelease], nil];
-	case RTFTextFormat: 
-	    return [NSMutableArray arrayWithObjects:[(id)UTCreateStringForOSType(RTF_TYPE_ID) autorelease], nil];
-	case HTMLFormat:
-	    return [NSMutableArray arrayWithObjects:[(id)UTCreateStringForOSType(HTML_TYPE_ID) autorelease], nil];
-	case WordDocFormat:
-		return [NSMutableArray arrayWithObjects:[(id)UTCreateStringForOSType(WORD_DOC_TYPE_ID) autorelease], nil];
-	default:
-	    NSLog(@"Unknown format ID: %d", formatID);
+        case NTVStorageFormatDatabase:
+            return [NSMutableArray arrayWithCapacity:0];
+        case NTVStorageFormatPlainText:
+            return [NSMutableArray arrayWithObjects:[(id)UTCreateStringForOSType(TEXT_TYPE_ID) autorelease], 
+                [(id)UTCreateStringForOSType(UTXT_TYPE_ID) autorelease], nil];
+        case NTVStorageFormatRichText:
+            return [NSMutableArray arrayWithObjects:[(id)UTCreateStringForOSType(RTF_TYPE_ID) autorelease], nil];
+        case NTVStorageFormatHTML:
+            return [NSMutableArray arrayWithObjects:[(id)UTCreateStringForOSType(HTML_TYPE_ID) autorelease], nil];
+        case NTVStorageFormatWord:
+            return [NSMutableArray arrayWithObjects:[(id)UTCreateStringForOSType(WORD_DOC_TYPE_ID) autorelease], nil];
+        case NTVStorageFormatOpenXML:
+            // TODO
+            return [NSMutableArray array];
+        default:
+            NSLog(@"Unknown format ID: %ld", (long)formatID);
     }
     
-    return [NSMutableArray arrayWithCapacity:0];
+    return [NSMutableArray array];
 }
 
-+ (NSMutableArray*)defaultPathExtensionsForFormat:(int)formatID {
++ (NSMutableArray*)defaultPathExtensionsForFormat:(NTVStorageFormat)formatID {
     switch (formatID) {
-	case SingleDatabaseFormat:
-	    return [NSMutableArray arrayWithCapacity:0];
-	case PlainTextFormat: 
-	    return [NSMutableArray arrayWithObjects:@"txt", @"text", @"utf8", @"taskpaper", nil];
-	case RTFTextFormat: 
-	    return [NSMutableArray arrayWithObjects:@"rtf", nil];
-	case HTMLFormat:
-	    return [NSMutableArray arrayWithObjects:@"html", @"htm", nil];
-	case WordDocFormat:
-		return [NSMutableArray arrayWithObjects:@"doc", nil];
-	case WordXMLFormat:
-		return [NSMutableArray arrayWithObjects:@"docx", nil];
-	default:
-	    NSLog(@"Unknown format ID: %d", formatID);
+        case NTVStorageFormatDatabase:
+            return [NSMutableArray arrayWithCapacity:0];
+        case NTVStorageFormatPlainText:
+            return [NSMutableArray arrayWithObjects:@"txt", @"text", @"utf8", @"taskpaper", nil];
+        case NTVStorageFormatRichText:
+            return [NSMutableArray arrayWithObjects:@"rtf", nil];
+        case NTVStorageFormatHTML:
+            return [NSMutableArray arrayWithObjects:@"html", @"htm", nil];
+        case NTVStorageFormatWord:
+            return [NSMutableArray arrayWithObjects:@"doc", nil];
+        case NTVStorageFormatOpenXML:
+            return [NSMutableArray arrayWithObjects:@"docx", nil];
+        default:
+            NSLog(@"Unknown format ID: %ld", (long)formatID);
     }
     
-    return [NSMutableArray arrayWithCapacity:0];
+    return [NSMutableArray array];
 }
 
 - (BOOL)preferencesChanged {
@@ -622,7 +624,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	if ([delegate respondsToSelector:@selector(totalNoteCount)])
 		notesExist = [delegate totalNoteCount] > 0;
 
-	return (proposedFormat == SingleDatabaseFormat && notesStorageFormat != SingleDatabaseFormat && notesExist);
+	return (proposedFormat == NTVStorageFormatDatabase && notesStorageFormat != NTVStorageFormatDatabase && notesExist);
 }
 
 - (void)noteFilesCleanupSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo {
@@ -852,7 +854,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 	//then display warning
 	
 	NSArray *enabledValues = [[syncServiceAccounts allValues] objectsFromDictionariesForKey:@"enabled"];	
-	if ([enabledValues containsObject:@YES] && SingleDatabaseFormat != notesStorageFormat) {
+	if ([enabledValues containsObject:@YES] && NTVStorageFormatDatabase != notesStorageFormat) {
 		//this DB is syncing with a service and is storing separate files; could it be syncing with anything else, too?
 		
 		//this logic will need to be more sophisticated anyway when multiple sync services are supported
@@ -886,22 +888,22 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
     */
 }
 
-+ (NSString*)pathExtensionForFormat:(NSInteger)format {
++ (NSString*)pathExtensionForFormat:(NTVStorageFormat)format {
     switch (format) {
-	case SingleDatabaseFormat:
-	case PlainTextFormat:
+	case NTVStorageFormatDatabase:
+	case NTVStorageFormatPlainText:
 	    
 	    return @"txt";
-	case RTFTextFormat:
+	case NTVStorageFormatRichText:
 	    
 	    return @"rtf";
-	case HTMLFormat:
+	case NTVStorageFormatHTML:
 	    
 	    return @"html";
-	case WordDocFormat:
+	case NTVStorageFormatWord:
 		
 		return @"doc";
-	case WordXMLFormat:
+	case NTVStorageFormatOpenXML:
 		
 		return @"docx";
 	default:
@@ -935,7 +937,7 @@ static NSMutableDictionary *ServiceAccountDictInit(NotationPrefs *prefs, NSStrin
 - (NSUInteger)indexOfChosenPathExtension {
 	return chosenExtIndices[notesStorageFormat];
 }
-- (NSString*)chosenPathExtensionForFormat:(NSInteger)format {
+- (NSString*)chosenPathExtensionForFormat:(NTVStorageFormat)format {
 	if (chosenExtIndices[format] >= [pathExtensions[format] count])
 		return [NotationPrefs pathExtensionForFormat:format];
 	

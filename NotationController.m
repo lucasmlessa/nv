@@ -624,7 +624,7 @@ bail:
 		[self performSelector:@selector(handleJournalError) withObject:nil afterDelay:0.0];
 	}
 	
-    if (currentStorageFormat == SingleDatabaseFormat) {
+    if (currentStorageFormat == NTVStorageFormatDatabase) {
 		
 		[self stopFileNotifications];
 		
@@ -675,7 +675,7 @@ bail:
     
     if ([unwrittenNotes count] > 0) {
 		lastWriteError = noErr;
-		if ([notationPrefs notesStorageFormat] != SingleDatabaseFormat) {
+		if ([notationPrefs notesStorageFormat] != NTVStorageFormatDatabase) {
 			//to avoid mutation enumeration if writing this file triggers a filename change which then triggers another makeNoteDirty which then triggers another scheduleWriteForNote:
 			//loose-coupling? what?
 			[[[unwrittenNotes copy] autorelease] makeObjectsPerformSelector:@selector(writeUsingCurrentFileFormatIfNecessary)];
@@ -767,7 +767,7 @@ bail:
 }
 
 - (void)trashRemainingNoteFilesInDirectory {
-	NSAssert([notationPrefs notesStorageFormat] == SingleDatabaseFormat, @"We shouldn't be removing files if the storage is not single-database");	
+	NSAssert([notationPrefs notesStorageFormat] == NTVStorageFormatDatabase, @"We shouldn't be removing files if the storage is not single-database");
 	[allNotes makeObjectsPerformSelector:@selector(moveFileToTrash)];
 	[self notifyOfChangedTrash];
 }
@@ -951,7 +951,7 @@ bail:
 	
 	NSArray *unknownPaths = filenames; //(this is not a requirement for -notesWithFilenames:unknownFiles:)
 	
-	if ([self currentNoteStorageFormat] != SingleDatabaseFormat) {
+	if ([self currentNoteStorageFormat] != NTVStorageFormatDatabase) {
 		//notes are stored as separate files, so if these paths are in the notes folder then NV can claim ownership over them
 		
 		//probably should sync directory here to make sure notesWithFilenames has the freshest data
@@ -1101,7 +1101,7 @@ bail:
 	[self synchronizeNoteChanges:nil];
     
     //we do this after removing it from the array to avoid re-discovering a removed file
-    if ([notationPrefs notesStorageFormat] != SingleDatabaseFormat) {
+    if ([notationPrefs notesStorageFormat] != NTVStorageFormatDatabase) {
 		[aNoteObject removeFileFromDirectory];
     }
 	//add journal removal event

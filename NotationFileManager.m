@@ -190,7 +190,7 @@ static BOOL VolumeSupportsExchangeObjects(NotationController *controller) {
 	//don't bother unless we will be reading notes as separate files; otherwise there's no need to track the source of the attr mod dates
 	//maybe disk UUIDs will be used in the future for something else; at that point this check should be altered
 	
-	if (!diskUUID && [self currentNoteStorageFormat] != SingleDatabaseFormat) {
+	if (!diskUUID && [self currentNoteStorageFormat] != NTVStorageFormatDatabase) {
 		
 		struct statfs * sfsb = StatFSVolumeInfo(self);
 		//if this is not an hfs+ disk, then get the FSEvents UUID

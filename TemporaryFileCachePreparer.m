@@ -100,7 +100,7 @@ static NSString *TempDirectoryPathForEditing() {
 		e.g., if it's a plain text file in plain-text-mode, or if the editor supports RTF/HTML
 	*/
 	
-	if ([prefs notesStorageFormat] != SingleDatabaseFormat || ![prefs doesEncryption] || 
+	if ([prefs notesStorageFormat] != NTVStorageFormatDatabase || ![prefs doesEncryption] || 
 		[[NSUserDefaults standardUserDefaults] boolForKey:@"UseInsecureTempEditing"]) {
 		if ([self _createFolderAtPath:TempDirectoryPathForEditing()]) {
 			[self _finishPreparationWithPath:TempDirectoryPathForEditing()];

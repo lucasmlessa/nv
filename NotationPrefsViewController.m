@@ -34,7 +34,7 @@
 - (BOOL)acceptsFirstResponder {
     
     if (storageFormatPopupButton)
-		return ([storageFormatPopupButton selectedTag] != SingleDatabaseFormat);
+		return ([storageFormatPopupButton selectedTag] != NTVStorageFormatDatabase);
 	
     return YES;
 }
@@ -325,7 +325,7 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 
 - (IBAction)changedFileStorageFormat:(id)sender {
     NSInteger storageTag = [storageFormatPopupButton selectedTag];
-	if (storageTag != SingleDatabaseFormat && [notationPrefs doesEncryption]) {
+	if (storageTag != NTVStorageFormatDatabase && [notationPrefs doesEncryption]) {
 		if (NSRunAlertPanel(NSLocalizedString(@"Encryption is currently on, but storing notes individually requires it to be off. Disable encryption?",nil),
 							NSLocalizedString(@"Warning: Your notes will be written to disk in clear text.",nil), NSLocalizedString(@"Disable Encryption",nil), 
 							NSLocalizedString(@"Cancel",nil), NULL) == NSAlertDefaultReturn) {
@@ -534,7 +534,7 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 - (void)encryptionFormatMismatchSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo {
 	if (returnCode == NSAlertDefaultReturn) {
 		//switching to single DB
-		[storageFormatPopupButton selectItemWithTag:SingleDatabaseFormat];
+		[storageFormatPopupButton selectItemWithTag:NTVStorageFormatDatabase];
 		
 		[self performSelector:@selector(changedFileStorageFormat:) withObject:storageFormatPopupButton afterDelay:0.0];
 		
@@ -555,7 +555,7 @@ enum {VERIFY_NOT_ATTEMPTED, VERIFY_FAILED, VERIFY_IN_PROGRESS, VERIFY_SUCCESS};
 	if (!picker) picker = [[PassphrasePicker alloc] initWithNotationPrefs:notationPrefs];
 	
 	NSInteger format = [notationPrefs notesStorageFormat];
-	if (format == SingleDatabaseFormat) {
+	if (format == NTVStorageFormatDatabase) {
 		
 		[picker showAroundWindow:[view window] resultDelegate:self];
 	} else {

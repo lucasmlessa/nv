@@ -24,7 +24,14 @@ including encryption, file formats, synchronization, passwords management, and o
 
 #define EPOC_ITERATION 4
 
-enum { SingleDatabaseFormat = 0, PlainTextFormat, RTFTextFormat, HTMLFormat, WordDocFormat, WordXMLFormat };
+typedef NS_ENUM(NSInteger, NTVStorageFormat) {
+    NTVStorageFormatDatabase = 0,
+    NTVStorageFormatPlainText,
+    NTVStorageFormatRichText,
+    NTVStorageFormatHTML,
+    NTVStorageFormatWord,
+    NTVStorageFormatOpenXML
+};
 
 extern NSString *NotationPrefsDidChangeNotification;
 
@@ -62,8 +69,8 @@ extern NSString *NotationPrefsDidChangeNotification;
 }
 
 + (int)appVersion;
-+ (NSMutableArray*)defaultTypeStringsForFormat:(int)formatID;
-+ (NSMutableArray*)defaultPathExtensionsForFormat:(int)formatID;
++ (NSMutableArray*)defaultTypeStringsForFormat:(NTVStorageFormat)formatID;
++ (NSMutableArray*)defaultPathExtensionsForFormat:(NTVStorageFormat)formatID;
 - (BOOL)preferencesChanged;
 - (void)setForegroundTextColor:(NSColor*)aColor;
 - (NSColor*)foregroundColor;
@@ -122,13 +129,13 @@ extern NSString *NotationPrefsDidChangeNotification;
 - (NSUInteger)tableIndexOfDiskUUID:(CFUUIDRef)UUIDRef;
 - (void)checkForKnownRedundantSyncConduitsAtPath:(NSString*)dbPath;
 
-+ (NSString*)pathExtensionForFormat:(NSInteger)format;
++ (NSString*)pathExtensionForFormat:(NTVStorageFormat)format;
 
 //used to view tableviews
 - (NSString*)typeStringAtIndex:(NSInteger)typeIndex;
 - (NSString*)pathExtensionAtIndex:(NSInteger)pathIndex;
 - (NSUInteger)indexOfChosenPathExtension;
-- (NSString*)chosenPathExtensionForFormat:(NSInteger)format;
+- (NSString*)chosenPathExtensionForFormat:(NTVStorageFormat)format;
 - (NSInteger)typeStringsCount;
 - (NSInteger)pathExtensionsCount;
 
