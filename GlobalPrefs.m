@@ -34,6 +34,7 @@
 #import "NSString_NV.h"
 #import "AppController.h"
 #import "BufferUtils.h"
+#import "CFUUID+NTVAdditions.h"
 
 static NSString *TriedToImportBlorKey = @"TriedToImportBlor";
 static NSString *DirectoryAliasKey = @"DirectoryAlias";
@@ -854,9 +855,7 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 	
 	[defaults setObject:stringMinusBreak forKey:LastSearchStringKey];
 	
-	CFUUIDBytes *bytes = [aNote uniqueNoteIDBytes];
-	NSString *uuidString = nil;
-	if (bytes) uuidString = [NSString uuidStringWithBytes:*bytes];
+    NSString *uuidString = [NSString ntv_UUIDStringForBytes:aNote.uniqueNoteIDBytes];
 
 	[defaults setObject:uuidString forKey:LastSelectedNoteUUIDBytesKey];
 	
@@ -872,12 +871,10 @@ BOOL ColorsEqualWith8BitChannels(NSColor *c1, NSColor *c2) {
 
 - (CFUUIDBytes)UUIDBytesOfLastSelectedNote {
 	CFUUIDBytes bytes;
-	bzero(&bytes, sizeof(CFUUIDBytes));
-	
-	NSString *uuidString = [defaults objectForKey:LastSelectedNoteUUIDBytesKey];
-	if (uuidString) bytes = [uuidString uuidBytes];
-
-	return bytes;
+    if (![[defaults objectForKey:LastSelectedNoteUUIDBytesKey] ntv_getUUIDBytes:&bytes]) {
+        bzero(&bytes, sizeof(CFUUIDBytes));
+    }
+    return bytes;
 }
 
 - (CGFloat)scrollOffsetOfLastSelectedNote {

@@ -524,30 +524,6 @@ BOOL IsHardLineBreakUnichar(unichar uchar, NSString *str, unsigned charIndex) {
 	return NO;
 }
 
-- (CFUUIDBytes)uuidBytes {
-	CFUUIDBytes bytes;
-	bzero(&bytes, sizeof(CFUUIDBytes));
-	CFUUIDRef uuidRef = CFUUIDCreateFromString(NULL, (CFStringRef)self);
-	if (uuidRef) {
-		bytes = CFUUIDGetUUIDBytes(uuidRef);
-		CFRelease(uuidRef);
-	}
-
-	return bytes;
-}
-
-+ (NSString*)uuidStringWithBytes:(CFUUIDBytes)bytes {
-	CFUUIDRef uuidRef = CFUUIDCreateFromUUIDBytes(NULL, bytes);
-	CFStringRef uuidString = NULL;
-	
-	if (uuidRef) {
-		uuidString = CFUUIDCreateString(NULL, uuidRef);
-		CFRelease(uuidRef);
-	}
-	
-	return [(NSString*)uuidString autorelease];	
-}
-
 - (NSString *)firstNumberFromStringWithinRange:(NSRange)subRange isInRange:(NSRange *)foundRange{
     if (NSMaxRange(subRange)<=self.length) {
         NSString *thisString=[self substringWithRange:subRange];

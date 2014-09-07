@@ -55,9 +55,6 @@ CFDateFormatterRef simplenoteDateFormatter(int lowPrecision);
 
 - (BOOL)UTIOfFileConformsToType:(NSString*)type;
 
-- (CFUUIDBytes)uuidBytes;
-+ (NSString*)uuidStringWithBytes:(CFUUIDBytes)bytes;
-
 - (NSString *)firstNumberFromStringWithinRange:(NSRange)subRange isInRange:(NSRange *)foundRange;
 - (NSInteger)isPairedCharacterWithMatchString:(NSString **)matchString;
 //- (NSTextView*)textViewWithFrame:(NSRect*)theFrame;

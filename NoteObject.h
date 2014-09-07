@@ -88,20 +88,11 @@ typedef struct _NoteFilterContext {
 extern NSComparator const NTVNoteCompareDateModified;
 extern NSComparator const NTVNoteCompareDateCreated;
 extern NSComparator const NTVNoteCompareLabelString;
-extern NSComparator const NTVNoteCompareUniqueIDs;
 extern NSComparator const NTVNoteCompareTitle;
 
 extern NSComparator const NTVNoteCompareFilename;
 extern NSComparator const NTVNoteCompareNodeID;
 extern NSComparator const NTVNoteCompareFileSize;
-
-//syncing w/ server and from journal
-- (CFUUIDBytes *)uniqueNoteIDBytes;
-- (NSDictionary*)syncServicesMD;
-- (unsigned int)logSequenceNumber;
-- (void)incrementLSN;
-
-- (BOOL)youngerThanLogObject:(id<SynchronizedNote>)obj;
 
 	//syncing w/ files in directory
 	NSInteger storageFormatOfNote(NoteObject *note);

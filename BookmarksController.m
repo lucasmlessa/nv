@@ -22,6 +22,7 @@
 #import "AppController.h"
 #import "NSString_NV.h"
 #import "NSCollection_utils.h"
+#import "CFUUID+NTVAdditions.h"
 
 static NSString *BMSearchStringKey = @"SearchString";
 static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
@@ -35,14 +36,18 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 		return (self = nil);
 	}
 
-	NSString *uuidString = aDict[BMNoteUUIDStringKey];
-	if (!uuidString) {
-		NSLog(@"NoteBookmark init: supplied nil uuidString");
+    self = [super init];
+    if (!self) { return nil; }
+    
+    if (![aDict[BMNoteUUIDStringKey] ntv_getUUIDBytes:&uuidBytes]) {
+        NSLog(@"NoteBookmark init: supplied bad uuidString");
 		[self release];
 		return (self = nil);
 	}
-
-	return (self = [self initWithNoteUUIDBytes:[uuidString uuidBytes] searchString:aDict[BMSearchStringKey]]);
+    
+    searchString = [aDict[BMSearchStringKey] copy];
+    
+    return self;
 }
 
 - (id)initWithNoteUUIDBytes:(CFUUIDBytes)bytes searchString:(NSString*)aString {
@@ -64,17 +69,15 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 
 	self = [super init];
 	if (!self) { return nil; }
-
-	noteObject = [aNote retain];
-	searchString = [aString copy];
-
-	CFUUIDBytes *bytes = [aNote uniqueNoteIDBytes];
-	if (!bytes) {
-		NSLog(@"NoteBookmark init: no cfuuidbytes pointer from note %@", titleOfNote(aNote));
-		[self release];
-		return (self = nil);
-	}
-	uuidBytes = *bytes;
+    
+    if (!NTVSynchronizedNoteGetUUIDBytes(aNote, &uuidBytes)) {
+        NSLog(@"NoteBookmark init: no cfuuidbytes pointer from note %@", titleOfNote(aNote));
+        [self release];
+        return (self = nil);
+    }
+    
+    searchString = [aString copy];
+    noteObject = [aNote retain];
 
 	return self;
 }
@@ -108,7 +111,7 @@ static NSString *BMNoteUUIDStringKey = @"NoteUUIDString";
 - (NSDictionary*)dictionaryRep {
 	return @{
 		BMSearchStringKey: searchString,
-		BMNoteUUIDStringKey: [NSString uuidStringWithBytes:uuidBytes]
+        BMNoteUUIDStringKey: [NSString ntv_UUIDStringForBytes:&uuidBytes]
 	};
 }
 

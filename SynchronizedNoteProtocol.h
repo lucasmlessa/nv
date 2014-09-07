@@ -16,19 +16,34 @@
    - Neither the name of Notational Velocity nor the names of its contributors may be used to endorse 
      or promote products derived from this software without specific prior written permission. */
 
+@import Foundation;
+#import "CFUUID+NTVAdditions.h"
 
 @protocol SynchronizedNote <NSCoding, NSObject>
 
-- (CFUUIDBytes *)uniqueNoteIDBytes;
-- (NSDictionary *)syncServicesMD;
-//need methods to modify parts of syncServicesMD
-- (unsigned int)logSequenceNumber;
-- (void)incrementLSN;
-- (BOOL)youngerThanLogObject:(id<SynchronizedNote>)obj;
+@property (nonatomic, readonly) const CFUUIDBytes *uniqueNoteIDBytes;
 
+@property (nonatomic, readonly) NSDictionary *syncServicesMD;
 - (void)setSyncObjectAndKeyMD:(NSDictionary*)aDict forService:(NSString*)serviceName;
-//- (void)removeKey:(NSString*)aKey forService:(NSString*)serviceName;
 - (void)removeAllSyncMDForService:(NSString*)serviceName;
 
+@property (nonatomic, readonly) unsigned int logSequenceNumber;
+- (void)incrementLSN;
 
 @end
+
+NTV_ALWAYS_INLINE BOOL NTVSynchronizedNoteIsEqual(id<SynchronizedNote> a, id<SynchronizedNote> b) {
+    if (![b conformsToProtocol:@protocol(SynchronizedNote)]) { return NO; }
+    return NTVUUIDIsEqualBytes(a.uniqueNoteIDBytes, b.uniqueNoteIDBytes);
+}
+
+NTV_ALWAYS_INLINE BOOL NTVSynchronizedNoteIsYounger(id<SynchronizedNote> a, id<SynchronizedNote> b) {
+	return [a logSequenceNumber] < [b logSequenceNumber];
+}
+
+NTV_ALWAYS_INLINE BOOL NTVSynchronizedNoteGetUUIDBytes(id<SynchronizedNote> a, CFUUIDBytes *b) {
+    const CFUUIDBytes *aPtr = a.uniqueNoteIDBytes;
+    if (!aPtr || !b) { return NO; }
+    *b = *aPtr;
+    return YES;
+}

@@ -18,19 +18,22 @@
 
 #import "DeletedNoteObject.h"
 #import "NSString_NV.h"
+#import "CFUUID+NTVAdditions.h"
 
-@implementation DeletedNoteObject
-
-+ (id)deletedNoteWithNote:(id <SynchronizedNote>)aNote {
-	return [[[DeletedNoteObject alloc] initWithExistingObject:aNote] autorelease];
+@implementation DeletedNoteObject {
+    CFUUIDBytes uniqueNoteIDBytes;
+    NSMutableDictionary *syncServicesMD;
 }
 
-- (id)initWithExistingObject:(id<SynchronizedNote>)note {
+@synthesize originalNote = originalNote;
+@synthesize logSequenceNumber = logSequenceNumber;
+@synthesize syncServicesMD = syncServicesMD;
+
+- (instancetype)initWithOriginalNote:(id<SynchronizedNote>)note {
 	self = [super init];
 	if (!self) { return nil; }
 
-	CFUUIDBytes *bytes = [note uniqueNoteIDBytes];
-	uniqueNoteIDBytes = *bytes;
+    NTVSynchronizedNoteGetUUIDBytes(note, &uniqueNoteIDBytes);
 	syncServicesMD = [[note syncServicesMD] mutableCopy];
 	logSequenceNumber = [note logSequenceNumber];
 	//not serialized: for runtime lookup purposes only
@@ -71,15 +74,39 @@
 	}
 }
 
-- (id<SynchronizedNote>)originalNote {
-	return originalNote;
-}
-
 - (NSString*)description {
-	return [NSString stringWithFormat:@"DeletedNoteObj(%@) %@", [NSString uuidStringWithBytes:uniqueNoteIDBytes], syncServicesMD];
+	return [NSString stringWithFormat:@"DeletedNoteObj(%@) %@", [NSString ntv_UUIDStringForBytes:&uniqueNoteIDBytes], syncServicesMD];
 }
 
-#include "SynchronizedNoteMixIns.h"
+- (void)setSyncObjectAndKeyMD:(NSDictionary*)aDict forService:(NSString*)serviceName {
+    NSMutableDictionary *dict = syncServicesMD[serviceName];
+    if (!dict) {
+        dict = [[NSMutableDictionary alloc] initWithDictionary:aDict];
+        if (!syncServicesMD) syncServicesMD = [[NSMutableDictionary alloc] init];
+        syncServicesMD[serviceName] = dict;
+        [dict release];
+    } else {
+        [dict addEntriesFromDictionary:aDict];
+    }
+}
+- (void)removeAllSyncMDForService:(NSString*)serviceName {
+    [syncServicesMD removeObjectForKey:serviceName];
+}
+- (const CFUUIDBytes *)uniqueNoteIDBytes {
+    return &uniqueNoteIDBytes;
+}
+
+- (void)incrementLSN {
+    logSequenceNumber++;
+}
+
+- (NSUInteger)hash {
+    return NTVUUIDBytesGetHash(&uniqueNoteIDBytes);
+}
+
+- (BOOL)isEqual:(id <SynchronizedNote>)otherNote {
+    return NTVSynchronizedNoteIsEqual(self, otherNote);
+}
 
 - (void)dealloc {
 	[syncServicesMD release];

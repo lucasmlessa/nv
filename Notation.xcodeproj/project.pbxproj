@@ -250,6 +250,7 @@
 		DB98BBA319A90B2500055B14 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DB98BBA219A90B2500055B14 /* libcrypto.dylib */; };
 		DB98BBA919A9110700055B14 /* NSData+NTVCommonDigest.m in Sources */ = {isa = PBXBuildFile; fileRef = DB98BBA819A9110700055B14 /* NSData+NTVCommonDigest.m */; };
 		DB98BBDF19A927C600055B14 /* NTVBrokenMD5.m in Sources */ = {isa = PBXBuildFile; fileRef = DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */; };
+		DB9D525A19BBCF8500ED7560 /* CFUUID+NTVAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = DB9D525919BBCF8500ED7560 /* CFUUID+NTVAdditions.m */; };
 		DB9D526319BCD23000ED7560 /* NTVLinkingEditorScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = DB9D526219BCD23000ED7560 /* NTVLinkingEditorScrollView.m */; };
 		DBC9DC7E19ABEC19009E8460 /* NTVNotesListDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DBC9DC7D19ABEC19009E8460 /* NTVNotesListDataSource.m */; };
 		DBD70D8A19A63C000026F349 /* HelpNotes in Resources */ = {isa = PBXBuildFile; fileRef = DBD70D8819A63C000026F349 /* HelpNotes */; };
@@ -447,7 +448,6 @@
 		21C737930B50C73E0048C08A /* MultiplePageView.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = MultiplePageView.h; sourceTree = "<group>"; };
 		21C737940B50C73E0048C08A /* MultiplePageView.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = MultiplePageView.m; sourceTree = "<group>"; };
 		21CB29AD10EEE39400360118 /* SyncServiceSessionProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncServiceSessionProtocol.h; sourceTree = "<group>"; };
-		21CF80F210FD33B90094AA90 /* SynchronizedNoteMixIns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SynchronizedNoteMixIns.h; sourceTree = "<group>"; };
 		21D60126098FDB46007440DF /* GlobalPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlobalPrefs.h; sourceTree = "<group>"; };
 		21D60127098FDB46007440DF /* GlobalPrefs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlobalPrefs.m; sourceTree = "<group>"; };
 		21D6F7ED12E0C751005C2DA5 /* AppController_Importing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppController_Importing.h; sourceTree = "<group>"; };
@@ -636,6 +636,8 @@
 		DB98BBDC19A9276F00055B14 /* NTVMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NTVMacros.h; sourceTree = "<group>"; };
 		DB98BBDD19A927C600055B14 /* NTVBrokenMD5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVBrokenMD5.h; sourceTree = "<group>"; };
 		DB98BBDE19A927C600055B14 /* NTVBrokenMD5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVBrokenMD5.m; sourceTree = "<group>"; };
+		DB9D525819BBCF8500ED7560 /* CFUUID+NTVAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CFUUID+NTVAdditions.h"; sourceTree = "<group>"; };
+		DB9D525919BBCF8500ED7560 /* CFUUID+NTVAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CFUUID+NTVAdditions.m"; sourceTree = "<group>"; };
 		DB9D526119BCD23000ED7560 /* NTVLinkingEditorScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVLinkingEditorScrollView.h; sourceTree = "<group>"; };
 		DB9D526219BCD23000ED7560 /* NTVLinkingEditorScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTVLinkingEditorScrollView.m; sourceTree = "<group>"; };
 		DBC9DC7C19ABEC19009E8460 /* NTVNotesListDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTVNotesListDataSource.h; sourceTree = "<group>"; };
@@ -864,7 +866,6 @@
 				21A3913912EB4C2F00CEB5F0 /* Spaces.m */,
 				21A3913812EB4C2F00CEB5F0 /* Spaces.h */,
 				21F0793710EC5E21004FE56F /* Sync Services */,
-				21CF80F210FD33B90094AA90 /* SynchronizedNoteMixIns.h */,
 				2181193909FA9CF90020A252 /* SynchronizedNoteProtocol.h */,
 				5CBA7A961305E38C004ADEBB /* TagEditingManager.h */,
 				5CBA7A971305E38C004ADEBB /* TagEditingManager.m */,
@@ -1319,6 +1320,8 @@
 				DB41EE4B19AA329800AD6246 /* NSData+NTVCrypto.m */,
 				DB41EE4D19AA40AD00AD6246 /* NSApplication+NTVActivationPolicy.h */,
 				DB41EE4E19AA40AD00AD6246 /* NSApplication+NTVActivationPolicy.m */,
+				DB9D525819BBCF8500ED7560 /* CFUUID+NTVAdditions.h */,
+				DB9D525919BBCF8500ED7560 /* CFUUID+NTVAdditions.m */,
 			);
 			name = Categories;
 			sourceTree = "<group>";
@@ -1601,6 +1604,7 @@
 				21AD2850110BE99B00B7A985 /* SyncSessionController.m in Sources */,
 				212C6952110E1940004DD82C /* TitlebarButton.m in Sources */,
 				DB9D526319BCD23000ED7560 /* NTVLinkingEditorScrollView.m in Sources */,
+				DB9D525A19BBCF8500ED7560 /* CFUUID+NTVAdditions.m in Sources */,
 				21B548FA112F307E00E163A1 /* NotationDirectoryManager.m in Sources */,
 				57F27FB91197407400C63ACF /* SearchCommand.m in Sources */,
 				216D987F12CE68AD0004B9CE /* NSFileManager_NV.m in Sources */,

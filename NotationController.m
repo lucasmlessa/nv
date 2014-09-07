@@ -470,7 +470,7 @@ bail:
 				if (existingNoteIndex != NSNotFound) {
 					
 					NoteObject *existingNote = allNotes[existingNoteIndex];
-					if ([existingNote youngerThanLogObject:obj]) {
+					if (NTVSynchronizedNoteIsYounger(existingNote, obj)) {
 						NSLog(@"got a newer deleted note %@", obj);
 						//except that normally the undomanager doesn't exist by this point			
 						[self _registerDeletionUndoForNote:existingNote];
@@ -489,16 +489,11 @@ bail:
 				}
 			} else if (existingNoteIndex != NSNotFound) {
 				
-				if ([allNotes[existingNoteIndex] youngerThanLogObject:obj]) {
-					// NSLog(@"replacing old note with new: %@", [[(NoteObject*)obj contentString] string]);
-					
+				if (NTVSynchronizedNoteIsYounger(allNotes[existingNoteIndex], obj)) {
 					[(NoteObject*)obj setDelegate:self];
 					[(NoteObject*)obj updateLabelConnectionsAfterDecoding];
 					allNotes[existingNoteIndex] = obj;
 					notesChanged = YES;
-				} else {
-					// NSLog(@"note %@ is not being replaced because its LSN is %u, while the old note's LSN is %u", 
-					//  [[(NoteObject*)obj contentString] string], [(NoteObject*)obj logSequenceNumber], [[allNotes objectAtIndex:existingNoteIndex] logSequenceNumber]);
 				}
 			} else {
 				//NSLog(@"Found new note: %@", [(NoteObject*)obj contentString]);
@@ -1113,7 +1108,7 @@ bail:
 	//(e.g., already been synced at least once)
 	//make sure we use the same deleted note that was added to the list of deleted notes, to simplify record-keeping
 	//if the note didn't have metadata, try to sync it anyway so that the service knows this note shouldn't be created
-	[self schedulePushToAllSyncServicesForNote: deletedNote ? deletedNote : [DeletedNoteObject deletedNoteWithNote:aNoteObject]];
+	[self schedulePushToAllSyncServicesForNote: deletedNote ? deletedNote : [[[DeletedNoteObject alloc] initWithOriginalNote:aNoteObject] autorelease]];
     
 	[self _registerDeletionUndoForNote:aNoteObject];
 		
@@ -1151,7 +1146,7 @@ bail:
 	
 	if ([[aNote syncServicesMD] count]) {
 		//it is important to use the actual deleted note if one is passed
-		DeletedNoteObject *deletedNote = [aNote isKindOfClass:[DeletedNoteObject class]] ? aNote : [DeletedNoteObject deletedNoteWithNote:aNote];
+		DeletedNoteObject *deletedNote = [aNote isKindOfClass:[DeletedNoteObject class]] ? aNote : [[[DeletedNoteObject alloc] initWithOriginalNote:aNote] autorelease];
 		[deletedNotes addObject:deletedNote];
 		notesChanged = YES;
 		return deletedNote;
@@ -1232,8 +1227,7 @@ bail:
 
 - (NSUInteger)indexOfNoteForUUIDBytes:(CFUUIDBytes*)bytes {
 	return [allNotes indexOfObjectPassingTest:^BOOL(NoteObject *note, NSUInteger idx, BOOL *stop) {
-		CFUUIDBytes *noteBytes = [note uniqueNoteIDBytes];
-		return !memcmp(noteBytes, bytes, sizeof(CFUUIDBytes));
+        return NTVUUIDIsEqualBytes(note.uniqueNoteIDBytes, bytes);
 	}];
 }
 

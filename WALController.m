@@ -27,6 +27,7 @@
 #import "NSCollection_utils.h"
 #import "NSString_NV.h"
 #import "NSData+NTVCrypto.h"
+#import "CFUUID+NTVAdditions.h"
 
 //file descriptor based for lower level access
 
@@ -190,7 +191,7 @@
     [aNoteObject incrementLSN];
     
     //construct a "removal object" for this note with some identifying information
-	DeletedNoteObject *removedNote = [[[DeletedNoteObject alloc] initWithExistingObject:aNoteObject] autorelease];
+	DeletedNoteObject *removedNote = [[[DeletedNoteObject alloc] initWithOriginalNote:aNoteObject] autorelease];
     
 	return [self writeNoteObject:removedNote];	
 }
@@ -496,36 +497,17 @@
     return object;
 }
 
-
-static CFStringRef SynchronizedNoteKeyDescription(const void *value) {
-
-	return value ? (CFStringRef)[NSString uuidStringWithBytes:*(CFUUIDBytes*)value] : NULL;
-}
-
-// TODO replace
-extern CFHashCode CFHashBytes(const uint8_t *, CFIndex);
-
-static CFHashCode SynchronizedNoteHash(const void * o) {
-	
-	return CFHashBytes(o, sizeof(CFUUIDBytes));
-}
-static Boolean SynchronizedNoteIsEqual(const void *o, const void *p) {
-	
-	return (!memcmp((CFUUIDBytes*)o, (CFUUIDBytes*)p, sizeof(CFUUIDBytes)));
-}
-
 //we keep a table of the newest recovered notes, as any changed notes will almost certainly be written multiple times
 //throw away objects with LSNs lower than the current highest one for each UUID
 //and when recovery cannot progress any further, only the newest objects will be exchanged
 
 - (NSDictionary*)recoveredNotes {
     id <SynchronizedNote> obj = nil;
-	CFUUIDBytes *objUUIDBytes = NULL;
     
     CFDictionaryKeyCallBacks keyCallbacks = kCFTypeDictionaryKeyCallBacks;
-    keyCallbacks.equal = SynchronizedNoteIsEqual;
-    keyCallbacks.hash = SynchronizedNoteHash;
-	keyCallbacks.copyDescription = SynchronizedNoteKeyDescription;
+    keyCallbacks.equal = NTVUUIDIsEqualBytes;
+    keyCallbacks.hash = NTVUUIDGetHashForBytes;
+	keyCallbacks.copyDescription = NTVUUIDCopyDescriptionForBytes;
 	keyCallbacks.retain = NULL;
 	keyCallbacks.release = NULL;
     
@@ -535,15 +517,16 @@ static Boolean SynchronizedNoteIsEqual(const void *o, const void *p) {
 		if ((obj = [self recoverNextObject])) {
 			
 			if ([obj conformsToProtocol:@protocol(SynchronizedNote)]) {
-				objUUIDBytes = [obj uniqueNoteIDBytes];
+				const CFUUIDBytes *objUUIDBytes = [obj uniqueNoteIDBytes];
 				id <SynchronizedNote> foundNote = nil;
 				
 				//if the note already exists, then insert this note only if it's newer, and always insert it if it doesn't exist
 				if (CFDictionaryGetValueIfPresent(recoveredNotes, (const void *)objUUIDBytes, (const void **)&foundNote)) {
 					
 					//note is already here, overwrite it only if our LSN is greater or equal
-					if (foundNote && ![foundNote youngerThanLogObject:obj])
+					if (foundNote && !NTVSynchronizedNoteIsYounger(foundNote, obj)) {
 						continue;
+					}
 				}
 				CFDictionarySetValue(recoveredNotes, (const void *)objUUIDBytes, (const void *)obj);
 			} else {

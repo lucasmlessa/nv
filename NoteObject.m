@@ -42,6 +42,7 @@
 #import "UnifiedCell.h"
 #import "LabelColumnCell.h"
 #import "ODBEditor.h"
+#import "CFUUID+NTVAdditions.h"
 
 #if __LP64__
 // Needed for compatability with data created by 32bit app
@@ -54,6 +55,9 @@ typedef NSRange NSRange32;
 #endif
 
 @implementation NoteObject
+
+@synthesize logSequenceNumber = logSequenceNumber;
+@synthesize syncServicesMD = syncServicesMD;
 
 static FSRef *noteFileRefInit(NoteObject* obj);
 static void setAttrModifiedDate(NoteObject *note, UTCDateTime *dateTime);
@@ -181,16 +185,6 @@ NSComparisonResult(^const NTVNoteCompareLabelString)(NoteObject *, NoteObject *)
 	return [labelsOfNote(one) compare:labelsOfNote(two) options:NSCaseInsensitiveSearch];
 };
 
-NSComparisonResult(^const NTVNoteCompareUniqueIDs)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
-	int cmp = memcmp((&one->uniqueNoteIDBytes), (&two->uniqueNoteIDBytes), sizeof(CFUUIDBytes));
-	if (cmp > 0) {
-		return NSOrderedDescending;
-	} else if (cmp < 0) {
-		return NSOrderedAscending;
-	}
-	return NSOrderedSame;
-};
-
 NSComparisonResult(^const NTVNoteCompareTitle)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
 	NSComparisonResult stringResult = [titleOfNote(one) compare:titleOfNote(two) options:NSCaseInsensitiveSearch];
 	if (stringResult != NSOrderedSame) { return stringResult; }
@@ -198,7 +192,7 @@ NSComparisonResult(^const NTVNoteCompareTitle)(NoteObject *, NoteObject *) = ^(N
 	NSComparisonResult dateResult = NTVNoteCompareDateCreated(one, two);
 	if (stringResult != NSOrderedSame) { return dateResult; }
 
-	return NTVNoteCompareUniqueIDs(one, two);
+    return (NSComparisonResult)NTVUUIDBytesCompare(one.uniqueNoteIDBytes, two.uniqueNoteIDBytes);
 };
 
 NSComparisonResult(^const NTVNoteCompareFilename)(NoteObject *, NoteObject *) = ^(NoteObject *one, NoteObject *two){
@@ -213,7 +207,37 @@ NSComparisonResult(^const NTVNoteCompareFileSize)(NoteObject *, NoteObject *) = 
 	return NTVCompare(one->logicalSize, two->logicalSize);
 };
 
-#include "SynchronizedNoteMixIns.h"
+- (void)setSyncObjectAndKeyMD:(NSDictionary*)aDict forService:(NSString*)serviceName {
+	NSMutableDictionary *dict = syncServicesMD[serviceName];
+	if (!dict) {
+		dict = [[NSMutableDictionary alloc] initWithDictionary:aDict];
+		if (!syncServicesMD) syncServicesMD = [[NSMutableDictionary alloc] init];
+		syncServicesMD[serviceName] = dict;
+		[dict release];
+	} else {
+		[dict addEntriesFromDictionary:aDict];
+	}
+}
+
+- (void)removeAllSyncMDForService:(NSString*)serviceName {
+	[syncServicesMD removeObjectForKey:serviceName];
+}
+
+- (const CFUUIDBytes *)uniqueNoteIDBytes {
+    return &uniqueNoteIDBytes;
+}
+
+- (void)incrementLSN {
+    logSequenceNumber++;
+}
+
+- (NSUInteger)hash {
+    return NTVUUIDBytesGetHash(&uniqueNoteIDBytes);
+}
+
+- (BOOL)isEqual:(id<SynchronizedNote>)otherNote {
+    return NTVSynchronizedNoteIsEqual(self, otherNote);
+}
 
 //syncing w/ server and from journal;
 

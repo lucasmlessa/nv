@@ -30,6 +30,7 @@
 #import "SynchronizedNoteProtocol.h"
 #import "NoteObject.h"
 #import "DeletedNoteObject.h"
+#import "CFUUID+NTVAdditions.h"
 
 //this class constitutes the simple-note-specific glue between HTTP fetching 
 //and NotationSyncServiceManager, which is NotationController
@@ -894,7 +895,7 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 }
 
 - (NSInvocation*)_popNextInvocationForNote:(id<SynchronizedNote>)aNote {
-	NSString *uuidStr = [NSString uuidStringWithBytes:*[aNote uniqueNoteIDBytes]];
+    NSString *uuidStr = [NSString ntv_UUIDStringForBytes:aNote.uniqueNoteIDBytes];
 
 	NSMutableArray *invocations = queuedNoteInvocations[uuidStr];
 	if (!invocations) return nil;
@@ -913,7 +914,7 @@ static void SNReachabilityCallback(SCNetworkReachabilityRef	target, SCNetworkCon
 
 - (void)_queueInvocation:(NSInvocation*)anInvocation forNote:(id<SynchronizedNote>)aNote {
 	if (!queuedNoteInvocations) queuedNoteInvocations = [[NSMutableDictionary alloc] init];
-	NSString *uuidStr = [NSString uuidStringWithBytes:*[aNote uniqueNoteIDBytes]];
+    NSString *uuidStr = [NSString ntv_UUIDStringForBytes:aNote.uniqueNoteIDBytes];
 	NSMutableArray *invocations = queuedNoteInvocations[uuidStr];
 	if (!invocations) {
 		//note has no already-waiting invocations
